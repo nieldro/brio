@@ -35,7 +35,7 @@ export default function Hoy() {
 
   const marcarListo = () => {
     if (completadoHoy) return;
-    marcarDiaCompletado();
+    marcarDiaCompletado(dia.reto);
     celebrar({ titulo: 'Hecho.', sub: subCelebracion(racha + 1) });
   };
 

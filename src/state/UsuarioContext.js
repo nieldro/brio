@@ -1,14 +1,23 @@
 import { createContext, useContext, useEffect, useMemo, useReducer } from 'react';
 import { completarDia, estaCompletado, rachaVigente, rachaRota } from '../services/racha';
 import { claveDia } from '../services/fecha';
-import { cargarEstado, guardarEstado, borrarEstado } from '../lib/almacenamiento';
+import {
+  cargar,
+  guardarLocal,
+  guardarPerfil,
+  marcarRegistro,
+  guardarLogro as subirLogro,
+  olvidar,
+} from '../lib/repositorio';
 
 // Única fuente de verdad de la app.
-// En la fase 4 el reducer se mantiene igual y solo se le agrega la escritura
-// contra Supabase: las pantallas no se enteran del cambio.
+// Habla solo con `lib/repositorio`: no sabe si los datos vienen del disco,
+// de Supabase o de las dos partes.
 
 const estadoInicial = {
-  hidratado: false, // ¿ya leímos el disco?
+  hidratado: false, // ¿ya leímos disco y nube?
+  userId: null,
+  enNube: false,
   onboardingListo: false,
   perfil: {
     nombre: '',
@@ -28,15 +37,15 @@ const estadoInicial = {
   diario: {}, // { '2026-08-13': 'texto' }
 };
 
-// Lo que se guarda en disco. `hidratado` es de esta sesión, no se persiste.
-function persistible({ hidratado, ...resto }) {
+// Lo que se guarda en disco. Lo demás se resuelve en cada arranque.
+function persistible({ hidratado, userId, enNube, ...resto }) {
   return resto;
 }
 
 function reducer(estado, accion) {
   switch (accion.tipo) {
     case 'HIDRATAR':
-      return { ...estado, ...(accion.guardado ?? {}), hidratado: true };
+      return { ...estado, ...(accion.datos ?? {}), hidratado: true };
 
     case 'TERMINAR_ONBOARDING':
       return {
@@ -59,7 +68,7 @@ function reducer(estado, accion) {
       };
 
     case 'REINICIAR':
-      return { ...estadoInicial, hidratado: true };
+      return { ...estadoInicial, hidratado: true, userId: estado.userId, enNube: estado.enNube };
 
     default:
       return estado;
@@ -71,25 +80,27 @@ const UsuarioContext = createContext(null);
 export function UsuarioProvider({ children }) {
   const [estado, dispatch] = useReducer(reducer, estadoInicial);
 
-  // Leer el disco una sola vez, al abrir.
+  // Leer una sola vez, al abrir.
   useEffect(() => {
     let vivo = true;
-    cargarEstado().then((guardado) => {
-      if (vivo) dispatch({ tipo: 'HIDRATAR', guardado });
+    cargar().then((datos) => {
+      if (vivo) dispatch({ tipo: 'HIDRATAR', datos });
     });
     return () => {
       vivo = false;
     };
   }, []);
 
-  // Guardar en cada cambio, nunca antes de haber leído (borraría lo guardado).
+  // Guardar en disco en cada cambio, nunca antes de haber leído
+  // (guardar antes borraría lo que ya estaba).
   useEffect(() => {
     if (!estado.hidratado) return;
-    guardarEstado(persistible(estado));
+    guardarLocal(persistible(estado));
   }, [estado]);
 
   const valor = useMemo(() => {
     const hoy = new Date();
+
     return {
       ...estado,
       // Derivados: las pantallas no recalculan reglas de racha.
@@ -97,13 +108,37 @@ export function UsuarioProvider({ children }) {
       racha: rachaVigente(estado, hoy),
       rota: rachaRota(estado, hoy),
 
-      terminarOnboarding: (perfil) => dispatch({ tipo: 'TERMINAR_ONBOARDING', perfil }),
-      actualizarPerfil: (cambios) => dispatch({ tipo: 'ACTUALIZAR_PERFIL', cambios }),
-      marcarDiaCompletado: () => dispatch({ tipo: 'COMPLETAR_DIA' }),
-      guardarLogro: (texto) => dispatch({ tipo: 'GUARDAR_LOGRO', texto }),
+      terminarOnboarding: (perfil) => {
+        dispatch({ tipo: 'TERMINAR_ONBOARDING', perfil });
+        guardarPerfil(estado.userId, perfil);
+      },
+
+      actualizarPerfil: (cambios) => {
+        dispatch({ tipo: 'ACTUALIZAR_PERFIL', cambios });
+        guardarPerfil(estado.userId, { ...estado.perfil, ...cambios });
+      },
+
+      // `reto` va al registro para que el Progreso pueda mostrar qué se hizo.
+      marcarDiaCompletado: (reto) => {
+        const siguiente = completarDia(estado);
+        if (siguiente === estado) return; // ya estaba marcado hoy
+        dispatch({ tipo: 'COMPLETAR_DIA' });
+        marcarRegistro(estado.userId, {
+          fecha: siguiente.ultimoDiaCompletado,
+          reto: reto ?? null,
+          rachaActual: siguiente.rachaActual,
+          mejorRacha: siguiente.mejorRacha,
+        });
+      },
+
+      guardarLogro: (texto) => {
+        dispatch({ tipo: 'GUARDAR_LOGRO', texto });
+        subirLogro(estado.userId, { fecha: claveDia(), texto });
+      },
+
       // La usa "cerrar sesión" del Perfil en la fase 6.
       reiniciar: async () => {
-        await borrarEstado();
+        await olvidar();
         dispatch({ tipo: 'REINICIAR' });
       },
     };
