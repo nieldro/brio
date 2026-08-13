@@ -16,6 +16,7 @@ import { fechaLarga, franjaDelDia, claveDia } from '../services/fecha';
 import { diaDelPlan, resumenReto, esDescanso } from '../services/plan';
 import { textoHecho, fraseDelDia, subCelebracion } from '../services/racha';
 
+
 const SALUDOS = {
   manana: 'Buenos días',
   tarde: 'Buenas tardes',
@@ -27,7 +28,7 @@ export default function Hoy() {
   const dia = useMemo(() => diaDelPlan(planDemo, hoy), [hoy]);
 
   const { celebrar } = useCelebracion();
-  const { perfil, rachaActual, completadoHoy, marcarDiaCompletado, diario, guardarLogro } =
+  const { perfil, racha, rota, completadoHoy, marcarDiaCompletado, diario, guardarLogro } =
     useUsuario();
 
   const [logro, setLogro] = useState(diario[claveDia(hoy)] ?? '');
@@ -35,7 +36,7 @@ export default function Hoy() {
   const marcarListo = () => {
     if (completadoHoy) return;
     marcarDiaCompletado();
-    celebrar({ titulo: 'Hecho.', sub: subCelebracion(rachaActual + 1) });
+    celebrar({ titulo: 'Hecho.', sub: subCelebracion(racha + 1) });
   };
 
   const saludo = `${SALUDOS[franjaDelDia(hoy)]}, ${perfil.nombre}.`;
@@ -44,12 +45,12 @@ export default function Hoy() {
     <Pantalla>
       <View style={styles.encabezado}>
         <Text style={styles.fecha}>{fechaLarga(hoy)}</Text>
-        <PildoraRacha dias={rachaActual} />
+        <PildoraRacha dias={racha} />
       </View>
 
       <View style={styles.bloqueSaludo}>
         <Text style={T.saludo}>{saludo}</Text>
-        <Text style={styles.frase}>{fraseDelDia({ completadoHoy, rachaActual })}</Text>
+        <Text style={styles.frase}>{fraseDelDia({ completadoHoy, racha, rota })}</Text>
       </View>
 
       <Tarjeta>
@@ -75,7 +76,7 @@ export default function Hoy() {
           onPress={marcarListo}
           style={styles.botonListo}
         >
-          {completadoHoy ? textoHecho(rachaActual) : 'Listo por hoy'}
+          {completadoHoy ? textoHecho(racha) : 'Listo por hoy'}
         </Boton>
       </Tarjeta>
 

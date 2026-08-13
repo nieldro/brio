@@ -22,6 +22,13 @@ export function claveDia(fecha = new Date()) {
   return `${fecha.getFullYear()}-${mes}-${dia}`;
 }
 
+// Clave del día anterior. Sirve para saber si la racha sigue viva.
+export function claveAyer(fecha = new Date()) {
+  const ayer = new Date(fecha);
+  ayer.setDate(ayer.getDate() - 1);
+  return claveDia(ayer);
+}
+
 export function franjaDelDia(fecha = new Date()) {
   const h = fecha.getHours();
   if (h < 12) return 'manana';

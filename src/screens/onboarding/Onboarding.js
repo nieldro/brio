@@ -6,9 +6,10 @@ import { useUsuario } from '../../state/UsuarioContext';
 import { planDemo } from '../../data/planDemo';
 import { diaDelPlan } from '../../services/plan';
 
+import Latido from '../../components/Latido';
 import Marco from './Marco';
 import { PASOS, interpolar } from './pasos';
-import { ListaOpciones, CampoUnico, CamposDatos, SelectorHora, Latido } from './PasosUI';
+import { ListaOpciones, CampoUnico, CamposDatos, SelectorHora } from './PasosUI';
 
 const ESPERA_PLAN = 1800; // fase 5: aquí se espera a la Edge Function `plan`
 const RETARDO_AVANCE = 180; // deja ver la opción elegida antes de pasar

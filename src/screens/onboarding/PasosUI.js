@@ -1,8 +1,6 @@
-import { useEffect, useRef } from 'react';
-import { View, Text, TextInput, Pressable, Animated, Easing, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Pressable, ScrollView, StyleSheet } from 'react-native';
 
 import { C, S, R, T } from '../../theme';
-import Chispa from '../../components/Chispa';
 
 const OTRO = '__otro__';
 
@@ -162,31 +160,6 @@ export function SelectorHora({ valor, onChange }) {
   );
 }
 
-// --- Paso de carga --------------------------------------------------------
-
-export function Latido() {
-  const escala = useRef(new Animated.Value(0.85)).current;
-
-  useEffect(() => {
-    const ciclo = Animated.loop(
-      Animated.sequence([
-        Animated.timing(escala, { toValue: 1.15, duration: 900, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-        Animated.timing(escala, { toValue: 0.85, duration: 900, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-      ]),
-    );
-    ciclo.start();
-    return () => ciclo.stop();
-  }, [escala]);
-
-  return (
-    <View style={styles.latido}>
-      <Animated.View style={{ transform: [{ scale: escala }] }}>
-        <Chispa size={56} />
-      </Animated.View>
-    </View>
-  );
-}
-
 // --------------------------------------------------------------------------
 
 const styles = StyleSheet.create({
@@ -295,10 +268,5 @@ const styles = StyleSheet.create({
     ...T.cuerpo,
     color: C.gris,
     marginTop: S.sm,
-  },
-  latido: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: S.xxxl,
   },
 });
