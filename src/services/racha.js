@@ -4,7 +4,7 @@
 // El estado guarda la FECHA del último día marcado, no un booleano. Así la
 // racha sigue siendo correcta cuando el usuario cierra la app y vuelve mañana.
 
-import { claveDia, claveAyer } from './fecha';
+import { claveDia, claveAyer } from './fecha.js';
 
 // ¿Ya marcó hoy?
 export function estaCompletado(estado, hoy = new Date()) {

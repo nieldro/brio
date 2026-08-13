@@ -1,7 +1,7 @@
 // Lecturas sobre el plan semanal. Puras, sin estado.
 // Aceptan el mismo jsonb que guardará `planes.plan` en Supabase.
 
-import { nombreDia } from './fecha';
+import { nombreDia } from './fecha.js';
 
 // Devuelve el día del plan que corresponde a la fecha dada.
 // Si el plan viniera incompleto, cae al primer día antes que dejar la pantalla vacía.
