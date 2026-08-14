@@ -137,8 +137,18 @@ export const guardarLocal = guardarEstado;
 
 export async function guardarPerfil(userId, perfil) {
   if (!supabase || !userId) return;
+
+  const fila = aFila(perfil);
+
   try {
-    await supabase.from('profiles').upsert({ id: userId, ...aFila(perfil) });
+    const { error } = await supabase.from('profiles').upsert({ id: userId, ...fila });
+    if (!error) return;
+
+    // `zona_horaria` solo existe si se corrió migrations/002. Sin este
+    // reintento, olvidar la migración haría perder el perfil entero en
+    // silencio, que es mucho peor que quedarse sin recordatorios.
+    const { zona_horaria, ...base } = fila;
+    await supabase.from('profiles').upsert({ id: userId, ...base });
   } catch {}
 }
 

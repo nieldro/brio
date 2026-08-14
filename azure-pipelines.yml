@@ -1,0 +1,56 @@
+# Pipeline de Brío en Azure DevOps.
+#
+# La Definición de Terminado del proyecto exige que la pipeline pase en verde
+# antes de dar una historia por cerrada. Esto es lo que revisa:
+#   1. Las pruebas de los servicios de la app.
+#   2. Las pruebas de las Azure Functions.
+#   3. Que la app compile de verdad (bundle completo de Android).
+#
+# No necesita secretos: sin variables de entorno la app compila en modo local.
+
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  # El runner de pruebas de Node acepta patrones glob desde la 21,
+  # y la detección de módulos ES sin "type": "module" desde la 22.7.
+  NODE_VERSION: '24.x'
+
+steps:
+  - task: NodeTool@0
+    displayName: Node $(NODE_VERSION)
+    inputs:
+      versionSpec: $(NODE_VERSION)
+
+  - script: npm ci
+    displayName: Dependencias de la app
+
+  - script: npm test
+    displayName: Pruebas de los servicios
+
+  - script: npm ci
+    workingDirectory: azure-functions
+    displayName: Dependencias de las funciones
+
+  - script: npm test
+    workingDirectory: azure-functions
+    displayName: Pruebas de las funciones
+
+  # Compila el bundle real. Atrapa importaciones rotas y errores de sintaxis
+  # que las pruebas unitarias no ven.
+  - script: npx expo export --platform android --output-dir dist
+    displayName: Compilar la app
+
+  - publish: dist
+    artifact: bundle-android
+    displayName: Guardar el bundle

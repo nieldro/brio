@@ -41,7 +41,7 @@ function Opciones({ valores, valor, onElegir, etiquetaDe = (v) => String(v) }) {
   );
 }
 
-export default function Perfil({ navigation }) {
+export default function Perfil() {
   const { perfil, actualizarPerfil, reiniciar } = useUsuario();
 
   const [borrador, setBorrador] = useState({
@@ -79,10 +79,9 @@ export default function Perfil({ navigation }) {
     setTimeout(() => setAviso(null), 3000);
   };
 
-  const cerrarSesion = async () => {
-    await reiniciar();
-    navigation.popToTop?.();
-  };
+  // No hace falta navegar: al reiniciar, `onboardingListo` vuelve a false
+  // y Raiz cambia el árbol entero al onboarding.
+  const cerrarSesion = () => reiniciar();
 
   return (
     <Pantalla contentStyle={styles.contenido}>
