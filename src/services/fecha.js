@@ -22,11 +22,42 @@ export function claveDia(fecha = new Date()) {
   return `${fecha.getFullYear()}-${mes}-${dia}`;
 }
 
+// Mapa { lunes: '2026-08-10', ... } de la semana en curso.
+// La semana de Brío empieza el lunes, como el plan.
+export function fechasDeLaSemana(fecha = new Date()) {
+  const dia = fecha.getDay(); // 0 es domingo
+  const alLunes = dia === 0 ? -6 : 1 - dia;
+
+  const lunes = new Date(fecha);
+  lunes.setDate(fecha.getDate() + alLunes);
+
+  const nombres = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+  const salida = {};
+
+  nombres.forEach((nombre, i) => {
+    const f = new Date(lunes);
+    f.setDate(lunes.getDate() + i);
+    salida[nombre] = claveDia(f);
+  });
+
+  return salida;
+}
+
 // Clave del día anterior. Sirve para saber si la racha sigue viva.
 export function claveAyer(fecha = new Date()) {
   const ayer = new Date(fecha);
   ayer.setDate(ayer.getDate() - 1);
   return claveDia(ayer);
+}
+
+// Zona horaria del teléfono ('America/Bogota'). El Timer Trigger la necesita
+// para saber cuándo son las 7 de la mañana PARA EL USUARIO.
+export function zonaDelTelefono() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || null;
+  } catch {
+    return null;
+  }
 }
 
 export function franjaDelDia(fecha = new Date()) {

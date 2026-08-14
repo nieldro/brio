@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>brío — un coach que acompaña, no exige</title>
+    <meta
+      name="description"
+      content="Brío arma tu plan semanal de ejercicio y alimentación consciente con inteligencia artificial. Sin contar calorías y sin culpa."
+    />
+    <meta name="theme-color" content="#FFF6EC" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%E2%9C%A6%3C/text%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --crema: #fff6ec;
+        --coral: #e2725b;
+        --cafe: #3a2e2a;
+        --gris: #8a7a6e;
+        --blanco: #ffffff;
+        --borde: #e8d9c8;
+        --salvia: #7fa98e;
+        --ambar: #e8a94c;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: var(--crema);
+        color: var(--cafe);
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .envoltura {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      header {
+        padding: 56px 0 8px;
+      }
+
+      .marca {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+      }
+
+      .chispa {
+        color: var(--coral);
+        font-size: 26px;
+        line-height: 1;
+      }
+
+      h1 {
+        font-size: clamp(32px, 7vw, 46px);
+        line-height: 1.2;
+        letter-spacing: -0.8px;
+        margin: 40px 0 20px;
+      }
+
+      .entrada {
+        font-size: 19px;
+        color: var(--gris);
+        max-width: 52ch;
+      }
+
+      .tarjetas {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        margin: 48px 0;
+      }
+
+      .tarjeta {
+        background: var(--blanco);
+        border: 1px solid var(--borde);
+        border-radius: 18px;
+        padding: 24px;
+      }
+
+      .tarjeta h2 {
+        font-size: 17px;
+        margin-bottom: 8px;
+      }
+
+      .tarjeta p {
+        font-size: 15px;
+        color: var(--gris);
+      }
+
+      .punto {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-bottom: 12px;
+      }
+
+      .verde { background: var(--salvia); }
+      .ambar { background: var(--ambar); }
+      .coral-punto { background: var(--coral); }
+
+      section {
+        margin: 48px 0;
+      }
+
+      h3 {
+        font-size: 22px;
+        margin-bottom: 16px;
+      }
+
+      ul {
+        list-style: none;
+        display: grid;
+        gap: 12px;
+      }
+
+      li {
+        padding-left: 26px;
+        position: relative;
+        color: var(--gris);
+      }
+
+      li::before {
+        content: "✦";
+        position: absolute;
+        left: 0;
+        color: var(--coral);
+      }
+
+      .aviso {
+        background: var(--blanco);
+        border: 1px solid var(--borde);
+        border-radius: 18px;
+        padding: 24px;
+        font-size: 15px;
+        color: var(--gris);
+      }
+
+      footer {
+        border-top: 1px solid var(--borde);
+        margin-top: 56px;
+        padding: 28px 0 56px;
+        font-size: 14px;
+        color: var(--gris);
+      }
+
+      a {
+        color: var(--coral);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="envoltura">
+      <header>
+        <div class="marca"><span class="chispa">✦</span>brío</div>
+      </header>
+
+      <h1>Un coach que acompaña,<br />no que exige.</h1>
+
+      <p class="entrada">
+        Brío arma tu plan semanal de ejercicio y alimentación consciente con inteligencia
+        artificial. Se adapta a tu tiempo real, celebra lo pequeño y nunca te hace sentir mal
+        por un día perdido.
+      </p>
+
+      <div class="tarjetas">
+        <div class="tarjeta">
+          <span class="punto coral-punto"></span>
+          <h2>Tu plan, no uno genérico</h2>
+          <p>Siete días armados según tu objetivo, tu lugar y los minutos que de verdad tienes.</p>
+        </div>
+
+        <div class="tarjeta">
+          <span class="punto verde"></span>
+          <h2>Sin contar calorías</h2>
+          <p>Un tip de alimentación al día, tipo semáforo. De sumar, nunca de quitar.</p>
+        </div>
+
+        <div class="tarjeta">
+          <span class="punto ambar"></span>
+          <h2>Un día perdido no es nada</h2>
+          <p>«Ayer no se pudo. Normal. Hoy arrancamos suave.» Cero culpa, siempre.</p>
+        </div>
+      </div>
+
+      <section>
+        <h3>Lo que Brío no hace</h3>
+        <ul>
+          <li>No cuenta calorías ni macros, ni usa tu peso como juicio.</li>
+          <li>No promete kilos ni fechas.</li>
+          <li>No da diagnósticos ni consejos médicos.</li>
+          <li>No te escribe más de dos veces al día, y a la hora que tú elijas.</li>
+        </ul>
+      </section>
+
+      <section>
+        <div class="aviso">
+          <strong>En construcción.</strong> Brío es un proyecto académico de la Facultad de
+          Ingeniería en Sistemas de la Universidad Central. La primera versión sale para Android.
+          Ante dolor, lesión o enfermedad, consulta a un profesional de la salud.
+        </div>
+      </section>
+
+      <footer class="envoltura" style="padding-left: 0; padding-right: 0">
+        brío · Universidad Central · Bogotá D.C.
+      </footer>
+    </div>
+  </body>
+</html>

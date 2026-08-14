@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
 import { C, S, R, T } from '../theme';
@@ -6,12 +7,26 @@ import Tarjeta from '../components/Tarjeta';
 import Etiqueta from '../components/Etiqueta';
 import Chispa from '../components/Chispa';
 import { useUsuario } from '../state/UsuarioContext';
-import { interpolar } from '../services/texto';
-import { planDemo, progresoDemo, completadosDemo } from '../data/planDemo';
+import { fechasDeLaSemana } from '../services/fecha';
+
+// El mensaje del coach sale del avance real. Nunca reprocha lo que falta.
+function mensajeCoach(hechos, nombre) {
+  const quien = nombre ? `, ${nombre}` : '';
+  if (hechos === 0) return `La semana está abierta${quien}. Un día basta para arrancar.`;
+  if (hechos <= 2) return `Ya llevas ${hechos}${quien}. Eso es más que cero, y cuenta.`;
+  if (hechos <= 5) return `${hechos} días esta semana${quien}. Vas bien.`;
+  return `Semana casi completa${quien}. Esto ya es tuyo.`;
+}
 
 export default function Progreso() {
-  const { perfil, mejorRacha } = useUsuario();
-  const { cumplimiento, mensaje_coach } = progresoDemo;
+  const { perfil, mejorRacha, diasCompletados } = useUsuario();
+
+  const { hechos, cumplimiento } = useMemo(() => {
+    const semana = Object.values(fechasDeLaSemana(new Date()));
+    const marcados = new Set(diasCompletados);
+    const n = semana.filter((f) => marcados.has(f)).length;
+    return { hechos: n, cumplimiento: Math.round((n / 7) * 100) };
+  }, [diasCompletados]);
 
   return (
     <Pantalla>
@@ -26,9 +41,7 @@ export default function Progreso() {
         <View style={styles.riel}>
           <View style={[styles.relleno, { width: `${Math.min(cumplimiento, 100)}%` }]} />
         </View>
-        <Text style={styles.pie}>
-          {completadosDemo.length} de {planDemo.dias.length} días marcados
-        </Text>
+        <Text style={styles.pie}>{hechos} de 7 días marcados</Text>
       </Tarjeta>
 
       <Tarjeta>
@@ -46,9 +59,9 @@ export default function Progreso() {
         </Text>
       </Tarjeta>
 
-      <Tarjeta style={styles.tarjetaCoach}>
+      <Tarjeta>
         <Etiqueta>brío te dice</Etiqueta>
-        <Text style={styles.mensajeCoach}>{interpolar(mensaje_coach, perfil)}</Text>
+        <Text style={styles.mensajeCoach}>{mensajeCoach(hechos, perfil.nombre)}</Text>
       </Tarjeta>
     </Pantalla>
   );
@@ -92,9 +105,6 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '700',
     color: C.cafe,
-  },
-  tarjetaCoach: {
-    backgroundColor: C.blanco,
   },
   mensajeCoach: {
     ...T.cuerpo,

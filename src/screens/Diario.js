@@ -1,0 +1,139 @@
+import { useMemo, useState } from 'react';
+import { View, Text, TextInput, StyleSheet } from 'react-native';
+
+import { C, S, R, T } from '../theme';
+import Pantalla from '../components/Pantalla';
+import Tarjeta from '../components/Tarjeta';
+import Boton from '../components/Boton';
+import Etiqueta from '../components/Etiqueta';
+import Chispa from '../components/Chispa';
+import { useUsuario } from '../state/UsuarioContext';
+import { claveDia, fechaLarga } from '../services/fecha';
+
+function aFecha(clave) {
+  const [a, m, d] = clave.split('-').map(Number);
+  return new Date(a, m - 1, d);
+}
+
+export default function Diario() {
+  const { perfil, diario, guardarLogro } = useUsuario();
+  const hoyClave = claveDia();
+
+  const [texto, setTexto] = useState(diario[hoyClave] ?? '');
+  const [diaDificil, setDiaDificil] = useState(false);
+
+  const pasados = useMemo(
+    () =>
+      Object.entries(diario)
+        .filter(([clave, valor]) => clave !== hoyClave && valor?.trim())
+        .sort((a, b) => b[0].localeCompare(a[0])),
+    [diario, hoyClave],
+  );
+
+  return (
+    <Pantalla contentStyle={styles.contenido}>
+      <Tarjeta>
+        <Etiqueta>hoy</Etiqueta>
+        <Text style={styles.pregunta}>¿Un logro de hoy?</Text>
+        <TextInput
+          value={texto}
+          onChangeText={setTexto}
+          onBlur={() => guardarLogro(texto.trim())}
+          placeholder="Una línea basta"
+          placeholderTextColor={C.apagado}
+          style={styles.entrada}
+          multiline
+        />
+        <Text style={styles.pie}>Nada es demasiado pequeño para escribirlo.</Text>
+      </Tarjeta>
+
+      {pasados.length > 0 && (
+        <Boton
+          variante={diaDificil ? 'salvia' : 'suave'}
+          onPress={() => setDiaDificil((v) => !v)}
+        >
+          {diaDificil ? 'Ya estoy mejor' : 'Hoy es un día difícil'}
+        </Boton>
+      )}
+
+      {diaDificil && (
+        <Tarjeta style={styles.recordatorio}>
+          <View style={styles.filaChispa}>
+            <Chispa size={20} />
+            <Text style={styles.mensajeDificil}>
+              {perfil.nombre ? `${perfil.nombre}, mira` : 'Mira'} todo lo que ya hiciste.
+            </Text>
+          </View>
+        </Tarjeta>
+      )}
+
+      {pasados.map(([clave, valor]) => (
+        <Tarjeta key={clave} style={diaDificil && styles.destacado}>
+          <Text style={styles.fecha}>{fechaLarga(aFecha(clave))}</Text>
+          <Text style={styles.logro}>{valor}</Text>
+        </Tarjeta>
+      ))}
+
+      {pasados.length === 0 && (
+        <Tarjeta>
+          <Text style={styles.vacio}>
+            Aquí se van a guardar tus logros. El primero es el de hoy.
+          </Text>
+        </Tarjeta>
+      )}
+    </Pantalla>
+  );
+}
+
+const styles = StyleSheet.create({
+  contenido: {
+    paddingTop: S.lg,
+  },
+  pregunta: {
+    ...T.subtitulo,
+    marginTop: S.md,
+  },
+  entrada: {
+    ...T.cuerpo,
+    marginTop: S.md,
+    backgroundColor: C.crema,
+    borderRadius: R.chico,
+    paddingHorizontal: S.md,
+    paddingVertical: S.md,
+    minHeight: 52,
+    textAlignVertical: 'top',
+  },
+  pie: {
+    ...T.secundario,
+    marginTop: S.md,
+  },
+  recordatorio: {
+    backgroundColor: C.blanco,
+    borderColor: C.salvia,
+  },
+  filaChispa: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: S.md,
+  },
+  mensajeDificil: {
+    ...T.cuerpo,
+    flex: 1,
+    fontWeight: '600',
+  },
+  destacado: {
+    borderColor: C.salvia,
+  },
+  fecha: {
+    ...T.secundario,
+    textTransform: 'lowercase',
+  },
+  logro: {
+    ...T.cuerpo,
+    marginTop: S.sm,
+  },
+  vacio: {
+    ...T.cuerpo,
+    color: C.gris,
+  },
+});

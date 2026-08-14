@@ -4,7 +4,7 @@ import { C } from '../theme';
 import Latido from '../components/Latido';
 import { useUsuario } from '../state/UsuarioContext';
 import Onboarding from '../screens/onboarding/Onboarding';
-import Tabs from './Tabs';
+import PilaPrincipal from './Pila';
 
 // Único punto que decide qué ve el usuario al abrir la app.
 export default function Raiz() {
@@ -19,7 +19,7 @@ export default function Raiz() {
     );
   }
 
-  return onboardingListo ? <Tabs /> : <Onboarding />;
+  return onboardingListo ? <PilaPrincipal /> : <Onboarding />;
 }
 
 const styles = StyleSheet.create({

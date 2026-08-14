@@ -1,4 +1,4 @@
-import { View, Text, TextInput, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
 
 import { C, S, R, T } from '../../theme';
 
@@ -110,55 +110,7 @@ export function CamposDatos({ datos, onChange }) {
   );
 }
 
-// --- Paso de hora ---------------------------------------------------------
-
-const HORAS = Array.from({ length: 18 }, (_, i) => i + 5); // 5:00 a 22:00
-const MINUTOS = ['00', '15', '30', '45'];
-
-export function SelectorHora({ valor, onChange }) {
-  const [horaActual = '', minutoActual = ''] = (valor || '').split(':');
-
-  const elegir = (h, m) => onChange(`${String(h).padStart(2, '0')}:${m}`);
-
-  return (
-    <View style={styles.lista}>
-      <Text style={styles.etiquetaHora}>Hora</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.fila}>
-        {HORAS.map((h) => {
-          const texto = String(h).padStart(2, '0');
-          const elegida = texto === horaActual;
-          return (
-            <Pressable
-              key={h}
-              onPress={() => elegir(h, minutoActual || '00')}
-              style={[styles.chipHora, elegida && styles.chipHoraElegido]}
-            >
-              <Text style={[styles.chipHoraTexto, elegida && styles.chipHoraTextoElegido]}>{texto}</Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-
-      <Text style={styles.etiquetaHora}>Minutos</Text>
-      <View style={styles.fila}>
-        {MINUTOS.map((m) => {
-          const elegido = m === minutoActual;
-          return (
-            <Pressable
-              key={m}
-              onPress={() => elegir(horaActual || '07', m)}
-              style={[styles.chipHora, elegido && styles.chipHoraElegido]}
-            >
-              <Text style={[styles.chipHoraTexto, elegido && styles.chipHoraTextoElegido]}>{m}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
-
-      {!!valor && <Text style={styles.horaElegida}>Te escribo a las {valor}</Text>}
-    </View>
-  );
-}
+// El selector de hora vive en components/SelectorHora.js: lo comparte Perfil.
 
 // --------------------------------------------------------------------------
 
@@ -232,41 +184,5 @@ const styles = StyleSheet.create({
     ...T.secundario,
     marginTop: S.sm,
     marginLeft: S.xs,
-  },
-  etiquetaHora: {
-    ...T.etiqueta,
-    color: C.gris,
-    marginTop: S.sm,
-  },
-  fila: {
-    flexDirection: 'row',
-    gap: S.sm,
-    paddingVertical: S.xs,
-  },
-  chipHora: {
-    backgroundColor: C.blanco,
-    borderRadius: R.pildora,
-    borderWidth: 1.5,
-    borderColor: C.borde,
-    paddingVertical: S.md,
-    paddingHorizontal: S.lg,
-    minWidth: 58,
-    alignItems: 'center',
-  },
-  chipHoraElegido: {
-    borderColor: C.coral,
-    backgroundColor: C.coral,
-  },
-  chipHoraTexto: {
-    ...T.cuerpo,
-    fontWeight: '700',
-  },
-  chipHoraTextoElegido: {
-    color: C.blanco,
-  },
-  horaElegida: {
-    ...T.cuerpo,
-    color: C.gris,
-    marginTop: S.sm,
   },
 });

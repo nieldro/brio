@@ -33,6 +33,7 @@ const estadoInicial = {
   },
   plan: null, // jsonb de `planes.plan`; null mientras no lo genere la IA
   ultimoDiaCompletado: null, // '2026-08-13'
+  diasCompletados: [], // ['2026-08-13', ...] para la semana y el progreso
   rachaActual: 0,
   mejorRacha: 0,
   diario: {}, // { '2026-08-13': 'texto' }
@@ -63,8 +64,18 @@ function reducer(estado, accion) {
       return { ...estado, perfil: { ...estado.perfil, ...accion.cambios } };
 
     // La regla vive en services/racha.js, no aquí.
-    case 'COMPLETAR_DIA':
-      return { ...estado, ...completarDia(estado) };
+    case 'COMPLETAR_DIA': {
+      const siguiente = completarDia(estado);
+      if (siguiente === estado) return estado;
+      const clave = siguiente.ultimoDiaCompletado;
+      return {
+        ...estado,
+        ...siguiente,
+        diasCompletados: estado.diasCompletados.includes(clave)
+          ? estado.diasCompletados
+          : [clave, ...estado.diasCompletados],
+      };
+    }
 
     case 'GUARDAR_LOGRO':
       return {

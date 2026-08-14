@@ -6,8 +6,8 @@ import Pantalla from '../components/Pantalla';
 import Tarjeta from '../components/Tarjeta';
 import Etiqueta from '../components/Etiqueta';
 import { useUsuario } from '../state/UsuarioContext';
-import { planDemo, completadosDemo } from '../data/planDemo';
-import { nombreDia } from '../services/fecha';
+import { planDemo } from '../data/planDemo';
+import { nombreDia, fechasDeLaSemana } from '../services/fecha';
 import { resumenReto } from '../services/plan';
 
 const TIPO = {
@@ -18,10 +18,15 @@ const TIPO = {
 
 export default function Semana() {
   const hoy = useMemo(() => nombreDia(new Date()), []);
-  const { perfil, plan: planUsuario } = useUsuario();
+  const fechas = useMemo(() => fechasDeLaSemana(new Date()), []);
+  const { perfil, plan: planUsuario, diasCompletados } = useUsuario();
 
   // Mientras la IA no haya entregado un plan, se muestra el de arranque.
   const plan = planUsuario ?? planDemo;
+
+  // Un día queda marcado por su FECHA real, no por su nombre: así el chulo
+  // del lunes pasado no se queda pegado el lunes siguiente.
+  const hechos = useMemo(() => new Set(diasCompletados), [diasCompletados]);
 
   return (
     <Pantalla>
@@ -32,7 +37,7 @@ export default function Semana() {
 
       {plan.dias.map((dia) => {
         const esHoy = dia.dia === hoy;
-        const hecho = completadosDemo.includes(dia.dia);
+        const hecho = hechos.has(fechas[dia.dia]);
         const tipo = TIPO[dia.tipo] ?? TIPO.suave;
 
         return (

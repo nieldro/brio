@@ -1,19 +1,15 @@
 import { app } from '@azure/functions';
 
 import { ajustesFaltantes } from '../lib/config.js';
-import { admin, usuarioDelToken } from '../lib/supabase.js';
-import { generar } from '../lib/gemini.js';
-import { promptPlan } from '../lib/prompts.js';
-import { extraerJson, validarPlan } from '../lib/planJson.js';
-import { leerPerfil, contextoSemana } from '../lib/datos.js';
+import { usuarioDelToken } from '../lib/supabase.js';
+import { crearPlan } from '../lib/planificador.js';
 import { fechaValida, hoyUtc } from '../lib/fechas.js';
 import { ok, noAutorizado, malaPeticion, sinConfigurar, falloIA, cuerpoJson } from '../lib/http.js';
 
-const TIEMPO_POR_DEFECTO = 20;
-
 // POST /api/plan
 // Genera el plan de la semana y lo guarda en `planes`.
-// Se invoca al terminar el onboarding y cada semana (fase 6, Timer Trigger).
+// Se invoca al terminar el onboarding; el Timer `plan-semanal` hace lo mismo
+// cada semana usando la misma función `crearPlan`.
 async function manejar(request, context) {
   const faltan = ajustesFaltantes();
   if (faltan.length) return sinConfigurar(faltan);
@@ -24,70 +20,14 @@ async function manejar(request, context) {
   const cuerpo = await cuerpoJson(request);
   const hoy = fechaValida(cuerpo.fecha) ?? hoyUtc();
 
-  const perfil = await leerPerfil(usuario.id);
-  if (!perfil) return malaPeticion('todavía no hay perfil para este usuario');
+  const resultado = await crearPlan(usuario.id, hoy, context);
 
-  const { semana, cumplimiento } = await contextoSemana(usuario.id, hoy);
-  const tiempo = perfil.tiempo_min ?? TIEMPO_POR_DEFECTO;
-
-  const instruccion = promptPlan({
-    edad: perfil.edad ?? 'no dice',
-    peso: perfil.peso ?? 'no dice',
-    estatura: perfil.estatura ?? 'no dice',
-    objetivo: perfil.objetivo ?? 'Crear el hábito',
-    lugar: perfil.lugar ?? 'En casa',
-    tiempo,
-    semana,
-    cumplimiento,
-    nivel: perfil.nivel ?? 'inicio',
-  });
-
-  // Se valida el JSON y se reintenta UNA vez si falla, como manda el documento.
-  let plan = null;
-  let ultimosErrores = [];
-
-  for (let intento = 1; intento <= 2 && !plan; intento += 1) {
-    try {
-      const crudo = await generar({
-        instruccion,
-        historial: [
-          {
-            rol: 'user',
-            texto:
-              intento === 1
-                ? 'Genera el plan.'
-                : `El intento anterior falló por: ${ultimosErrores.join('; ')}. Corrígelo y responde solo el JSON.`,
-          },
-        ],
-        temperatura: 0.3,
-        timeoutMs: 30000,
-      });
-
-      const revision = validarPlan(extraerJson(crudo), { tiempoMax: tiempo });
-      if (revision.ok) {
-        plan = revision.plan;
-      } else {
-        ultimosErrores = revision.errores;
-        context.warn(`plan inválido en el intento ${intento}: ${revision.errores.join('; ')}`);
-      }
-    } catch (e) {
-      ultimosErrores = [e.message];
-      context.error(`fallo al generar el plan en el intento ${intento}: ${e.message}`);
-    }
+  if (resultado.error === 'sin perfil') {
+    return malaPeticion('todavía no hay perfil para este usuario');
   }
+  if (resultado.error) return falloIA();
 
-  if (!plan) return falloIA();
-
-  const { error } = await admin()
-    .from('planes')
-    .insert({ user_id: usuario.id, semana, plan, cumplimiento });
-
-  if (error) {
-    context.error(`no se pudo guardar el plan: ${error.message}`);
-    // El plan es bueno: se devuelve aunque no se haya podido guardar.
-  }
-
-  return ok({ semana, cumplimiento, plan });
+  return ok(resultado);
 }
 
 app.http('plan', {

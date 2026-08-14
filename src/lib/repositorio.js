@@ -20,6 +20,8 @@ function aFila(perfil) {
     lugar: perfil.lugar || null,
     tiempo_min: perfil.tiempo_min ?? null,
     hora_recordatorio: perfil.hora_recordatorio || null,
+    push_token: perfil.push_token || null,
+    zona_horaria: perfil.zona_horaria || null,
   };
 }
 
@@ -34,21 +36,24 @@ function aPerfil(fila) {
     lugar: fila.lugar ?? '',
     tiempo_min: fila.tiempo_min ?? null,
     hora_recordatorio: fila.hora_recordatorio?.slice(0, 5) ?? '',
+    push_token: fila.push_token ?? null,
+    zona_horaria: fila.zona_horaria ?? null,
   };
 }
 
 // --- Lectura --------------------------------------------------------------
 
 async function leerNube(userId) {
-  const [perfil, ultimo, entradas, plan] = await Promise.all([
+  const [perfil, hechos, entradas, plan] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
+    // Los últimos 30 días alcanzan para la semana en curso y para la racha.
     supabase
       .from('registros')
       .select('fecha')
       .eq('user_id', userId)
       .eq('completado', true)
       .order('fecha', { ascending: false })
-      .limit(1),
+      .limit(30),
     supabase.from('diario').select('fecha, texto').eq('user_id', userId),
     supabase
       .from('planes')
@@ -61,12 +66,15 @@ async function leerNube(userId) {
   // Sin fila de perfil, el onboarding todavía no terminó en este dispositivo.
   if (perfil.error || !perfil.data) return null;
 
+  const fechas = (hechos.data ?? []).map((r) => r.fecha);
+
   return {
     onboardingListo: true,
     perfil: aPerfil(perfil.data),
     rachaActual: perfil.data.racha_actual ?? 0,
     mejorRacha: perfil.data.mejor_racha ?? 0,
-    ultimoDiaCompletado: ultimo.data?.[0]?.fecha ?? null,
+    ultimoDiaCompletado: fechas[0] ?? null,
+    diasCompletados: fechas,
     diario: Object.fromEntries((entradas.data ?? []).map((e) => [e.fecha, e.texto])),
     plan: plan.data?.[0]?.plan ?? null,
   };
@@ -110,6 +118,9 @@ export async function cargar() {
       perfil: { ...(local.perfil ?? {}), ...nube.perfil },
       // Si la nube todavía no tiene plan, no borramos el que ya está en disco.
       plan: nube.plan ?? local.plan ?? null,
+      diasCompletados: nube.diasCompletados?.length
+        ? nube.diasCompletados
+        : (local.diasCompletados ?? []),
       userId,
       enNube: true,
     };

@@ -12,10 +12,16 @@ barrera entre un usuario y los datos de otro. No quitarlo nunca.
 
 ## Funciones
 
-| Ruta | Método | Qué hace |
+| Nombre | Disparador | Qué hace |
 |---|---|---|
-| `/api/plan` | POST | Lee el perfil, llama a Gemini con el prompt 2, valida el JSON y lo guarda en `planes`. |
-| `/api/coach` | POST | Lee perfil, plan y últimos 10 mensajes, llama a Gemini con el prompt 1 y guarda ambos mensajes. |
+| `plan` | HTTP `POST /api/plan` | Lee el perfil, llama a Gemini con el prompt 2, valida el JSON y lo guarda en `planes`. |
+| `coach` | HTTP `POST /api/coach` | Lee perfil, plan y últimos 10 mensajes, llama a Gemini con el prompt 1 y guarda ambos mensajes. |
+| `recordatorios` | Timer, cada hora en punto | Escribe por Expo Push a quien le toca **a su hora local**, máximo 2 al día. A quien ya cumplió, no le escribe. |
+| `plan-semanal` | Timer, lunes 9:00 UTC | Regenera el plan de todos según el cumplimiento, usando la misma `crearPlan`. |
+
+`recordatorios` y `plan-semanal` requieren la migración
+`supabase/migrations/002_recordatorios.sql`, que agrega `zona_horaria` y el
+contador diario. Sin ella el tope de dos notificaciones no se puede cumplir.
 
 Las dos aceptan `{ "fecha": "2026-08-14" }`: la fecha **local** del teléfono.
 El servidor vive en UTC y se equivocaría de día para quien está en América al

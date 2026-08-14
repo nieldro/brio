@@ -79,12 +79,10 @@ export const PASOS = [
   },
   {
     id: 'permiso',
-    tipo: 'mensaje',
+    tipo: 'permiso',
     titulo: '¿Me dejas recordarte?',
     sub: 'Máximo dos mensajes al día. Lo prometo.',
     boton: 'Dale',
-    // En la fase 6 este paso además pide el permiso real de Expo Push.
-    alAvanzar: { notificaciones: true },
   },
   {
     id: 'hora',

@@ -3,15 +3,6 @@
 // Function `plan` en la fase 5. Cuando llegue la IA solo cambia el origen del
 // dato, no las pantallas que lo consumen.
 
-// Días ya marcados. En la fase 4 esto sale de la tabla `registros`.
-export const completadosDemo = ['lunes', 'martes'];
-
-// Progreso quemado de la fase 2. En la fase 4 se calcula desde `registros`.
-export const progresoDemo = {
-  cumplimiento: 71, // porcentaje de la semana en curso
-  mensaje_coach: 'La semana no termina y ya llevas varios días. Vas bien, {nombre}.',
-};
-
 export const planDemo = {
   semana: 1,
   nivel: 'inicio',

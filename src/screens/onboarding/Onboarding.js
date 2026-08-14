@@ -4,13 +4,16 @@ import { View, Text, StyleSheet } from 'react-native';
 import { C, S, T } from '../../theme';
 import { useUsuario } from '../../state/UsuarioContext';
 import { generarPlan, hayApi } from '../../lib/api';
+import { pedirPermisoYToken } from '../../lib/notificaciones';
 import { planDemo } from '../../data/planDemo';
 import { diaDelPlan } from '../../services/plan';
+import { zonaDelTelefono } from '../../services/fecha';
 
 import Latido from '../../components/Latido';
+import SelectorHora from '../../components/SelectorHora';
 import Marco from './Marco';
 import { PASOS, interpolar } from './pasos';
-import { ListaOpciones, CampoUnico, CamposDatos, SelectorHora } from './PasosUI';
+import { ListaOpciones, CampoUnico, CamposDatos } from './PasosUI';
 
 const ESPERA_MINIMA = 1600; // que la chispa alcance a respirar, no parpadee
 const RETARDO_AVANCE = 180; // deja ver la opción elegida antes de pasar
@@ -60,8 +63,18 @@ export default function Onboarding() {
     lugar: respuestas.lugar ?? '',
     tiempo_min: respuestas.tiempo_min ?? null,
     hora_recordatorio: respuestas.hora_recordatorio ?? '',
-    notificaciones: !!respuestas.notificaciones,
+    notificaciones: !!respuestas.push_token,
+    push_token: respuestas.push_token ?? null,
+    // El servidor vive en UTC y la hora del recordatorio es local.
+    zona_horaria: zonaDelTelefono(),
   });
+
+  // Paso 8. Pide el permiso real. Si el usuario dice que no, se sigue igual:
+  // la app funciona sin recordatorios y nadie recibe un reproche por negarse.
+  const pedirPermiso = async () => {
+    const token = await pedirPermisoYToken();
+    avanzar({ push_token: token });
+  };
 
   // Paso 10. Guarda el perfil y le pide el plan a la Azure Function.
   // Si la IA no está configurada o falla, se sigue con el plan de arranque:
@@ -114,6 +127,9 @@ export default function Onboarding() {
   switch (paso.tipo) {
     case 'mensaje':
       return <Marco {...comun} boton={paso.boton} onBoton={() => avanzar(paso.alAvanzar)} />;
+
+    case 'permiso':
+      return <Marco {...comun} boton={paso.boton} onBoton={pedirPermiso} />;
 
     case 'campo': {
       const valor = respuestas[paso.campo] ?? '';

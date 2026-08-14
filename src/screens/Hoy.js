@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
 
 import { C, S, R, T } from '../theme';
 import Pantalla from '../components/Pantalla';
@@ -23,7 +23,7 @@ const SALUDOS = {
   noche: 'Buenas noches',
 };
 
-export default function Hoy() {
+export default function Hoy({ navigation }) {
   const hoy = useMemo(() => new Date(), []);
 
   const { celebrar } = useCelebracion();
@@ -47,7 +47,21 @@ export default function Hoy() {
     <Pantalla>
       <View style={styles.encabezado}>
         <Text style={styles.fecha}>{fechaLarga(hoy)}</Text>
-        <PildoraRacha dias={racha} />
+
+        <View style={styles.acciones}>
+          <PildoraRacha dias={racha} />
+          <Pressable
+            onPress={() => navigation.navigate('Perfil')}
+            accessibilityRole="button"
+            accessibilityLabel="Tu perfil"
+            hitSlop={8}
+            style={({ pressed }) => [styles.avatar, pressed && styles.presionado]}
+          >
+            <Text style={styles.inicial}>
+              {perfil.nombre?.trim()?.charAt(0)?.toUpperCase() || '·'}
+            </Text>
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.bloqueSaludo}>
@@ -91,7 +105,17 @@ export default function Hoy() {
       </Tarjeta>
 
       <Tarjeta>
-        <Etiqueta>tu diario</Etiqueta>
+        <View style={styles.filaDiario}>
+          <Etiqueta>tu diario</Etiqueta>
+          <Pressable
+            onPress={() => navigation.navigate('Diario')}
+            accessibilityRole="button"
+            hitSlop={8}
+          >
+            <Text style={styles.verTodo}>Ver todo</Text>
+          </Pressable>
+        </View>
+
         <Text style={styles.pregunta}>¿Un logro de hoy?</Text>
         <TextInput
           value={logro}
@@ -116,6 +140,40 @@ const styles = StyleSheet.create({
   fecha: {
     ...T.secundario,
     textTransform: 'lowercase',
+    flex: 1,
+  },
+  acciones: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: S.sm,
+  },
+  avatar: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: C.blanco,
+    borderWidth: 1,
+    borderColor: C.borde,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inicial: {
+    ...T.subtitulo,
+    fontSize: 15,
+    color: C.gris,
+  },
+  presionado: {
+    opacity: 0.7,
+  },
+  filaDiario: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  verTodo: {
+    ...T.secundario,
+    color: C.coral,
+    fontWeight: '700',
   },
   bloqueSaludo: {
     marginTop: S.sm,
