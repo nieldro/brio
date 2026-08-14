@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useReducer } from 'react';
 import { completarDia, estaCompletado, rachaVigente, rachaRota } from '../services/racha';
 import { claveDia } from '../services/fecha';
+import { reducer, estadoInicial, persistible } from './usuarioReducer';
 import {
   cargar,
   guardarLocal,
@@ -11,85 +12,8 @@ import {
 } from '../lib/repositorio';
 
 // Única fuente de verdad de la app.
-// Habla solo con `lib/repositorio`: no sabe si los datos vienen del disco,
-// de Supabase o de las dos partes.
-
-const estadoInicial = {
-  hidratado: false, // ¿ya leímos disco y nube?
-  userId: null,
-  enNube: false,
-  onboardingListo: false,
-  perfil: {
-    nombre: '',
-    edad: null,
-    estatura: null,
-    peso: null,
-    objetivo: '',
-    porque: '',
-    lugar: '',
-    tiempo_min: null,
-    hora_recordatorio: '',
-    notificaciones: false,
-  },
-  plan: null, // jsonb de `planes.plan`; null mientras no lo genere la IA
-  ultimoDiaCompletado: null, // '2026-08-13'
-  diasCompletados: [], // ['2026-08-13', ...] para la semana y el progreso
-  rachaActual: 0,
-  mejorRacha: 0,
-  diario: {}, // { '2026-08-13': 'texto' }
-};
-
-// Lo que se guarda en disco. Lo demás se resuelve en cada arranque.
-function persistible({ hidratado, userId, enNube, ...resto }) {
-  return resto;
-}
-
-function reducer(estado, accion) {
-  switch (accion.tipo) {
-    case 'HIDRATAR':
-      return { ...estado, ...(accion.datos ?? {}), hidratado: true };
-
-    case 'TERMINAR_ONBOARDING':
-      return {
-        ...estado,
-        onboardingListo: true,
-        perfil: { ...estado.perfil, ...accion.perfil },
-        plan: accion.plan ?? estado.plan,
-      };
-
-    case 'GUARDAR_PLAN':
-      return { ...estado, plan: accion.plan };
-
-    case 'ACTUALIZAR_PERFIL':
-      return { ...estado, perfil: { ...estado.perfil, ...accion.cambios } };
-
-    // La regla vive en services/racha.js, no aquí.
-    case 'COMPLETAR_DIA': {
-      const siguiente = completarDia(estado);
-      if (siguiente === estado) return estado;
-      const clave = siguiente.ultimoDiaCompletado;
-      return {
-        ...estado,
-        ...siguiente,
-        diasCompletados: estado.diasCompletados.includes(clave)
-          ? estado.diasCompletados
-          : [clave, ...estado.diasCompletados],
-      };
-    }
-
-    case 'GUARDAR_LOGRO':
-      return {
-        ...estado,
-        diario: { ...estado.diario, [claveDia()]: accion.texto },
-      };
-
-    case 'REINICIAR':
-      return { ...estadoInicial, hidratado: true, userId: estado.userId, enNube: estado.enNube };
-
-    default:
-      return estado;
-  }
-}
+// La máquina de estado vive en usuarioReducer.js (pura, con pruebas).
+// Aquí solo se manejan los efectos: leer, guardar y sincronizar.
 
 const UsuarioContext = createContext(null);
 
@@ -159,7 +83,7 @@ export function UsuarioProvider({ children }) {
         subirLogro(estado.userId, { fecha: claveDia(), texto });
       },
 
-      // La usa "cerrar sesión" del Perfil en la fase 6.
+      // La usa "cerrar sesión" del Perfil.
       reiniciar: async () => {
         await olvidar();
         dispatch({ tipo: 'REINICIAR' });
