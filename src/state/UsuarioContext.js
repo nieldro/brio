@@ -31,6 +31,7 @@ const estadoInicial = {
     hora_recordatorio: '',
     notificaciones: false,
   },
+  plan: null, // jsonb de `planes.plan`; null mientras no lo genere la IA
   ultimoDiaCompletado: null, // '2026-08-13'
   rachaActual: 0,
   mejorRacha: 0,
@@ -52,7 +53,11 @@ function reducer(estado, accion) {
         ...estado,
         onboardingListo: true,
         perfil: { ...estado.perfil, ...accion.perfil },
+        plan: accion.plan ?? estado.plan,
       };
+
+    case 'GUARDAR_PLAN':
+      return { ...estado, plan: accion.plan };
 
     case 'ACTUALIZAR_PERFIL':
       return { ...estado, perfil: { ...estado.perfil, ...accion.cambios } };
@@ -108,14 +113,21 @@ export function UsuarioProvider({ children }) {
       racha: rachaVigente(estado, hoy),
       rota: rachaRota(estado, hoy),
 
-      terminarOnboarding: (perfil) => {
-        dispatch({ tipo: 'TERMINAR_ONBOARDING', perfil });
+      // El plan llega desde el paso 10 del onboarding; puede venir vacío si
+      // la IA no respondió, y ahí las pantallas usan el plan de arranque.
+      terminarOnboarding: (perfil, plan) => {
+        dispatch({ tipo: 'TERMINAR_ONBOARDING', perfil, plan });
         guardarPerfil(estado.userId, perfil);
       },
 
-      actualizarPerfil: (cambios) => {
+      guardarPlan: (plan) => dispatch({ tipo: 'GUARDAR_PLAN', plan }),
+
+      // Devuelve promesa a propósito: el onboarding necesita que el perfil
+      // esté en Supabase ANTES de pedirle el plan a la Azure Function,
+      // porque la función lo lee de la base.
+      actualizarPerfil: async (cambios) => {
         dispatch({ tipo: 'ACTUALIZAR_PERFIL', cambios });
-        guardarPerfil(estado.userId, { ...estado.perfil, ...cambios });
+        await guardarPerfil(estado.userId, { ...estado.perfil, ...cambios });
       },
 
       // `reto` va al registro para que el Progreso pueda mostrar qué se hizo.

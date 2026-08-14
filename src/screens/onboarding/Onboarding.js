@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 
 import { C, S, T } from '../../theme';
 import { useUsuario } from '../../state/UsuarioContext';
+import { generarPlan, hayApi } from '../../lib/api';
 import { planDemo } from '../../data/planDemo';
 import { diaDelPlan } from '../../services/plan';
 
@@ -11,7 +12,7 @@ import Marco from './Marco';
 import { PASOS, interpolar } from './pasos';
 import { ListaOpciones, CampoUnico, CamposDatos, SelectorHora } from './PasosUI';
 
-const ESPERA_PLAN = 1800; // fase 5: aquí se espera a la Edge Function `plan`
+const ESPERA_MINIMA = 1600; // que la chispa alcance a respirar, no parpadee
 const RETARDO_AVANCE = 180; // deja ver la opción elegida antes de pasar
 
 const LIMITES = {
@@ -27,15 +28,17 @@ const enRango = (clave, texto) => {
 };
 
 export default function Onboarding() {
-  const { terminarOnboarding } = useUsuario();
+  const { terminarOnboarding, actualizarPerfil } = useUsuario();
 
   const [indice, setIndice] = useState(0);
   const [respuestas, setRespuestas] = useState({});
   const [otro, setOtro] = useState('');
   const [datos, setDatos] = useState({ edad: '', estatura: '', peso: '' });
+  const [plan, setPlan] = useState(null);
 
   const paso = PASOS[indice];
-  const diaDeHoy = useMemo(() => diaDelPlan(planDemo, new Date()), []);
+  // Hasta que la IA responda, el reto del paso 11 sale del plan de arranque.
+  const diaDeHoy = useMemo(() => diaDelPlan(plan ?? planDemo, new Date()), [plan]);
 
   const avanzar = (cambios) => {
     if (cambios) setRespuestas((r) => ({ ...r, ...cambios }));
@@ -44,11 +47,51 @@ export default function Onboarding() {
 
   const retroceder = indice > 0 ? () => setIndice((i) => i - 1) : undefined;
 
-  // El paso de carga avanza solo. En la fase 5 espera al plan real.
+  const porqueFinal =
+    respuestas.porque === ListaOpciones.OTRO ? otro.trim() : respuestas.porque;
+
+  const armarPerfil = () => ({
+    nombre: respuestas.nombre?.trim() ?? '',
+    objetivo: respuestas.objetivo ?? '',
+    porque: porqueFinal ?? '',
+    edad: Number(datos.edad),
+    estatura: Number(datos.estatura),
+    peso: Number(datos.peso),
+    lugar: respuestas.lugar ?? '',
+    tiempo_min: respuestas.tiempo_min ?? null,
+    hora_recordatorio: respuestas.hora_recordatorio ?? '',
+    notificaciones: !!respuestas.notificaciones,
+  });
+
+  // Paso 10. Guarda el perfil y le pide el plan a la Azure Function.
+  // Si la IA no está configurada o falla, se sigue con el plan de arranque:
+  // el usuario nunca se queda atrapado en esta pantalla.
   useEffect(() => {
     if (paso.tipo !== 'cargando') return;
-    const t = setTimeout(() => setIndice((i) => i + 1), ESPERA_PLAN);
-    return () => clearTimeout(t);
+
+    let vivo = true;
+    const desde = Date.now();
+
+    (async () => {
+      if (hayApi) {
+        try {
+          await actualizarPerfil(armarPerfil());
+          const respuesta = await generarPlan();
+          if (vivo && respuesta?.plan) setPlan(respuesta.plan);
+        } catch {
+          // Se sigue con el plan de arranque.
+        }
+      }
+
+      const falta = Math.max(0, ESPERA_MINIMA - (Date.now() - desde));
+      setTimeout(() => {
+        if (vivo) setIndice((i) => i + 1);
+      }, falta);
+    })();
+
+    return () => {
+      vivo = false;
+    };
   }, [paso.tipo]);
 
   const elegirOpcion = (valor) => {
@@ -57,23 +100,7 @@ export default function Onboarding() {
     setTimeout(() => setIndice((i) => i + 1), RETARDO_AVANCE);
   };
 
-  const porqueFinal =
-    respuestas.porque === ListaOpciones.OTRO ? otro.trim() : respuestas.porque;
-
-  const terminar = () => {
-    terminarOnboarding({
-      nombre: respuestas.nombre?.trim() ?? '',
-      objetivo: respuestas.objetivo ?? '',
-      porque: porqueFinal ?? '',
-      edad: Number(datos.edad),
-      estatura: Number(datos.estatura),
-      peso: Number(datos.peso),
-      lugar: respuestas.lugar ?? '',
-      tiempo_min: respuestas.tiempo_min ?? null,
-      hora_recordatorio: respuestas.hora_recordatorio ?? '',
-      notificaciones: !!respuestas.notificaciones,
-    });
-  };
+  const terminar = () => terminarOnboarding(armarPerfil(), plan);
 
   const comun = {
     paso: indice,

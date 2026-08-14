@@ -1,0 +1,20 @@
+{
+  "_comentario": [
+    "Copia este archivo como local.settings.json para correr en tu máquina.",
+    "local.settings.json está en .gitignore: nunca se sube.",
+    "En Azure, estos mismos valores van en Function App > Configuration > Application Settings.",
+    "La service role key salta el Row Level Security: JAMÁS puede vivir en la app móvil."
+  ],
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "SUPABASE_URL": "https://tuproyecto.supabase.co",
+    "SUPABASE_SERVICE_ROLE_KEY": "tu_service_role_key",
+    "GEMINI_API_KEY": "tu_api_key_de_gemini",
+    "GEMINI_MODELO": "gemini-2.5-flash"
+  },
+  "Host": {
+    "CORS": "*"
+  }
+}

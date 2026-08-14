@@ -25,11 +25,13 @@ const SALUDOS = {
 
 export default function Hoy() {
   const hoy = useMemo(() => new Date(), []);
-  const dia = useMemo(() => diaDelPlan(planDemo, hoy), [hoy]);
 
   const { celebrar } = useCelebracion();
-  const { perfil, racha, rota, completadoHoy, marcarDiaCompletado, diario, guardarLogro } =
+  const { perfil, plan, racha, rota, completadoHoy, marcarDiaCompletado, diario, guardarLogro } =
     useUsuario();
+
+  // Mientras la IA no haya entregado un plan, se muestra el de arranque.
+  const dia = useMemo(() => diaDelPlan(plan ?? planDemo, hoy), [plan, hoy]);
 
   const [logro, setLogro] = useState(diario[claveDia(hoy)] ?? '');
 

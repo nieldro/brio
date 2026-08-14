@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
   ScrollView,
+  TextInput,
   Pressable,
   KeyboardAvoidingView,
   Platform,
@@ -11,21 +12,54 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { C, S, R, T } from '../theme';
+import { useUsuario } from '../state/UsuarioContext';
+import { preguntarCoach, hayApi } from '../lib/api';
+import { leerMensajes } from '../lib/repositorio';
 import { mensajesDemo, CHIPS } from '../data/chatDemo';
+
+// Si el coach no contesta, Brío responde igual. Sin culpa y sin pantalla rota.
+const SIN_CONEXION = 'No pude conectarme ahora mismo. Escríbeme en un rato y seguimos.';
+
+let contador = 0;
+const nuevoId = (rol) => `${rol}-${(contador += 1)}`;
 
 export default function Chat() {
   const insets = useSafeAreaInsets();
   const scroll = useRef(null);
-  const [mensajes, setMensajes] = useState(mensajesDemo);
+  const { userId, enNube } = useUsuario();
 
-  // Fase 2: la respuesta sale de un mapa local. En la fase 5 la trae el coach.
-  const responder = (chip) => {
-    const base = Date.now();
+  const [mensajes, setMensajes] = useState(mensajesDemo);
+  const [texto, setTexto] = useState('');
+  const [esperando, setEsperando] = useState(false);
+
+  // Historial real cuando hay nube; si no, la conversación de arranque.
+  useEffect(() => {
+    if (!enNube || !userId) return;
+    let vivo = true;
+    leerMensajes(userId).then((guardados) => {
+      if (vivo && guardados?.length) setMensajes(guardados);
+    });
+    return () => {
+      vivo = false;
+    };
+  }, [enNube, userId]);
+
+  const enviar = async (contenido, respuestaLocal) => {
+    const limpio = contenido.trim();
+    if (!limpio || esperando) return;
+
+    setMensajes((prev) => [...prev, { id: nuevoId('u'), rol: 'user', texto: limpio }]);
+    setTexto('');
+    setEsperando(true);
+
+    let respuesta = null;
+    if (hayApi) respuesta = (await preguntarCoach(limpio))?.texto ?? null;
+
     setMensajes((prev) => [
       ...prev,
-      { id: `u${base}`, rol: 'user', texto: chip.texto },
-      { id: `b${base}`, rol: 'brio', texto: chip.respuesta },
+      { id: nuevoId('b'), rol: 'brio', texto: respuesta ?? respuestaLocal ?? SIN_CONEXION },
     ]);
+    setEsperando(false);
   };
 
   return (
@@ -37,6 +71,7 @@ export default function Chat() {
         ref={scroll}
         contentContainerStyle={[styles.hilo, { paddingTop: insets.top + S.xl }]}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
         onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: true })}
       >
         {mensajes.map((m) => (
@@ -49,25 +84,62 @@ export default function Chat() {
             </Text>
           </View>
         ))}
+
+        {esperando && (
+          <View style={[styles.burbuja, styles.deBrio]}>
+            <Text style={styles.escribiendo}>Brío está escribiendo…</Text>
+          </View>
+        )}
       </ScrollView>
 
-      <View style={styles.zonaChips}>
+      <View style={[styles.zonaBaja, { paddingBottom: S.md + insets.bottom / 2 }]}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.chips}
         >
           {CHIPS.map((chip) => (
             <Pressable
               key={chip.texto}
-              onPress={() => responder(chip)}
+              onPress={() => enviar(chip.texto, chip.respuesta)}
+              disabled={esperando}
               accessibilityRole="button"
-              style={({ pressed }) => [styles.chip, pressed && styles.chipPresionado]}
+              style={({ pressed }) => [
+                styles.chip,
+                (pressed || esperando) && styles.chipApagado,
+              ]}
             >
               <Text style={styles.chipTexto}>{chip.texto}</Text>
             </Pressable>
           ))}
         </ScrollView>
+
+        <View style={styles.barraEscritura}>
+          <TextInput
+            value={texto}
+            onChangeText={setTexto}
+            placeholder="Escríbele a Brío"
+            placeholderTextColor={C.apagado}
+            style={styles.entrada}
+            multiline
+            maxLength={1000}
+            onSubmitEditing={() => enviar(texto)}
+          />
+          <Pressable
+            onPress={() => enviar(texto)}
+            disabled={!texto.trim() || esperando}
+            accessibilityRole="button"
+            accessibilityLabel="Enviar"
+            style={({ pressed }) => [
+              styles.enviar,
+              (!texto.trim() || esperando) && styles.enviarApagado,
+              pressed && styles.chipApagado,
+            ]}
+          >
+            <Text style={styles.enviarTexto}>↑</Text>
+          </Pressable>
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
@@ -108,11 +180,16 @@ const styles = StyleSheet.create({
   textoBrio: {
     ...T.cuerpo,
   },
-  zonaChips: {
+  escribiendo: {
+    ...T.secundario,
+    fontStyle: 'italic',
+  },
+  zonaBaja: {
     borderTopWidth: 1,
     borderTopColor: C.borde,
     backgroundColor: C.crema,
-    paddingVertical: S.md,
+    paddingTop: S.md,
+    gap: S.md,
   },
   chips: {
     paddingHorizontal: S.xl,
@@ -126,12 +203,45 @@ const styles = StyleSheet.create({
     paddingVertical: S.sm + 2,
     paddingHorizontal: S.lg,
   },
-  chipPresionado: {
-    opacity: 0.8,
+  chipApagado: {
+    opacity: 0.6,
   },
   chipTexto: {
     ...T.secundario,
     color: C.cafe,
     fontWeight: '600',
+  },
+  barraEscritura: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: S.sm,
+    paddingHorizontal: S.xl,
+  },
+  entrada: {
+    ...T.cuerpo,
+    flex: 1,
+    backgroundColor: C.blanco,
+    borderRadius: R.grande,
+    borderWidth: 1,
+    borderColor: C.borde,
+    paddingHorizontal: S.lg,
+    paddingVertical: S.md,
+    maxHeight: 120,
+  },
+  enviar: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: C.coral,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  enviarApagado: {
+    backgroundColor: C.apagado,
+  },
+  enviarTexto: {
+    color: C.blanco,
+    fontSize: 20,
+    fontWeight: '700',
   },
 });

@@ -1,0 +1,16 @@
+{
+  "name": "brio-functions",
+  "version": "1.0.0",
+  "description": "Funciones de IA de Brío en Azure Functions (plan de consumo, capa gratuita permanente)",
+  "type": "module",
+  "main": "src/functions/*.js",
+  "private": true,
+  "scripts": {
+    "start": "func start",
+    "test": "node --test \"tests/*.test.mjs\""
+  },
+  "dependencies": {
+    "@azure/functions": "^4.5.1",
+    "@supabase/supabase-js": "^2.45.0"
+  }
+}

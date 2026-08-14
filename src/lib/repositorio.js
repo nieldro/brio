@@ -40,7 +40,7 @@ function aPerfil(fila) {
 // --- Lectura --------------------------------------------------------------
 
 async function leerNube(userId) {
-  const [perfil, ultimo, entradas] = await Promise.all([
+  const [perfil, ultimo, entradas, plan] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
     supabase
       .from('registros')
@@ -50,6 +50,12 @@ async function leerNube(userId) {
       .order('fecha', { ascending: false })
       .limit(1),
     supabase.from('diario').select('fecha, texto').eq('user_id', userId),
+    supabase
+      .from('planes')
+      .select('plan, semana')
+      .eq('user_id', userId)
+      .order('semana', { ascending: false })
+      .limit(1),
   ]);
 
   // Sin fila de perfil, el onboarding todavía no terminó en este dispositivo.
@@ -62,7 +68,25 @@ async function leerNube(userId) {
     mejorRacha: perfil.data.mejor_racha ?? 0,
     ultimoDiaCompletado: ultimo.data?.[0]?.fecha ?? null,
     diario: Object.fromEntries((entradas.data ?? []).map((e) => [e.fecha, e.texto])),
+    plan: plan.data?.[0]?.plan ?? null,
   };
+}
+
+// Historial del chat. Vive aparte del estado global: solo lo usa esa pantalla.
+export async function leerMensajes(userId, cuantos = 30) {
+  if (!supabase || !userId) return null;
+  try {
+    const { data, error } = await supabase
+      .from('mensajes')
+      .select('id, rol, texto')
+      .eq('user_id', userId)
+      .order('creado_en', { ascending: false })
+      .limit(cuantos);
+    if (error) return null;
+    return (data ?? []).reverse();
+  } catch {
+    return null;
+  }
 }
 
 export async function cargar() {
@@ -84,6 +108,8 @@ export async function cargar() {
       ...local,
       ...nube,
       perfil: { ...(local.perfil ?? {}), ...nube.perfil },
+      // Si la nube todavía no tiene plan, no borramos el que ya está en disco.
+      plan: nube.plan ?? local.plan ?? null,
       userId,
       enNube: true,
     };

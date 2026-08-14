@@ -18,16 +18,19 @@ const TIPO = {
 
 export default function Semana() {
   const hoy = useMemo(() => nombreDia(new Date()), []);
-  const { perfil } = useUsuario();
+  const { perfil, plan: planUsuario } = useUsuario();
+
+  // Mientras la IA no haya entregado un plan, se muestra el de arranque.
+  const plan = planUsuario ?? planDemo;
 
   return (
     <Pantalla>
       <View style={styles.encabezado}>
-        <Etiqueta>semana {planDemo.semana}</Etiqueta>
-        <Text style={T.titulo}>{planDemo.mensaje_semana}</Text>
+        <Etiqueta>semana {plan.semana}</Etiqueta>
+        <Text style={T.titulo}>{plan.mensaje_semana}</Text>
       </View>
 
-      {planDemo.dias.map((dia) => {
+      {plan.dias.map((dia) => {
         const esHoy = dia.dia === hoy;
         const hecho = completadosDemo.includes(dia.dia);
         const tipo = TIPO[dia.tipo] ?? TIPO.suave;
