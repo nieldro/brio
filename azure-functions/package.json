@@ -12,5 +12,9 @@
   "dependencies": {
     "@azure/functions": "^4.5.1",
     "@supabase/supabase-js": "^2.45.0"
+  },
+  "devDependencies": {
+    "azure-functions-core-tools": "^4.13.0",
+    "azurite": "^3.36.0"
   }
 }

@@ -23,7 +23,13 @@ export async function usuarioDelToken(request) {
   const token = encabezado.slice(7).trim();
   if (!token) return null;
 
-  const { data, error } = await admin().auth.getUser(token);
-  if (error || !data?.user) return null;
-  return data.user;
+  try {
+    const { data, error } = await admin().auth.getUser(token);
+    if (error || !data?.user) return null;
+    return data.user;
+  } catch {
+    // Supabase caído o URL mal configurada: se responde 401, no 500.
+    // Un token que no se pudo verificar es un token que no vale.
+    return null;
+  }
 }

@@ -48,11 +48,24 @@ falta, en vez de fallar de forma rara.
 ```bash
 npm install
 cp local.settings.example.json local.settings.json   # y pega tus valores
-func start
+npx azurite --silent &   # almacenamiento local, lo piden los Timer Trigger
+npm start
 ```
 
-Necesitas [Azure Functions Core Tools v4](https://learn.microsoft.com/azure/azure-functions/functions-run-local).
+Las Core Tools v4 y Azurite entran como `devDependencies`: no hay que
+instalar nada de forma global ni con permisos de administrador.
+
 Luego, en el `.env` de la app: `EXPO_PUBLIC_API_URL=http://localhost:7071`.
+
+Con el host arriba se pueden verificar los caminos de error sin llaves reales:
+
+```bash
+curl -s -w "\n%{http_code}\n" -X POST http://localhost:7071/api/plan \
+  -H "Content-Type: application/json" -d '{}'
+```
+
+Sin encabezado `Authorization` responde **401**. Si faltan ajustes en la
+configuración, responde **503** nombrando cuáles.
 
 ## Publicar
 
