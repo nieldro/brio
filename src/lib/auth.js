@@ -1,6 +1,12 @@
+import { makeRedirectUri } from 'expo-auth-session';
+import { openAuthSessionAsync } from 'expo-web-browser';
+
 import { supabase, hayNube, sesionAnonima } from './supabase';
 import { borrarEstado } from './almacenamiento';
 import { normalizarCorreo, mensajeDeError } from '../services/credenciales';
+
+const crearUri = makeRedirectUri;
+const abrirSesionAuth = openAuthSessionAsync;
 
 // Todo lo que tiene que ver con la cuenta del usuario.
 //
@@ -117,6 +123,60 @@ export async function salir() {
 
   await borrarEstado();
   return { ok: true };
+}
+
+// Entrar con Google.
+//
+// Abre el navegador del sistema, no una vista dentro de la app: así el usuario
+// ve la barra de direcciones de Google y puede comprobar que le está dando la
+// clave a Google y no a nosotros. Es la forma correcta y la que exigen las
+// tiendas.
+//
+// Requiere que Google esté habilitado en Supabase (Authentication > Providers).
+// Si no lo está, se dice claro en vez de dejar una pantalla en blanco.
+export async function entrarConGoogle() {
+  if (!supabase) return { ok: false, error: SIN_NUBE };
+
+  try {
+    const redirectTo = crearUri({ scheme: 'brio', path: 'auth' });
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo, skipBrowserRedirect: true },
+    });
+
+    if (error) {
+      if (/provider is not enabled|unsupported provider/i.test(error.message ?? '')) {
+        return { ok: false, error: 'Entrar con Google todavía no está disponible.' };
+      }
+      return { ok: false, error: mensajeDeError(error) };
+    }
+    if (!data?.url) return { ok: false, error: mensajeDeError('') };
+
+    const resultado = await abrirSesionAuth(data.url, redirectTo);
+
+    // El usuario cerró el navegador sin terminar. No es un error: no se le
+    // muestra nada, simplemente sigue donde estaba.
+    if (resultado.type !== 'success') return { ok: false, cancelado: true };
+
+    // Supabase devuelve los tokens en el fragmento de la URL (#access_token=...)
+    const fragmento = resultado.url.split('#')[1] ?? '';
+    const params = new URLSearchParams(fragmento);
+    const access_token = params.get('access_token');
+    const refresh_token = params.get('refresh_token');
+
+    if (!access_token || !refresh_token) return { ok: false, error: mensajeDeError('') };
+
+    const { error: errorSesion } = await supabase.auth.setSession({
+      access_token,
+      refresh_token,
+    });
+    if (errorSesion) return { ok: false, error: mensajeDeError(errorSesion) };
+
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: mensajeDeError(e) };
+  }
 }
 
 // Recuperar la clave. Supabase manda un correo con un enlace.

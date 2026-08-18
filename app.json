@@ -4,15 +4,16 @@
     "slug": "brio",
     "version": "1.0.0",
     "orientation": "portrait",
+    "scheme": "brio",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "backgroundColor": "#FFF6EC",
+    "backgroundColor": "#131A2E",
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#FFF6EC",
+        "backgroundColor": "#131A2E",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -25,10 +26,11 @@
       [
         "expo-notifications",
         {
-          "color": "#E2725B",
+          "color": "#F2604C",
           "defaultChannel": "brio"
         }
-      ]
+      ],
+      "expo-web-browser"
     ]
   }
 }

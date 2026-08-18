@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEstilos, useTema } from '../state/TemaContext';
 import Boton from '../components/Boton';
 import { useUsuario } from '../state/UsuarioContext';
-import { crearCuenta, entrar, recuperarClave } from '../lib/auth';
+import { crearCuenta, entrar, recuperarClave, entrarConGoogle } from '../lib/auth';
 import {
   revisarCorreo,
   revisarClave,
@@ -72,6 +72,20 @@ const crear = ({ C, T, R, S }) => ({
   },
   accion: {
     marginTop: S.xl,
+  },
+  separador: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: S.md,
+    marginVertical: S.lg,
+  },
+  linea: {
+    flex: 1,
+    height: 1,
+    backgroundColor: C.borde,
+  },
+  oTexto: {
+    ...T.secundario,
   },
   enlace: {
     alignItems: 'center',
@@ -154,6 +168,24 @@ export default function Cuenta({ route, navigation }) {
     // Al entrar con una cuenta que ya tiene perfil, Raiz cambia el árbol
     // entero y esta pantalla se desmonta sola. Solo se vuelve atrás si
     // seguimos aquí, para no navegar sobre un navegador que ya murió.
+    if (navigation.canGoBack()) navigation.goBack();
+  };
+
+  const conGoogle = async () => {
+    setOcupado(true);
+    setError(null);
+
+    const r = await entrarConGoogle();
+
+    setOcupado(false);
+    // Cerrar el navegador a medias no es un error: no se dice nada.
+    if (r.cancelado) return;
+    if (!r.ok) {
+      setError(r.error);
+      return;
+    }
+
+    await refrescarSesion();
     if (navigation.canGoBack()) navigation.goBack();
   };
 
@@ -243,6 +275,16 @@ export default function Cuenta({ route, navigation }) {
 
         <Boton onPress={enviar} disabled={!puedeSeguir || ocupado} style={est.accion}>
           {ocupado ? 'Un momento…' : creando ? 'Crear mi cuenta' : 'Entrar'}
+        </Boton>
+
+        <View style={est.separador}>
+          <View style={est.linea} />
+          <Text style={est.oTexto}>o</Text>
+          <View style={est.linea} />
+        </View>
+
+        <Boton variante="suave" onPress={conGoogle} disabled={ocupado}>
+          Continuar con Google
         </Boton>
 
         {!creando && (

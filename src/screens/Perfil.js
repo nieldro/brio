@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Pressable } from 'react-native';
+import { View, Text, TextInput, Pressable, Alert } from 'react-native';
 
 import { useEstilos, useTema, PREFERENCIAS, NOMBRES_PREFERENCIA } from '../state/TemaContext';
 import Pantalla from '../components/Pantalla';
@@ -201,6 +201,20 @@ export default function Perfil({ navigation }) {
   // y Raiz cambia el árbol entero al onboarding.
   const cerrarSesion = () => reiniciar();
 
+  // Sin cuenta no hay a dónde volver: esto borra todo de verdad. Se ofrece
+  // igual, porque esconderlo deja a la persona sin salida, pero con el
+  // nombre correcto y una confirmación que dice qué se pierde.
+  const empezarDeCero = () => {
+    Alert.alert(
+      'Empezar de cero',
+      'Se borra tu racha, tu plan y tu diario. Como no tienes cuenta, esto no se puede deshacer.',
+      [
+        { text: 'Mejor no', style: 'cancel' },
+        { text: 'Borrar todo', style: 'destructive', onPress: () => reiniciar() },
+      ],
+    );
+  };
+
   return (
     <Pantalla contentStyle={est.contenido}>
       <Tarjeta>
@@ -325,12 +339,15 @@ export default function Perfil({ navigation }) {
         {guardando ? 'Guardando…' : 'Guardar cambios'}
       </Boton>
 
-      {/* Solo se ofrece a quien PUEDE volver. Para alguien sin cuenta,
-          "cerrar sesión" es borrarlo todo sin retorno, y no hay ninguna
-          razón para poner esa palanca al alcance de la mano. */}
-      {sesion === 'concuenta' && (
+      {/* Con cuenta es reversible y se llama cerrar sesión. Sin cuenta es
+          irreversible, así que se llama por su nombre y pide confirmación. */}
+      {sesion === 'concuenta' ? (
         <Pressable onPress={cerrarSesion} accessibilityRole="button" style={est.salir}>
           <Text style={est.salirTexto}>Cerrar sesión</Text>
+        </Pressable>
+      ) : (
+        <Pressable onPress={empezarDeCero} accessibilityRole="button" style={est.salir}>
+          <Text style={est.salirTexto}>Empezar de cero</Text>
         </Pressable>
       )}
 
