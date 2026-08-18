@@ -8,7 +8,7 @@ import Boton from '../components/Boton';
 import Etiqueta from '../components/Etiqueta';
 import SelectorHora from '../components/SelectorHora';
 import { useUsuario } from '../state/UsuarioContext';
-import { pedirPermisoYToken } from '../lib/notificaciones';
+import { pedirPermisoYToken, hayModuloPush } from '../lib/notificaciones';
 
 const OBJETIVOS = ['Perder peso', 'Ganar músculo', 'Sentirme mejor', 'Crear el hábito'];
 const LUGARES = ['En casa', 'En el gym', 'Mezclado'];
@@ -69,6 +69,14 @@ export default function Perfil() {
   };
 
   const activarRecordatorios = async () => {
+    // En Expo Go para Android no existe el módulo de push. Se dice claro,
+    // en vez de dejar al usuario buscando un permiso que no va a encontrar.
+    if (!hayModuloPush()) {
+      setAviso('Los recordatorios llegan en la app instalada, no en Expo Go.');
+      setTimeout(() => setAviso(null), 4000);
+      return;
+    }
+
     const token = await pedirPermisoYToken();
     if (token) {
       cambiar('push_token', token);

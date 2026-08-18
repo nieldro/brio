@@ -1,5 +1,4 @@
 import { Platform } from 'react-native';
-import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 
@@ -7,18 +6,48 @@ import { C } from '../theme';
 
 // Único punto que habla con Expo Push. Devuelve el token o null.
 // Nunca lanza: negarse a recibir recordatorios no puede romper el onboarding.
+//
+// OJO: `expo-notifications` se carga PEREZOSAMENTE, a propósito.
+// En Expo Go para Android, el simple `import` lanza:
+//   "Android Push notifications ... was removed from Expo Go with SDK 53"
+// Es un error a nivel de módulo, sin capturar, y tumbaba la app entera antes
+// de renderizar: la pantalla se quedaba en el splash sin mostrar nada.
+// Cargándolo solo cuando el usuario pide el permiso, la app corre completa en
+// Expo Go y los recordatorios funcionan en el development build.
 
-// Con la app abierta, el recordatorio se ve pero no interrumpe.
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
-});
+let modulo;
 
-async function canalAndroid() {
+function cargarModulo() {
+  if (modulo !== undefined) return modulo;
+  try {
+    // eslint-disable-next-line global-require
+    modulo = require('expo-notifications');
+    configurar(modulo);
+  } catch {
+    modulo = null;
+  }
+  return modulo;
+}
+
+// ¿Este binario puede recibir push? Falso en Expo Go para Android.
+// La UI lo usa para explicar el porqué en vez de culpar al usuario.
+export function hayModuloPush() {
+  return cargarModulo() !== null;
+}
+
+function configurar(Notifications) {
+  // Con la app abierta, el recordatorio se ve pero no interrumpe.
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+    }),
+  });
+}
+
+async function canalAndroid(Notifications) {
   if (Platform.OS !== 'android') return;
   await Notifications.setNotificationChannelAsync('brio', {
     name: 'Recordatorios de Brío',
@@ -29,11 +58,14 @@ async function canalAndroid() {
 }
 
 export async function pedirPermisoYToken() {
+  const Notifications = cargarModulo();
+  if (!Notifications) return null;
+
   try {
     // El emulador no entrega push. No tiene sentido pedir permiso ahí.
     if (!Device.isDevice) return null;
 
-    await canalAndroid();
+    await canalAndroid(Notifications);
 
     const { status: actual } = await Notifications.getPermissionsAsync();
     let status = actual;
