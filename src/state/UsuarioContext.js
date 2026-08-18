@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useReducer 
 import { completarDia, estaCompletado, rachaVigente, rachaRota } from '../services/racha';
 import { claveDia } from '../services/fecha';
 import { reducer, estadoInicial, persistible } from './usuarioReducer';
+import { useHoy } from './useHoy';
 import {
   cargar,
   guardarLocal,
@@ -19,6 +20,10 @@ const UsuarioContext = createContext(null);
 
 export function UsuarioProvider({ children }) {
   const [estado, dispatch] = useReducer(reducer, estadoInicial);
+
+  // Cambia sola al cruzar la medianoche o al volver del segundo plano.
+  // Sin esto, `completadoHoy` se quedaba en el día del arranque.
+  const hoy = useHoy();
 
   // Trae disco, nube y estado de sesión. Se usa al abrir y cada vez que
   // alguien entra o crea cuenta: ahí los datos cambian de dueño.
@@ -48,10 +53,9 @@ export function UsuarioProvider({ children }) {
   }, [estado]);
 
   const valor = useMemo(() => {
-    const hoy = new Date();
-
     return {
       ...estado,
+      hoy,
       // Atajo para la UI: solo quien está anónimo necesita que le ofrezcan
       // guardar la cuenta.
       puedeGuardarCuenta: estado.sesion === 'anonimo',
@@ -78,10 +82,12 @@ export function UsuarioProvider({ children }) {
       },
 
       // `reto` va al registro para que el Progreso pueda mostrar qué se hizo.
+      // La fecha se pasa explícita para que marcar a las 23:59 y el registro
+      // que se guarda hablen del mismo día.
       marcarDiaCompletado: (reto) => {
-        const siguiente = completarDia(estado);
+        const siguiente = completarDia(estado, hoy);
         if (siguiente === estado) return; // ya estaba marcado hoy
-        dispatch({ tipo: 'COMPLETAR_DIA' });
+        dispatch({ tipo: 'COMPLETAR_DIA', hoy });
         marcarRegistro(estado.userId, {
           fecha: siguiente.ultimoDiaCompletado,
           reto: reto ?? null,
@@ -91,8 +97,8 @@ export function UsuarioProvider({ children }) {
       },
 
       guardarLogro: (texto) => {
-        dispatch({ tipo: 'GUARDAR_LOGRO', texto });
-        subirLogro(estado.userId, { fecha: claveDia(), texto });
+        dispatch({ tipo: 'GUARDAR_LOGRO', texto, hoy });
+        subirLogro(estado.userId, { fecha: claveDia(hoy), texto });
       },
 
       // Después de entrar o de crear cuenta: los datos cambiaron de dueño,
@@ -110,7 +116,7 @@ export function UsuarioProvider({ children }) {
         await hidratar();
       },
     };
-  }, [estado, hidratar]);
+  }, [estado, hidratar, hoy]);
 
   return <UsuarioContext.Provider value={valor}>{children}</UsuarioContext.Provider>;
 }

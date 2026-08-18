@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { View, Text, TextInput } from 'react-native';
 
 import { useEstilos, useTema } from '../state/TemaContext';
@@ -71,11 +71,20 @@ const crear = ({ C, T, R, S }) => ({
 export default function Diario() {
   const est = useEstilos(crear);
   const { C } = useTema();
-  const { perfil, diario, guardarLogro } = useUsuario();
-  const hoyClave = claveDia();
+  const { hoy, perfil, diario, guardarLogro } = useUsuario();
+  const hoyClave = claveDia(hoy);
 
-  const [texto, setTexto] = useState(diario[hoyClave] ?? '');
+  const guardado = diario[hoyClave] ?? '';
+  const [texto, setTexto] = useState(guardado);
   const [diaDificil, setDiaDificil] = useState(false);
+
+  useEffect(() => setTexto(guardado), [guardado]);
+
+  // Perder el foco sin haber cambiado nada no puede borrar lo escrito.
+  const guardarSiCambio = () => {
+    const limpio = texto.trim();
+    if (limpio !== guardado) guardarLogro(limpio);
+  };
 
   const pasados = useMemo(
     () =>
@@ -93,7 +102,7 @@ export default function Diario() {
         <TextInput
           value={texto}
           onChangeText={setTexto}
-          onBlur={() => guardarLogro(texto.trim())}
+          onBlur={guardarSiCambio}
           placeholder="Una línea basta"
           placeholderTextColor={C.apagado}
           style={est.entrada}

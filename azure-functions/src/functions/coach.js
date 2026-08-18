@@ -60,6 +60,7 @@ async function manejar(request, context) {
       historial: [...historial, { rol: 'user', texto }],
       temperatura: 0.7,
       timeoutMs: 20000,
+      log: context,
     });
   } catch (e) {
     context.error(`fallo del coach: ${e.message}`);

@@ -78,9 +78,11 @@ export async function crearCuenta(correoCrudo, clave) {
 
 // Entrar con una cuenta que ya existe.
 //
-// Ojo: quien entra puede venir de una sesión anónima con datos de OTRA persona
-// en este teléfono. El disco local se borra ANTES de traer los de la cuenta,
-// para que no se mezclen. Quien llama debe volver a hidratar después.
+// NO se borra el disco aquí. Quien entra puede venir de una sesión anónima con
+// datos de otra persona en este teléfono, pero eso se resuelve con el sello de
+// dueño: lo guardado lleva el `duenoId`, y al cargar se descarta si no
+// coincide con la sesión. Borrar por adelantado dejaba a la persona sin nada
+// si la nube no respondía después.
 export async function entrar(correoCrudo, clave) {
   if (!supabase) return { ok: false, error: SIN_NUBE };
 
@@ -89,8 +91,6 @@ export async function entrar(correoCrudo, clave) {
   try {
     const { error } = await supabase.auth.signInWithPassword({ email: correo, password: clave });
     if (error) return { ok: false, error: mensajeDeError(error) };
-
-    await borrarEstado();
     return { ok: true, correo };
   } catch (e) {
     return { ok: false, error: mensajeDeError(e) };
@@ -101,8 +101,20 @@ export async function entrar(correoCrudo, clave) {
 // y vuelven al entrar. Lo que se borra es la copia de este teléfono.
 export async function salir() {
   try {
+    // Soltar el push token ANTES de salir. Sin esto, el Timer Trigger seguía
+    // mandando los recordatorios del usuario anterior a este teléfono, con su
+    // nombre dentro: "Daniel, hoy toca caminar" en el celular de otra persona.
+    const { data } = await supabase.auth.getSession();
+    const userId = data?.session?.user?.id;
+    if (userId) {
+      await supabase.from('profiles').update({ push_token: null }).eq('id', userId);
+    }
+  } catch {}
+
+  try {
     await supabase?.auth.signOut();
   } catch {}
+
   await borrarEstado();
   return { ok: true };
 }

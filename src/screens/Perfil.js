@@ -180,12 +180,19 @@ export default function Perfil({ navigation }) {
     }
 
     const token = await pedirPermisoYToken();
-    if (token) {
-      cambiar('push_token', token);
-      setAviso('Recordatorios activados.');
-    } else {
+    if (!token) {
       setAviso('No se pudo activar. Revisa los permisos del teléfono.');
+      setTimeout(() => setAviso(null), 3000);
+      return;
     }
+
+    // Se guarda YA, no solo en el borrador. Antes decía "activados" y el
+    // token moría al salir de Perfil sin tocar "Guardar cambios": el usuario
+    // creía tener recordatorios y no le llegaba ninguno.
+    cambiar('push_token', token);
+    await actualizarPerfil({ push_token: token });
+
+    setAviso('Recordatorios activados.');
     setTimeout(() => setAviso(null), 3000);
   };
 
@@ -317,9 +324,14 @@ export default function Perfil({ navigation }) {
         {guardando ? 'Guardando…' : 'Guardar cambios'}
       </Boton>
 
-      <Pressable onPress={cerrarSesion} accessibilityRole="button" style={est.salir}>
-        <Text style={est.salirTexto}>Cerrar sesión</Text>
-      </Pressable>
+      {/* Solo se ofrece a quien PUEDE volver. Para alguien sin cuenta,
+          "cerrar sesión" es borrarlo todo sin retorno, y no hay ninguna
+          razón para poner esa palanca al alcance de la mano. */}
+      {sesion === 'concuenta' && (
+        <Pressable onPress={cerrarSesion} accessibilityRole="button" style={est.salir}>
+          <Text style={est.salirTexto}>Cerrar sesión</Text>
+        </Pressable>
+      )}
 
       <Text style={est.legal}>
         Brío acompaña, no diagnostica. Ante dolor, lesión o enfermedad, consulta a un profesional.

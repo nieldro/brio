@@ -48,6 +48,7 @@ export async function crearPlan(userId, hoy, log = console) {
         ],
         temperatura: 0.3,
         timeoutMs: 30000,
+        log,
       });
 
       const revision = validarPlan(extraerJson(crudo), { tiempoMax: tiempo });

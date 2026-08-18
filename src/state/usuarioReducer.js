@@ -36,10 +36,16 @@ export const estadoInicial = {
 };
 
 // Lo que se guarda en disco. Lo demás se resuelve en cada arranque.
-// La sesión y el correo NUNCA se persisten aquí: los manda Supabase, y una
-// copia vieja en disco haría creer a la app que sigue una sesión que ya murió.
+//
+// La sesión y el correo NUNCA se persisten: los manda Supabase, y una copia
+// vieja haría creer a la app que sigue viva una sesión que ya murió.
+//
+// El `userId` sí queda, como `duenoId`: es el sello de a quién pertenece esto.
+// Al abrir, si el dueño del disco no es quien tiene la sesión, lo guardado se
+// descarta. Así dos personas en el mismo teléfono no mezclan sus datos, y no
+// hay que borrar nada por adelantado para conseguirlo.
 export function persistible({ hidratado, userId, enNube, sesion, correo, ...resto }) {
-  return resto;
+  return userId ? { ...resto, duenoId: userId } : resto;
 }
 
 export function reducer(estado, accion) {

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { View, Text, TextInput, Pressable } from 'react-native';
 
 import { useEstilos, useTema } from '../state/TemaContext';
@@ -130,18 +130,38 @@ const crear = ({ C, T, R, S }) => ({
 });
 
 export default function Hoy({ navigation }) {
-  const hoy = useMemo(() => new Date(), []);
-
   const est = useEstilos(crear);
   const { C, T } = useTema();
   const { celebrar } = useCelebracion();
-  const { perfil, plan, racha, rota, completadoHoy, marcarDiaCompletado, diario, guardarLogro } =
-    useUsuario();
+  const {
+    hoy, // viva: cambia sola al cruzar la medianoche
+    perfil,
+    plan,
+    racha,
+    rota,
+    completadoHoy,
+    marcarDiaCompletado,
+    diario,
+    guardarLogro,
+  } = useUsuario();
 
   // Mientras la IA no haya entregado un plan, se muestra el de arranque.
   const dia = useMemo(() => diaDelPlan(plan ?? planDemo, hoy), [plan, hoy]);
 
-  const [logro, setLogro] = useState(diario[claveDia(hoy)] ?? '');
+  // Diario se abre ENCIMA de Hoy sin desmontarla. Si el usuario escribe allá,
+  // este campo tiene que enterarse: antes seguía vacío y, al perder el foco,
+  // guardaba ese vacío y borraba el logro del teléfono y de la nube.
+  const logroGuardado = diario[claveDia(hoy)] ?? '';
+  const [logro, setLogro] = useState(logroGuardado);
+
+  useEffect(() => setLogro(logroGuardado), [logroGuardado]);
+
+  // Solo se guarda si de verdad cambió. Perder el foco sin tocar nada no
+  // puede borrar lo que ya estaba escrito.
+  const guardarSiCambio = () => {
+    const limpio = logro.trim();
+    if (limpio !== logroGuardado) guardarLogro(limpio);
+  };
 
   const marcarListo = () => {
     if (completadoHoy) return;
@@ -228,7 +248,7 @@ export default function Hoy({ navigation }) {
         <TextInput
           value={logro}
           onChangeText={setLogro}
-          onBlur={() => guardarLogro(logro.trim())}
+          onBlur={guardarSiCambio}
           placeholder="Una línea basta"
           placeholderTextColor={C.apagado}
           style={est.input}

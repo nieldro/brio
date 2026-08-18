@@ -1,4 +1,5 @@
 import { cargarEstado, guardarEstado } from './almacenamiento';
+import { fusionar } from '../services/fusion';
 import { supabase, hayNube, sesionAnonima } from './supabase';
 
 // Único contrato de datos de la app. El estado no sabe si hay nube o no.
@@ -63,20 +64,31 @@ async function leerNube(userId) {
       .limit(1),
   ]);
 
-  // Sin fila de perfil, el onboarding todavía no terminó en este dispositivo.
-  if (perfil.error || !perfil.data) return null;
+  // Estos tres casos son distintos y antes se confundían en un solo `null`:
+  //
+  //   'fallo'      la consulta no se pudo hacer. NO se sabe nada del usuario.
+  //   'sin-perfil' se preguntó bien y este usuario aún no terminó el onboarding.
+  //   'ok'         hay datos.
+  //
+  // Confundir 'fallo' con 'sin-perfil' mandaba a alguien con cuenta a rehacer
+  // el onboarding, y al terminarlo sobrescribía su perfil real en la nube.
+  if (perfil.error) return { estado: 'fallo' };
+  if (!perfil.data) return { estado: 'sin-perfil' };
 
   const fechas = (hechos.data ?? []).map((r) => r.fecha);
 
   return {
-    onboardingListo: true,
-    perfil: aPerfil(perfil.data),
-    rachaActual: perfil.data.racha_actual ?? 0,
-    mejorRacha: perfil.data.mejor_racha ?? 0,
-    ultimoDiaCompletado: fechas[0] ?? null,
-    diasCompletados: fechas,
-    diario: Object.fromEntries((entradas.data ?? []).map((e) => [e.fecha, e.texto])),
-    plan: plan.data?.[0]?.plan ?? null,
+    estado: 'ok',
+    datos: {
+      onboardingListo: true,
+      perfil: aPerfil(perfil.data),
+      rachaActual: perfil.data.racha_actual ?? 0,
+      mejorRacha: perfil.data.mejor_racha ?? 0,
+      ultimoDiaCompletado: fechas[0] ?? null,
+      diasCompletados: fechas,
+      diario: Object.fromEntries((entradas.data ?? []).map((e) => [e.fecha, e.texto])),
+      plan: plan.data?.[0]?.plan ?? null,
+    },
   };
 }
 
@@ -98,34 +110,35 @@ export async function leerMensajes(userId, cuantos = 30) {
 }
 
 export async function cargar() {
-  const local = (await cargarEstado()) ?? {};
+  const guardado = (await cargarEstado()) ?? {};
 
-  if (!hayNube) return { ...local, userId: null, enNube: false };
+  if (!hayNube) return { ...guardado, userId: null, enNube: false };
 
   try {
     const sesion = await sesionAnonima();
-    if (!sesion) return { ...local, userId: null, enNube: false };
+    if (!sesion) return { ...guardado, userId: null, enNube: false };
 
     const userId = sesion.user.id;
-    const nube = await leerNube(userId);
-    if (!nube) return { ...local, userId, enNube: true };
 
-    // La nube pisa lo local, salvo los campos que solo viven en el teléfono
-    // (por ejemplo el permiso de notificaciones, que aún no tiene columna).
-    return {
-      ...local,
-      ...nube,
-      perfil: { ...(local.perfil ?? {}), ...nube.perfil },
-      // Si la nube todavía no tiene plan, no borramos el que ya está en disco.
-      plan: nube.plan ?? local.plan ?? null,
-      diasCompletados: nube.diasCompletados?.length
-        ? nube.diasCompletados
-        : (local.diasCompletados ?? []),
-      userId,
-      enNube: true,
-    };
+    // Lo guardado en disco lleva el sello de su dueño. Si el que abre la app
+    // es otro (alguien entró con su cuenta en un teléfono prestado), lo del
+    // anterior no se usa. Antes esto se resolvía borrando el disco al entrar,
+    // que dejaba a la persona sin nada si la nube no respondía.
+    const local = guardado.duenoId && guardado.duenoId !== userId ? {} : guardado;
+
+    const lectura = await leerNube(userId);
+
+    // La consulta falló: se sigue con lo del disco. NO se asume que el
+    // usuario no tiene perfil, porque eso lo mandaría a rehacer el onboarding.
+    if (lectura.estado === 'fallo') return { ...local, userId, enNube: true };
+
+    if (lectura.estado === 'sin-perfil') {
+      return { ...local, userId, enNube: true };
+    }
+
+    return { ...fusionar(local, lectura.datos), userId, enNube: true };
   } catch {
-    return { ...local, userId: null, enNube: false };
+    return { ...guardado, userId: null, enNube: false };
   }
 }
 

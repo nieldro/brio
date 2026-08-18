@@ -38,7 +38,13 @@ diciéndole al modelo qué falló. Si el segundo intento tampoco sirve, responde
 | `SUPABASE_URL` | Supabase › Project Settings › API |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase › Project Settings › API › service_role |
 | `GEMINI_API_KEY` | Google AI Studio › API keys |
-| `GEMINI_MODELO` | Opcional. Por defecto `gemini-2.5-flash` |
+| `GEMINI_MODELO` | Opcional. Por defecto `gemini-flash-latest` |
+
+**Usa el alias, no una versión fija.** Google retira modelos para cuentas
+nuevas sin avisar: `gemini-2.5-flash` empezó a devolver
+`404 no longer available to new users` y dejó la app sin plan. El alias
+`gemini-flash-latest` sigue apuntando al modelo vigente, y el validador de
+`planJson.js` protege la calidad de lo que salga.
 
 Si falta alguno, las funciones responden 503 con el nombre del ajuste que
 falta, en vez de fallar de forma rara.
