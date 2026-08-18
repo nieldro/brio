@@ -92,9 +92,21 @@ const crear = ({ C, T, R, S }) => ({
     padding: S.md,
     gap: 2,
   },
+  filaEjercicio: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   ejercicioNombre: {
     ...T.subtitulo,
     fontSize: 16,
+    flex: 1,
+  },
+  comoSeHace: {
+    ...T.secundario,
+    fontSize: 13,
+    color: C.coralTexto,
+    fontWeight: '700',
   },
   mensaje: {
     ...T.cuerpo,
@@ -205,10 +217,22 @@ export default function Hoy({ navigation }) {
         {dia.ejercicios.length > 0 && (
           <View style={est.ejercicios}>
             {dia.ejercicios.map((e) => (
-              <View key={e.nombre} style={est.ejercicio}>
-                <Text style={est.ejercicioNombre}>{e.nombre}</Text>
+              // Tocable: quien nunca entrenó no sabe qué es "flexiones en la
+              // pared". Saber cómo se hace es la diferencia entre intentarlo
+              // y cerrar la app.
+              <Pressable
+                key={e.nombre}
+                onPress={() => navigation.navigate('Guia', { ejercicio: e })}
+                accessibilityRole="button"
+                accessibilityLabel={`Cómo se hace: ${e.nombre}`}
+                style={({ pressed }) => [est.ejercicio, pressed && est.presionado]}
+              >
+                <View style={est.filaEjercicio}>
+                  <Text style={est.ejercicioNombre}>{e.nombre}</Text>
+                  <Text style={est.comoSeHace}>cómo</Text>
+                </View>
                 <Text style={T.secundario}>{e.detalle}</Text>
-              </View>
+              </Pressable>
             ))}
           </View>
         )}

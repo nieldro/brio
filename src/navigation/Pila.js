@@ -5,6 +5,7 @@ import Tabs from './Tabs';
 import Perfil from '../screens/Perfil';
 import Diario from '../screens/Diario';
 import Cuenta from '../screens/Cuenta';
+import GuiaEjercicio from '../screens/Guia';
 
 const Pila = createNativeStackNavigator();
 
@@ -31,6 +32,7 @@ export default function PilaPrincipal() {
         component={Cuenta}
         options={{ title: 'Tu cuenta', presentation: 'modal' }}
       />
+      <Pila.Screen name="Guia" component={GuiaEjercicio} options={{ title: 'Cómo se hace' }} />
     </Pila.Navigator>
   );
 }
