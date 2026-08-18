@@ -8,6 +8,7 @@ import Etiqueta from '../components/Etiqueta';
 import Chispa from '../components/Chispa';
 import { useUsuario } from '../state/UsuarioContext';
 import { fechasDeLaSemana } from '../services/fecha';
+import { contarRegresos, textoRegresos } from '../services/regresos';
 
 // El mensaje del coach sale del avance real. Nunca reprocha lo que falta.
 function mensajeCoach(hechos, nombre) {
@@ -68,6 +69,8 @@ export default function Progreso() {
   const { T } = useTema();
   const { perfil, mejorRacha, diasCompletados } = useUsuario();
 
+  const regresos = useMemo(() => textoRegresos(contarRegresos(diasCompletados)), [diasCompletados]);
+
   const { hechos, cumplimiento } = useMemo(() => {
     const semana = Object.values(fechasDeLaSemana(new Date()));
     const marcados = new Set(diasCompletados);
@@ -89,6 +92,18 @@ export default function Progreso() {
           <View style={[est.relleno, { width: `${Math.min(cumplimiento, 100)}%` }]} />
         </View>
         <Text style={est.pie}>{hechos} de 7 días marcados</Text>
+      </Tarjeta>
+
+      {/* La métrica que ninguna otra app lleva. Va ANTES de la mejor racha
+          a propósito: para quien ya abandonó cinco veces, esto es lo que
+          necesita ver primero. */}
+      <Tarjeta>
+        <Etiqueta>tus regresos</Etiqueta>
+        <View style={est.filaRacha}>
+          <Chispa size={26} />
+          <Text style={est.cifraRacha}>{regresos.cifra}</Text>
+        </View>
+        <Text style={T.secundario}>{regresos.frase}</Text>
       </Tarjeta>
 
       <Tarjeta>

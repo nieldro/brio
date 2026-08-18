@@ -22,3 +22,25 @@ export function resumenReto(dia, lugar) {
 export function esDescanso(dia) {
   return dia?.tipo === 'descanso';
 }
+
+// La versión mínima del día, para el botón "hoy no puedo".
+//
+// Lo que hace abandonar a la gente no es la falta de ganas: es el todo o nada.
+// Si no alcanzan los 20 minutos, no se hace nada, y al tercer día la persona
+// desaparece. Esto le quita a la app el poder de romperle la semana: se queda
+// el primer ejercicio, un par de minutos, y el día CUENTA igual.
+export function versionMinima(dia) {
+  if (!dia) return null;
+
+  const primero = dia.ejercicios?.[0] ?? null;
+  const duracion = Math.min(2, dia.duracion_min > 0 ? dia.duracion_min : 2);
+
+  return {
+    ...dia,
+    reto: primero ? primero.nombre : dia.reto,
+    duracion_min: duracion,
+    ejercicios: primero ? [primero] : [],
+    minima: true,
+    mensaje: 'Dos minutos y ya está. Cuenta igual que el día completo.',
+  };
+}

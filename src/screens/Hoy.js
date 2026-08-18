@@ -13,8 +13,9 @@ import { useUsuario } from '../state/UsuarioContext';
 
 import { planDemo } from '../data/planDemo';
 import { fechaLarga, franjaDelDia, claveDia } from '../services/fecha';
-import { diaDelPlan, resumenReto, esDescanso } from '../services/plan';
+import { diaDelPlan, resumenReto, esDescanso, versionMinima } from '../services/plan';
 import { textoHecho, fraseDelDia, subCelebracion } from '../services/racha';
+import { hoySeriaRegreso, celebrarRegreso, contarRegresos, diasSinVolver } from '../services/regresos';
 
 const SALUDOS = {
   manana: 'Buenos días',
@@ -116,6 +117,16 @@ const crear = ({ C, T, R, S }) => ({
   botonListo: {
     marginTop: S.lg,
   },
+  noPuedo: {
+    alignItems: 'center',
+    paddingVertical: S.md,
+    marginTop: S.xs,
+  },
+  noPuedoTexto: {
+    ...T.secundario,
+    color: C.gris,
+    fontWeight: '600',
+  },
   filaTip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -152,13 +163,24 @@ export default function Hoy({ navigation }) {
     racha,
     rota,
     completadoHoy,
+    diasCompletados,
     marcarDiaCompletado,
     diario,
     guardarLogro,
   } = useUsuario();
 
   // Mientras la IA no haya entregado un plan, se muestra el de arranque.
-  const dia = useMemo(() => diaDelPlan(plan ?? planDemo, hoy), [plan, hoy]);
+  const diaCompleto = useMemo(() => diaDelPlan(plan ?? planDemo, hoy), [plan, hoy]);
+
+  // "Hoy no puedo" cambia el reto por su versión de dos minutos. No es un
+  // modo aparte: el día se marca igual y cuenta igual.
+  const [enMinima, setEnMinima] = useState(false);
+  const dia = enMinima ? versionMinima(diaCompleto) : diaCompleto;
+
+  const esRegreso = useMemo(
+    () => hoySeriaRegreso({ diasCompletados }, hoy),
+    [diasCompletados, hoy],
+  );
 
   // Diario se abre ENCIMA de Hoy sin desmontarla. Si el usuario escribe allá,
   // este campo tiene que enterarse: antes seguía vacío y, al perder el foco,
@@ -177,8 +199,16 @@ export default function Hoy({ navigation }) {
 
   const marcarListo = () => {
     if (completadoHoy) return;
+
+    // Volver se celebra distinto que seguir. Para quien paró, esto es lo
+    // difícil, y es justo lo que ninguna app le ha reconocido nunca.
+    const felicitacion = esRegreso
+      ? celebrarRegreso(contarRegresos(diasCompletados) + 1, diasSinVolver(diasCompletados, hoy))
+      : { titulo: 'Hecho.', sub: subCelebracion(racha + 1) };
+
     marcarDiaCompletado(dia.reto);
-    celebrar({ titulo: 'Hecho.', sub: subCelebracion(racha + 1) });
+    celebrar(felicitacion);
+    setEnMinima(false);
   };
 
   const saludo = `${SALUDOS[franjaDelDia(hoy)]}, ${perfil.nombre}.`;
@@ -210,7 +240,20 @@ export default function Hoy({ navigation }) {
       </View>
 
       <Tarjeta>
-        <Etiqueta>{esDescanso(dia) ? 'hoy descansas' : 'reto de hoy'}</Etiqueta>
+        <View style={est.filaDiario}>
+          <Etiqueta>
+            {enMinima ? 'versión corta' : esDescanso(dia) ? 'hoy descansas' : 'reto de hoy'}
+          </Etiqueta>
+          {dia.ejercicios.length > 0 && (
+            <Pressable
+              onPress={() => navigation.navigate('Rutina', { dia, lugar: perfil.lugar })}
+              accessibilityRole="button"
+              hitSlop={8}
+            >
+              <Text style={est.verTodo}>ver rutina</Text>
+            </Pressable>
+          )}
+        </View>
         <Text style={est.reto}>{dia.reto}</Text>
         <Text style={est.resumen}>{resumenReto(dia, perfil.lugar)}</Text>
 
@@ -246,6 +289,28 @@ export default function Hoy({ navigation }) {
         >
           {completadoHoy ? textoHecho(racha) : 'Listo por hoy'}
         </Boton>
+
+        {/* Lo que hace abandonar no es la falta de ganas: es el todo o nada.
+            Este botón le quita a la app el poder de romperle la semana. */}
+        {!completadoHoy && !enMinima && dia.ejercicios.length > 0 && (
+          <Pressable
+            onPress={() => setEnMinima(true)}
+            accessibilityRole="button"
+            style={est.noPuedo}
+          >
+            <Text style={est.noPuedoTexto}>Hoy no puedo</Text>
+          </Pressable>
+        )}
+
+        {!completadoHoy && enMinima && (
+          <Pressable
+            onPress={() => setEnMinima(false)}
+            accessibilityRole="button"
+            style={est.noPuedo}
+          >
+            <Text style={est.noPuedoTexto}>Mejor hago el completo</Text>
+          </Pressable>
+        )}
       </Tarjeta>
 
       <Tarjeta>
