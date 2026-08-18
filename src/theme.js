@@ -14,9 +14,11 @@ export const PALETAS = {
     gris: '#7A6A5E', // textos secundarios: #8A7A6E daba 3,86:1 sobre crema
     blanco: '#FFFFFF', // tarjetas
     borde: '#E8D9C8', // bordes
-    salvia: '#7FA98E', // éxito y verde semáforo
+    salvia: '#7FA98E', // éxito y verde semáforo: puntos y rellenos, no texto
+    salviaTexto: '#3F6B4F', // "listo, ya lo tengo": el salvia daba 2,25:1
     ambar: '#E8A94C', // ámbar semáforo
     rojo: '#D96C5F', // rojo semáforo (informa, nunca castiga)
+    rojoTexto: '#B03A2E', // avisos de formulario: el rojo daba 3,1:1
     apagado: '#B4A79B', // pestañas inactivas
     coralSuave: '#FDF0EC', // fondo de opción elegida
   },
@@ -33,8 +35,10 @@ export const PALETAS = {
     blanco: '#2B2320', // tarjetas: un paso por encima del fondo
     borde: '#3D332E', // bordes
     salvia: '#8FBA9D', // aclarado para que se lea sobre oscuro
+    salviaTexto: '#8FBA9D', // sobre oscuro ya da 7:1, no hace falta variante
     ambar: '#EFB964',
     rojo: '#E58274',
+    rojoTexto: '#E58274', // sobre oscuro ya da 5,6:1
     apagado: '#9C8C81', // pestañas inactivas (4,7:1, se lee de verdad)
     coralSuave: '#3A2724', // fondo de opción elegida
   },

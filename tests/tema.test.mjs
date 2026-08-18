@@ -118,6 +118,20 @@ test('el coral de TEXTO pasa AA sobre fondo y sobre tarjeta', () => {
   }
 });
 
+test('los colores de aviso pasan AA como texto', () => {
+  // El salvia y el rojo de marca son para puntos y bordes. Como texto daban
+  // 2,25:1 y 3,1:1 sobre crema: por eso existen las variantes de texto.
+  for (const modo of MODOS) {
+    const C = PALETAS[modo];
+    for (const clave of ['salviaTexto', 'rojoTexto']) {
+      for (const superficie of ['crema', 'blanco']) {
+        const razon = contraste(C[clave], C[superficie]);
+        assert.ok(razon >= 4.5, `${modo}: ${clave} sobre ${superficie} da ${razon.toFixed(2)}:1`);
+      }
+    }
+  }
+});
+
 test('el coral de MARCA se distingue como forma, aunque no sirva para texto chico', () => {
   // La chispa y los bordes son gráficos: el mínimo es 3:1, no 4,5:1.
   for (const modo of MODOS) {

@@ -5,12 +5,13 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { TemaProvider, useTema } from './src/state/TemaContext';
 import { UsuarioProvider } from './src/state/UsuarioContext';
 import { CelebracionProvider } from './src/state/CelebracionContext';
+import RedDeSeguridad from './src/components/RedDeSeguridad';
 import Raiz from './src/navigation/Raiz';
 
 // El tema de navegación se alimenta del tema de Brío: nada de blanco de fábrica
 // en claro, ni del negro puro de fábrica en oscuro.
 function Navegacion() {
-  const { C, esOscuro } = useTema();
+  const { C, esOscuro, modo } = useTema();
 
   const base = esOscuro ? DarkTheme : DefaultTheme;
   const tema = {
@@ -32,7 +33,12 @@ function Navegacion() {
       <CelebracionProvider>
         {/* En oscuro los iconos de la barra van claros, y al revés. */}
         <StatusBar style={esOscuro ? 'light' : 'dark'} backgroundColor={C.crema} />
-        <Raiz />
+        {/* Va DENTRO del tema para poder pintarse en claro u oscuro, y por
+            dentro de la navegación para que un error de pantalla no se lleve
+            la app entera. */}
+        <RedDeSeguridad modo={modo}>
+          <Raiz />
+        </RedDeSeguridad>
       </CelebracionProvider>
     </NavigationContainer>
   );

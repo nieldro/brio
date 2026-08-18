@@ -54,7 +54,8 @@ const crear = ({ C, T, R, S }) => ({
   },
   ayuda: {
     ...T.secundario,
-    color: C.rojo,
+    // El rojo del semáforo sirve para un punto, no para texto: daba 3,1:1.
+    color: C.rojoTexto,
     marginTop: S.xs,
   },
   aviso: {

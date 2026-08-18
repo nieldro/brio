@@ -100,7 +100,8 @@ const crear = ({ C, T, R, S, RELLENO }) => ({
   },
   aviso: {
     ...T.cuerpo,
-    color: C.salvia,
+    // El salvia de marca sobre crema daba 2,25:1: ilegible para mucha gente.
+    color: C.salviaTexto,
     textAlign: 'center',
   },
   salir: {

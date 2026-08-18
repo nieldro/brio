@@ -13,7 +13,7 @@ import { resumenReto } from '../services/plan';
 // El tipo del día es texto de 12px: usa el coral de texto, no el de marca.
 const tiposDe = (C) => ({
   entrenamiento: { texto: 'entrenamiento', color: C.coralTexto },
-  suave: { texto: 'suave', color: C.salvia },
+  suave: { texto: 'suave', color: C.salviaTexto },
   descanso: { texto: 'descanso', color: C.gris },
 });
 
