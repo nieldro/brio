@@ -22,9 +22,14 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
-  # El runner de pruebas de Node acepta patrones glob desde la 21,
-  # y la detección de módulos ES sin "type": "module" desde la 22.7.
-  NODE_VERSION: '24.x'
+  # Debe coincidir con el runtime de la Function App, que corre en Node 22.
+  # Node 24 aparece como soportado en `az functionapp list-runtimes`, pero esa
+  # lista no separa por plan: en Linux consumo la app no levanta y responde
+  # 503 indefinidamente. Verificado el 18/08/2026.
+  #
+  # La 22 alcanza para las pruebas: el runner acepta patrones glob desde la 21
+  # y detecta módulos ES sin "type": "module" desde la 22.7.
+  NODE_VERSION: '22.x'
 
 steps:
   - task: NodeTool@0

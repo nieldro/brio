@@ -70,12 +70,31 @@ configuración, responde **503** nombrando cuáles.
 ## Publicar
 
 ```bash
-func azure functionapp publish brio-functions
+npx func azure functionapp publish brio-functions-68191c --build remote --subscription <id>
 ```
 
-La Function App debe estar en **plan de consumo** (un millón de ejecuciones
-gratis al mes, capa gratuita permanente). Activa Application Insights con la
-cuota mensual gratuita.
+El `--subscription` es necesario: Core Tools no siempre hereda el contexto de
+`az` y falla con «Can't find app with name».
+
+La Function App debe estar en **plan de consumo** (SKU `Y1`, nivel `Dynamic`):
+un millón de ejecuciones gratis al mes, capa gratuita permanente. Cualquier
+otro plan consume los créditos, que vencen.
+
+### Dos cosas que costaron tiempo, para no repetirlas
+
+**Node 22, no 24.** `az functionapp list-runtimes --os linux` reporta `Node|24`
+como soportado en Functions v4, pero esa lista no separa por plan de
+hospedaje. En Linux consumo la app se crea, dice `Running`, y tanto el sitio
+como Kudu responden **503 indefinidamente**: nunca levanta un trabajador. Con
+Node 22 arranca de inmediato. Verificado el 18/08/2026 en dos regiones
+distintas, así que no es un problema del sello.
+
+**Regiones restringidas.** Las suscripciones Azure for Students traen la
+directiva `Allowed resource deployment regions`. Para ver cuáles permite:
+
+```bash
+az policy assignment list --query "[?displayName=='Allowed resource deployment regions'] | [0].parameters.listOfAllowedLocations.value"
+```
 
 Después de publicar, en el `.env` de la app:
 `EXPO_PUBLIC_API_URL=https://brio-functions.azurewebsites.net`.

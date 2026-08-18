@@ -4,3 +4,9 @@ local.settings.json
 local.settings.example.json
 tests
 README.md
+
+# Con --build remote, Azure corre `npm install --production` del lado del
+# servidor. Subir node_modules aquí no aporta nada y sí estorba: las Core
+# Tools y Azurite, que son devDependencies, pesan mas de 1 GB y dejan la
+# publicacion colgada durante la carga.
+node_modules
