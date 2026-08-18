@@ -1,16 +1,14 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { useTema } from '../state/TemaContext';
-import Tabs from './Tabs';
-import Perfil from '../screens/Perfil';
-import Diario from '../screens/Diario';
+import Onboarding from '../screens/onboarding/Onboarding';
 import Cuenta from '../screens/Cuenta';
 
 const Pila = createNativeStackNavigator();
 
-// Las 4 pestañas son la app. Perfil y Diario se abren encima, a un toque,
-// y se cierran volviendo. No son pestañas: no compiten con lo diario.
-export default function PilaPrincipal() {
+// Pila de quien todavía no tiene perfil. Existe solo para que el paso 1 pueda
+// abrir "Ya tengo cuenta" sin obligar a nadie a registrarse para empezar.
+export default function PilaEntrada() {
   const { C, T } = useTema();
 
   return (
@@ -23,9 +21,7 @@ export default function PilaPrincipal() {
         contentStyle: { backgroundColor: C.crema },
       }}
     >
-      <Pila.Screen name="Pestañas" component={Tabs} options={{ headerShown: false }} />
-      <Pila.Screen name="Perfil" component={Perfil} options={{ title: 'Tu perfil' }} />
-      <Pila.Screen name="Diario" component={Diario} options={{ title: 'Tu diario' }} />
+      <Pila.Screen name="Onboarding" component={Onboarding} options={{ headerShown: false }} />
       <Pila.Screen
         name="Cuenta"
         component={Cuenta}

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 
 import { useEstilos } from '../../state/TemaContext';
 import { useUsuario } from '../../state/UsuarioContext';
@@ -30,7 +30,7 @@ const enRango = (clave, texto) => {
   return Number.isFinite(n) && n >= min && n <= max;
 };
 
-export default function Onboarding() {
+export default function Onboarding({ navigation }) {
   const { terminarOnboarding, actualizarPerfil } = useUsuario();
   const est = useEstilos(crear);
 
@@ -127,7 +127,22 @@ export default function Onboarding() {
 
   switch (paso.tipo) {
     case 'mensaje':
-      return <Marco {...comun} boton={paso.boton} onBoton={() => avanzar(paso.alAvanzar)} />;
+      return (
+        <Marco {...comun} boton={paso.boton} onBoton={() => avanzar(paso.alAvanzar)}>
+          {/* Solo en el primer paso, y como enlace discreto: quien ya usó Brío
+              en otro teléfono no debería tener que rehacer el onboarding.
+              Nunca es un muro, siempre está debajo del botón principal. */}
+          {paso.id === 'intro' && (
+            <Pressable
+              onPress={() => navigation.navigate('Cuenta', { modo: 'entrar' })}
+              accessibilityRole="button"
+              style={est.enlaceCuenta}
+            >
+              <Text style={est.enlaceCuentaTexto}>Ya tengo cuenta</Text>
+            </Pressable>
+          )}
+        </Marco>
+      );
 
     case 'permiso':
       return <Marco {...comun} boton={paso.boton} onBoton={pedirPermiso} />;
@@ -219,6 +234,16 @@ export default function Onboarding() {
 }
 
 const crear = ({ C, T, S }) => ({
+  enlaceCuenta: {
+    marginTop: S.xxl,
+    alignSelf: 'flex-start',
+    paddingVertical: S.sm,
+  },
+  enlaceCuentaTexto: {
+    ...T.cuerpo,
+    color: C.coralTexto,
+    fontWeight: '600',
+  },
   cierre: {
     marginTop: S.lg,
     gap: S.md,

@@ -141,10 +141,10 @@ function Opciones({ valores, valor, onElegir, etiquetaDe = (v) => String(v), est
   );
 }
 
-export default function Perfil() {
+export default function Perfil({ navigation }) {
   const est = useEstilos(crear);
   const { C, preferencia, cambiarPreferencia } = useTema();
-  const { perfil, actualizarPerfil, reiniciar } = useUsuario();
+  const { perfil, actualizarPerfil, reiniciar, sesion, correo } = useUsuario();
 
   const [borrador, setBorrador] = useState({
     ...perfil,
@@ -256,6 +256,32 @@ export default function Perfil() {
         />
 
         <Text style={est.pie}>Los cambios entran en el plan de la próxima semana.</Text>
+      </Tarjeta>
+
+      <Tarjeta>
+        <Etiqueta>tu cuenta</Etiqueta>
+        {sesion === 'concuenta' ? (
+          <>
+            <Text style={est.campo}>{correo}</Text>
+            <Text style={est.pie}>
+              Tu progreso está guardado. Entra con este correo en cualquier teléfono.
+            </Text>
+          </>
+        ) : (
+          <>
+            <Text style={est.campo}>Todavía sin cuenta</Text>
+            <Text style={est.pie}>
+              Hoy tu racha vive solo en este teléfono. Con una cuenta te sigue a donde vayas.
+            </Text>
+            <Boton
+              variante="suave"
+              onPress={() => navigation.navigate('Cuenta', { modo: 'crear' })}
+              style={est.activar}
+            >
+              Guardar mi cuenta
+            </Boton>
+          </>
+        )}
       </Tarjeta>
 
       <Tarjeta>

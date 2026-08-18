@@ -1,4 +1,4 @@
-import { cargarEstado, guardarEstado, borrarEstado } from './almacenamiento';
+import { cargarEstado, guardarEstado } from './almacenamiento';
 import { supabase, hayNube, sesionAnonima } from './supabase';
 
 // Único contrato de datos de la app. El estado no sabe si hay nube o no.
@@ -175,9 +175,5 @@ export async function guardarLogro(userId, { fecha, texto }) {
   } catch {}
 }
 
-export async function olvidar() {
-  await borrarEstado();
-  try {
-    await supabase?.auth.signOut();
-  } catch {}
-}
+// Cerrar sesión vive en lib/auth.js: es asunto de la cuenta, no del
+// repositorio de datos.

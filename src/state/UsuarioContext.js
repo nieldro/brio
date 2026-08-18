@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useReducer } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react';
 import { completarDia, estaCompletado, rachaVigente, rachaRota } from '../services/racha';
 import { claveDia } from '../services/fecha';
 import { reducer, estadoInicial, persistible } from './usuarioReducer';
@@ -8,8 +8,8 @@ import {
   guardarPerfil,
   marcarRegistro,
   guardarLogro as subirLogro,
-  olvidar,
 } from '../lib/repositorio';
+import { estadoDeSesion, salir as salirDeLaCuenta } from '../lib/auth';
 
 // Única fuente de verdad de la app.
 // La máquina de estado vive en usuarioReducer.js (pura, con pruebas).
@@ -20,16 +20,25 @@ const UsuarioContext = createContext(null);
 export function UsuarioProvider({ children }) {
   const [estado, dispatch] = useReducer(reducer, estadoInicial);
 
+  // Trae disco, nube y estado de sesión. Se usa al abrir y cada vez que
+  // alguien entra o crea cuenta: ahí los datos cambian de dueño.
+  const hidratar = useCallback(async () => {
+    const [datos, sesion] = await Promise.all([cargar(), estadoDeSesion()]);
+    dispatch({ tipo: 'HIDRATAR', datos });
+    dispatch({ tipo: 'SESION', tipoSesion: sesion.tipo, correo: sesion.correo });
+  }, []);
+
   // Leer una sola vez, al abrir.
   useEffect(() => {
     let vivo = true;
-    cargar().then((datos) => {
-      if (vivo) dispatch({ tipo: 'HIDRATAR', datos });
+    hidratar().catch(() => {
+      // Sin datos la app arranca igual, en modo local.
+      if (vivo) dispatch({ tipo: 'HIDRATAR', datos: null });
     });
     return () => {
       vivo = false;
     };
-  }, []);
+  }, [hidratar]);
 
   // Guardar en disco en cada cambio, nunca antes de haber leído
   // (guardar antes borraría lo que ya estaba).
@@ -43,6 +52,9 @@ export function UsuarioProvider({ children }) {
 
     return {
       ...estado,
+      // Atajo para la UI: solo quien está anónimo necesita que le ofrezcan
+      // guardar la cuenta.
+      puedeGuardarCuenta: estado.sesion === 'anonimo',
       // Derivados: las pantallas no recalculan reglas de racha.
       completadoHoy: estaCompletado(estado, hoy),
       racha: rachaVigente(estado, hoy),
@@ -83,13 +95,22 @@ export function UsuarioProvider({ children }) {
         subirLogro(estado.userId, { fecha: claveDia(), texto });
       },
 
-      // La usa "cerrar sesión" del Perfil.
+      // Después de entrar o de crear cuenta: los datos cambiaron de dueño,
+      // hay que volver a traerlos enteros.
+      refrescarSesion: async () => {
+        dispatch({ tipo: 'REHIDRATAR' });
+        await hidratar();
+      },
+
+      // "Cerrar sesión" del Perfil. Con cuenta, los datos siguen en la nube
+      // y vuelven al entrar; lo que se borra es la copia de este teléfono.
       reiniciar: async () => {
-        await olvidar();
-        dispatch({ tipo: 'REINICIAR' });
+        await salirDeLaCuenta();
+        dispatch({ tipo: 'REHIDRATAR' });
+        await hidratar();
       },
     };
-  }, [estado]);
+  }, [estado, hidratar]);
 
   return <UsuarioContext.Provider value={valor}>{children}</UsuarioContext.Provider>;
 }

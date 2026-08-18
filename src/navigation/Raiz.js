@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { useEstilos } from '../state/TemaContext';
 import Latido from '../components/Latido';
 import { useUsuario } from '../state/UsuarioContext';
-import Onboarding from '../screens/onboarding/Onboarding';
+import PilaEntrada from './PilaEntrada';
 import PilaPrincipal from './Pila';
 
 const crear = ({ C }) => ({
@@ -29,5 +29,5 @@ export default function Raiz() {
     );
   }
 
-  return onboardingListo ? <PilaPrincipal /> : <Onboarding />;
+  return onboardingListo ? <PilaPrincipal /> : <PilaEntrada />;
 }

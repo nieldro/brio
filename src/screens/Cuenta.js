@@ -1,0 +1,267 @@
+import { useState } from 'react';
+import { View, Text, TextInput, Pressable, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { useEstilos, useTema } from '../state/TemaContext';
+import Boton from '../components/Boton';
+import { useUsuario } from '../state/UsuarioContext';
+import { crearCuenta, entrar, recuperarClave } from '../lib/auth';
+import {
+  revisarCorreo,
+  revisarClave,
+  revisarConfirmacion,
+  listoParaEntrar,
+  listoParaCrear,
+} from '../services/credenciales';
+
+const crear = ({ C, T, R, S }) => ({
+  pantalla: {
+    flex: 1,
+    backgroundColor: C.crema,
+  },
+  contenido: {
+    paddingHorizontal: S.xl,
+    paddingBottom: S.xxl,
+    gap: S.md,
+  },
+  titulo: {
+    ...T.saludo,
+    fontSize: 30,
+    lineHeight: 40,
+  },
+  sub: {
+    ...T.cuerpo,
+    color: C.gris,
+    marginBottom: S.md,
+  },
+  campo: {
+    ...T.secundario,
+    fontWeight: '600',
+    marginTop: S.md,
+    marginBottom: S.xs,
+  },
+  entrada: {
+    ...T.cuerpo,
+    backgroundColor: C.blanco,
+    borderRadius: R.medio,
+    borderWidth: 1.5,
+    borderColor: C.borde,
+    paddingHorizontal: S.lg,
+    paddingVertical: S.lg,
+  },
+  entradaMal: {
+    borderColor: C.rojo,
+  },
+  ayuda: {
+    ...T.secundario,
+    color: C.rojo,
+    marginTop: S.xs,
+  },
+  aviso: {
+    ...T.cuerpo,
+    backgroundColor: C.blanco,
+    borderRadius: R.medio,
+    borderWidth: 1,
+    borderColor: C.borde,
+    padding: S.lg,
+    marginTop: S.md,
+  },
+  avisoBien: {
+    borderColor: C.salvia,
+  },
+  accion: {
+    marginTop: S.xl,
+  },
+  enlace: {
+    alignItems: 'center',
+    paddingVertical: S.md,
+  },
+  enlaceTexto: {
+    ...T.cuerpo,
+    color: C.coralTexto,
+    fontWeight: '600',
+  },
+  nota: {
+    ...T.secundario,
+    marginTop: S.lg,
+    textAlign: 'center',
+  },
+});
+
+// Una sola pantalla con dos modos. La cuenta nunca es obligatoria: sirve para
+// no perder la racha al cambiar de teléfono.
+export default function Cuenta({ route, navigation }) {
+  const modoInicial = route?.params?.modo === 'entrar' ? 'entrar' : 'crear';
+
+  const est = useEstilos(crear);
+  const { C } = useTema();
+  const insets = useSafeAreaInsets();
+  const { puedeGuardarCuenta, refrescarSesion } = useUsuario();
+
+  const [modo, setModo] = useState(modoInicial);
+  const [correo, setCorreo] = useState('');
+  const [clave, setClave] = useState('');
+  const [confirmacion, setConfirmacion] = useState('');
+  const [tocado, setTocado] = useState({});
+  const [ocupado, setOcupado] = useState(false);
+  const [error, setError] = useState(null);
+  const [logrado, setLogrado] = useState(null);
+
+  const creando = modo === 'crear';
+
+  // Los avisos solo aparecen después de que el usuario tocó el campo:
+  // regañar mientras alguien escribe su correo es hostil.
+  const malCorreo = tocado.correo ? revisarCorreo(correo) : null;
+  const malClave = tocado.clave ? revisarClave(clave) : null;
+  const malConfirmacion =
+    creando && tocado.confirmacion ? revisarConfirmacion(clave, confirmacion) : null;
+
+  const puedeSeguir = creando
+    ? listoParaCrear({ correo, clave, confirmacion })
+    : listoParaEntrar({ correo, clave });
+
+  const cambiarModo = () => {
+    setModo(creando ? 'entrar' : 'crear');
+    setError(null);
+    setLogrado(null);
+    setTocado({});
+  };
+
+  const enviar = async () => {
+    setOcupado(true);
+    setError(null);
+
+    const r = creando ? await crearCuenta(correo, clave) : await entrar(correo, clave);
+
+    if (!r.ok) {
+      setError(r.error);
+      setOcupado(false);
+      return;
+    }
+
+    if (r.faltaConfirmar) {
+      setLogrado(
+        `Te mandé un correo a ${r.correo}. Ábrelo para confirmar y tu cuenta queda lista.`,
+      );
+      setOcupado(false);
+      return;
+    }
+
+    await refrescarSesion();
+    setOcupado(false);
+
+    // Al entrar con una cuenta que ya tiene perfil, Raiz cambia el árbol
+    // entero y esta pantalla se desmonta sola. Solo se vuelve atrás si
+    // seguimos aquí, para no navegar sobre un navegador que ya murió.
+    if (navigation.canGoBack()) navigation.goBack();
+  };
+
+  const olvideLaClave = async () => {
+    const mal = revisarCorreo(correo);
+    if (mal) {
+      setTocado((t) => ({ ...t, correo: true }));
+      setError('Escribe tu correo y te mando el enlace.');
+      return;
+    }
+    setOcupado(true);
+    const r = await recuperarClave(correo);
+    setOcupado(false);
+    if (r.ok) setLogrado('Te mandé un enlace para cambiar la clave. Revisa tu correo.');
+    else setError(r.error);
+  };
+
+  return (
+    <KeyboardAvoidingView
+      style={est.pantalla}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={[est.contenido, { paddingTop: insets.top + 8 }]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={est.titulo}>{creando ? 'Guarda tu cuenta.' : 'Bienvenido de vuelta.'}</Text>
+        <Text style={est.sub}>
+          {creando
+            ? puedeGuardarCuenta
+              ? 'Así no pierdes tu racha si cambias de teléfono. Todo lo que llevas se queda contigo.'
+              : 'Con una cuenta tu progreso te sigue a cualquier teléfono.'
+            : 'Entra y recuperas tu racha, tu plan y tu diario.'}
+        </Text>
+
+        <Text style={est.campo}>Tu correo</Text>
+        <TextInput
+          value={correo}
+          onChangeText={setCorreo}
+          onBlur={() => setTocado((t) => ({ ...t, correo: true }))}
+          placeholder="nombre@correo.com"
+          placeholderTextColor={C.apagado}
+          style={[est.entrada, malCorreo && est.entradaMal]}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="email"
+          textContentType="emailAddress"
+        />
+        {!!malCorreo && <Text style={est.ayuda}>{malCorreo}</Text>}
+
+        <Text style={est.campo}>Tu clave</Text>
+        <TextInput
+          value={clave}
+          onChangeText={setClave}
+          onBlur={() => setTocado((t) => ({ ...t, clave: true }))}
+          placeholder={creando ? 'Mínimo 8 caracteres' : 'Tu clave'}
+          placeholderTextColor={C.apagado}
+          style={[est.entrada, malClave && est.entradaMal]}
+          secureTextEntry
+          autoCapitalize="none"
+          autoComplete={creando ? 'new-password' : 'current-password'}
+          textContentType={creando ? 'newPassword' : 'password'}
+        />
+        {!!malClave && <Text style={est.ayuda}>{malClave}</Text>}
+
+        {creando && (
+          <>
+            <Text style={est.campo}>Repítela</Text>
+            <TextInput
+              value={confirmacion}
+              onChangeText={setConfirmacion}
+              onBlur={() => setTocado((t) => ({ ...t, confirmacion: true }))}
+              placeholder="La misma clave"
+              placeholderTextColor={C.apagado}
+              style={[est.entrada, malConfirmacion && est.entradaMal]}
+              secureTextEntry
+              autoCapitalize="none"
+            />
+            {!!malConfirmacion && <Text style={est.ayuda}>{malConfirmacion}</Text>}
+          </>
+        )}
+
+        {!!error && <Text style={est.aviso}>{error}</Text>}
+        {!!logrado && <Text style={[est.aviso, est.avisoBien]}>{logrado}</Text>}
+
+        <Boton onPress={enviar} disabled={!puedeSeguir || ocupado} style={est.accion}>
+          {ocupado ? 'Un momento…' : creando ? 'Crear mi cuenta' : 'Entrar'}
+        </Boton>
+
+        {!creando && (
+          <Pressable onPress={olvideLaClave} accessibilityRole="button" style={est.enlace}>
+            <Text style={est.enlaceTexto}>Olvidé mi clave</Text>
+          </Pressable>
+        )}
+
+        <Pressable onPress={cambiarModo} accessibilityRole="button" style={est.enlace}>
+          <Text style={est.enlaceTexto}>
+            {creando ? 'Ya tengo cuenta' : 'No tengo cuenta todavía'}
+          </Text>
+        </Pressable>
+
+        {creando && puedeGuardarCuenta && (
+          <Text style={est.nota}>
+            No pierdes nada de lo que llevas. Tu racha y tu diario se quedan contigo.
+          </Text>
+        )}
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}

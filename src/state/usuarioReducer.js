@@ -8,6 +8,10 @@ export const estadoInicial = {
   hidratado: false, // ¿ya leímos disco y nube?
   userId: null,
   enNube: false,
+  // 'invitado' | 'anonimo' | 'concuenta'. Decide si Perfil ofrece guardar
+  // la cuenta o mostrar el correo con el que entró.
+  sesion: 'invitado',
+  correo: null,
   onboardingListo: false,
   perfil: {
     nombre: '',
@@ -32,7 +36,9 @@ export const estadoInicial = {
 };
 
 // Lo que se guarda en disco. Lo demás se resuelve en cada arranque.
-export function persistible({ hidratado, userId, enNube, ...resto }) {
+// La sesión y el correo NUNCA se persisten aquí: los manda Supabase, y una
+// copia vieja en disco haría creer a la app que sigue una sesión que ya murió.
+export function persistible({ hidratado, userId, enNube, sesion, correo, ...resto }) {
   return resto;
 }
 
@@ -75,6 +81,15 @@ export function reducer(estado, accion) {
         ...estado,
         diario: { ...estado.diario, [claveDia(accion.hoy)]: accion.texto },
       };
+
+    case 'SESION':
+      return { ...estado, sesion: accion.tipoSesion, correo: accion.correo ?? null };
+
+    // Vuelve a cero y espera una hidratación nueva. `hidratado` en false
+    // hace que Raiz muestre la chispa mientras se traen los datos de quien
+    // acaba de entrar, en vez de enseñar por un instante los del anterior.
+    case 'REHIDRATAR':
+      return { ...estadoInicial, enNube: estado.enNube };
 
     case 'REINICIAR':
       return { ...estadoInicial, hidratado: true, userId: estado.userId, enNube: estado.enNube };
