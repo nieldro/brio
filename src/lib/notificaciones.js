@@ -2,7 +2,11 @@ import { Platform } from 'react-native';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 
-import { C } from '../theme';
+import { PALETAS } from '../theme';
+
+// El canal de Android se configura una vez, fuera de React: no tiene acceso al
+// tema activo. El coral es el mismo en las dos paletas, así que da igual cuál.
+const CORAL = PALETAS.claro.coral;
 
 // Único punto que habla con Expo Push. Devuelve el token o null.
 // Nunca lanza: negarse a recibir recordatorios no puede romper el onboarding.
@@ -52,7 +56,7 @@ async function canalAndroid(Notifications) {
   await Notifications.setNotificationChannelAsync('brio', {
     name: 'Recordatorios de Brío',
     importance: Notifications.AndroidImportance.DEFAULT,
-    lightColor: C.coral,
+    lightColor: CORAL,
     sound: null,
   });
 }

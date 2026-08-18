@@ -1,28 +1,12 @@
-import { View, StyleSheet } from 'react-native';
+import { View } from 'react-native';
 
-import { C } from '../theme';
+import { useEstilos } from '../state/TemaContext';
 import Latido from '../components/Latido';
 import { useUsuario } from '../state/UsuarioContext';
 import Onboarding from '../screens/onboarding/Onboarding';
 import PilaPrincipal from './Pila';
 
-// Único punto que decide qué ve el usuario al abrir la app.
-export default function Raiz() {
-  const { hidratado, onboardingListo } = useUsuario();
-
-  // Mientras se lee el disco. Sin esto, el onboarding parpadea en cada arranque.
-  if (!hidratado) {
-    return (
-      <View style={styles.espera}>
-        <Latido size={48} />
-      </View>
-    );
-  }
-
-  return onboardingListo ? <PilaPrincipal /> : <Onboarding />;
-}
-
-const styles = StyleSheet.create({
+const crear = ({ C }) => ({
   espera: {
     flex: 1,
     backgroundColor: C.crema,
@@ -30,3 +14,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+
+// Único punto que decide qué ve el usuario al abrir la app.
+export default function Raiz() {
+  const { hidratado, onboardingListo } = useUsuario();
+  const est = useEstilos(crear);
+
+  // Mientras se lee el disco. Sin esto, el onboarding parpadea en cada arranque.
+  if (!hidratado) {
+    return (
+      <View style={est.espera}>
+        <Latido size={48} />
+      </View>
+    );
+  }
+
+  return onboardingListo ? <PilaPrincipal /> : <Onboarding />;
+}

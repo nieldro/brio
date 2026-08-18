@@ -1,13 +1,45 @@
 import { useEffect, useRef } from 'react';
 import { View, Text, Animated, Easing, StyleSheet } from 'react-native';
-import { C, S, T } from '../theme';
+
+import { useEstilos } from '../state/TemaContext';
 import Chispa from '../components/Chispa';
 
 const DURACION_VISIBLE = 2000;
 
+// La celebración es coral en los dos modos: es un momento de marca, no una
+// superficie del tema. El texto va blanco encima del relleno coral.
+const crear = ({ T, S, RELLENO }) => ({
+  capa: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: RELLENO.coral,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: S.xl,
+    zIndex: 100,
+    elevation: 100,
+  },
+  textos: {
+    alignItems: 'center',
+    gap: S.sm,
+    paddingHorizontal: S.xxl,
+  },
+  titulo: {
+    ...T.saludo,
+    color: '#FFFFFF',
+    textAlign: 'center',
+  },
+  sub: {
+    ...T.cuerpo,
+    color: '#FFFFFF',
+    opacity: 0.9,
+    textAlign: 'center',
+  },
+});
+
 // Pantalla completa coral. Aparece al completar el reto y se va sola.
 // Animated de React Native, sin librerías extra.
 export default function Celebracion({ mensaje, onFin }) {
+  const est = useEstilos(crear);
   const fondo = useRef(new Animated.Value(0)).current;
   const chispa = useRef(new Animated.Value(0)).current;
 
@@ -38,10 +70,7 @@ export default function Celebracion({ mensaje, onFin }) {
   }, [fondo, chispa, onFin]);
 
   return (
-    <Animated.View
-      pointerEvents="auto"
-      style={[styles.capa, { opacity: fondo }]}
-    >
+    <Animated.View pointerEvents="auto" style={[est.capa, { opacity: fondo }]}>
       <Animated.View
         style={{
           transform: [
@@ -50,41 +79,13 @@ export default function Celebracion({ mensaje, onFin }) {
           opacity: chispa,
         }}
       >
-        <Chispa size={72} color={C.blanco} />
+        <Chispa size={72} color="#FFFFFF" />
       </Animated.View>
 
-      <View style={styles.textos}>
-        <Text style={styles.titulo}>{mensaje?.titulo ?? 'Hecho.'}</Text>
-        <Text style={styles.sub}>{mensaje?.sub ?? 'Un día más contigo.'}</Text>
+      <View style={est.textos}>
+        <Text style={est.titulo}>{mensaje?.titulo ?? 'Hecho.'}</Text>
+        <Text style={est.sub}>{mensaje?.sub ?? 'Un día más contigo.'}</Text>
       </View>
     </Animated.View>
   );
 }
-
-const styles = StyleSheet.create({
-  capa: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: C.coral,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: S.xl,
-    zIndex: 100,
-    elevation: 100,
-  },
-  textos: {
-    alignItems: 'center',
-    gap: S.sm,
-    paddingHorizontal: S.xxl,
-  },
-  titulo: {
-    ...T.saludo,
-    color: C.blanco,
-    textAlign: 'center',
-  },
-  sub: {
-    ...T.cuerpo,
-    color: C.blanco,
-    opacity: 0.9,
-    textAlign: 'center',
-  },
-});

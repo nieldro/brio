@@ -1,8 +1,10 @@
 import { View } from 'react-native';
-import { SEMAFORO } from '../theme';
+import { useTema } from '../state/TemaContext';
 
 // El semáforo informa, nunca castiga. Verde suma, ámbar modera, rojo avisa.
 export default function PuntoSemaforo({ color = 'verde', size = 10 }) {
+  const { SEMAFORO } = useTema();
+
   return (
     <View
       style={{

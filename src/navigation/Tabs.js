@@ -1,6 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
-import { C, S } from '../theme';
+import { S } from '../theme';
+import { useTema } from '../state/TemaContext';
 import { IconoHoy, IconoSemana, IconoChat, IconoProgreso } from '../components/iconos';
 import Hoy from '../screens/Hoy';
 import Semana from '../screens/Semana';
@@ -17,11 +18,13 @@ const PESTANAS = [
 ];
 
 export default function Tabs() {
+  const { C } = useTema();
+
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: C.coral,
+        tabBarActiveTintColor: C.coralTexto,
         tabBarInactiveTintColor: C.apagado,
         tabBarStyle: {
           backgroundColor: C.blanco,

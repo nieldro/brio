@@ -6,6 +6,24 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const CLAVE = 'brio:estado:v1';
 
+// El tema va en su propia clave: se lee antes que el resto para que la app
+// no parpadee en claro antes de ponerse oscura.
+const CLAVE_TEMA = 'brio:tema:v1';
+
+export async function cargarTema() {
+  try {
+    return await AsyncStorage.getItem(CLAVE_TEMA);
+  } catch {
+    return null;
+  }
+}
+
+export async function guardarTema(preferencia) {
+  try {
+    await AsyncStorage.setItem(CLAVE_TEMA, preferencia);
+  } catch {}
+}
+
 export async function cargarEstado() {
   try {
     const crudo = await AsyncStorage.getItem(CLAVE);

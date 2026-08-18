@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Pressable } from 'react-native';
 
-import { C, S, R, T } from '../theme';
+import { useEstilos, useTema } from '../state/TemaContext';
 import Pantalla from '../components/Pantalla';
 import Tarjeta from '../components/Tarjeta';
 import Boton from '../components/Boton';
@@ -16,122 +16,13 @@ import { fechaLarga, franjaDelDia, claveDia } from '../services/fecha';
 import { diaDelPlan, resumenReto, esDescanso } from '../services/plan';
 import { textoHecho, fraseDelDia, subCelebracion } from '../services/racha';
 
-
 const SALUDOS = {
   manana: 'Buenos días',
   tarde: 'Buenas tardes',
   noche: 'Buenas noches',
 };
 
-export default function Hoy({ navigation }) {
-  const hoy = useMemo(() => new Date(), []);
-
-  const { celebrar } = useCelebracion();
-  const { perfil, plan, racha, rota, completadoHoy, marcarDiaCompletado, diario, guardarLogro } =
-    useUsuario();
-
-  // Mientras la IA no haya entregado un plan, se muestra el de arranque.
-  const dia = useMemo(() => diaDelPlan(plan ?? planDemo, hoy), [plan, hoy]);
-
-  const [logro, setLogro] = useState(diario[claveDia(hoy)] ?? '');
-
-  const marcarListo = () => {
-    if (completadoHoy) return;
-    marcarDiaCompletado(dia.reto);
-    celebrar({ titulo: 'Hecho.', sub: subCelebracion(racha + 1) });
-  };
-
-  const saludo = `${SALUDOS[franjaDelDia(hoy)]}, ${perfil.nombre}.`;
-
-  return (
-    <Pantalla>
-      <View style={styles.encabezado}>
-        <Text style={styles.fecha}>{fechaLarga(hoy)}</Text>
-
-        <View style={styles.acciones}>
-          <PildoraRacha dias={racha} />
-          <Pressable
-            onPress={() => navigation.navigate('Perfil')}
-            accessibilityRole="button"
-            accessibilityLabel="Tu perfil"
-            hitSlop={8}
-            style={({ pressed }) => [styles.avatar, pressed && styles.presionado]}
-          >
-            <Text style={styles.inicial}>
-              {perfil.nombre?.trim()?.charAt(0)?.toUpperCase() || '·'}
-            </Text>
-          </Pressable>
-        </View>
-      </View>
-
-      <View style={styles.bloqueSaludo}>
-        <Text style={T.saludo}>{saludo}</Text>
-        <Text style={styles.frase}>{fraseDelDia({ completadoHoy, racha, rota })}</Text>
-      </View>
-
-      <Tarjeta>
-        <Etiqueta>{esDescanso(dia) ? 'hoy descansas' : 'reto de hoy'}</Etiqueta>
-        <Text style={styles.reto}>{dia.reto}</Text>
-        <Text style={styles.resumen}>{resumenReto(dia, perfil.lugar)}</Text>
-
-        {dia.ejercicios.length > 0 && (
-          <View style={styles.ejercicios}>
-            {dia.ejercicios.map((e) => (
-              <View key={e.nombre} style={styles.ejercicio}>
-                <Text style={styles.ejercicioNombre}>{e.nombre}</Text>
-                <Text style={T.secundario}>{e.detalle}</Text>
-              </View>
-            ))}
-          </View>
-        )}
-
-        <Text style={styles.mensaje}>{dia.mensaje}</Text>
-
-        <Boton
-          variante={completadoHoy ? 'salvia' : 'coral'}
-          onPress={marcarListo}
-          style={styles.botonListo}
-        >
-          {completadoHoy ? textoHecho(racha) : 'Listo por hoy'}
-        </Boton>
-      </Tarjeta>
-
-      <Tarjeta>
-        <Etiqueta>hoy en la mesa</Etiqueta>
-        <View style={styles.filaTip}>
-          <PuntoSemaforo color={dia.comida_color} />
-          <Text style={[T.cuerpo, styles.tip]}>{dia.comida_tip}</Text>
-        </View>
-      </Tarjeta>
-
-      <Tarjeta>
-        <View style={styles.filaDiario}>
-          <Etiqueta>tu diario</Etiqueta>
-          <Pressable
-            onPress={() => navigation.navigate('Diario')}
-            accessibilityRole="button"
-            hitSlop={8}
-          >
-            <Text style={styles.verTodo}>Ver todo</Text>
-          </Pressable>
-        </View>
-
-        <Text style={styles.pregunta}>¿Un logro de hoy?</Text>
-        <TextInput
-          value={logro}
-          onChangeText={setLogro}
-          onBlur={() => guardarLogro(logro.trim())}
-          placeholder="Una línea basta"
-          placeholderTextColor={C.apagado}
-          style={styles.input}
-          multiline
-        />
-      </Tarjeta>
-    </Pantalla>
-  );
-}
-
-const styles = StyleSheet.create({
+const crear = ({ C, T, R, S }) => ({
   encabezado: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -172,7 +63,7 @@ const styles = StyleSheet.create({
   },
   verTodo: {
     ...T.secundario,
-    color: C.coral,
+    color: C.coralTexto,
     fontWeight: '700',
   },
   bloqueSaludo: {
@@ -237,3 +128,113 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
 });
+
+export default function Hoy({ navigation }) {
+  const hoy = useMemo(() => new Date(), []);
+
+  const est = useEstilos(crear);
+  const { C, T } = useTema();
+  const { celebrar } = useCelebracion();
+  const { perfil, plan, racha, rota, completadoHoy, marcarDiaCompletado, diario, guardarLogro } =
+    useUsuario();
+
+  // Mientras la IA no haya entregado un plan, se muestra el de arranque.
+  const dia = useMemo(() => diaDelPlan(plan ?? planDemo, hoy), [plan, hoy]);
+
+  const [logro, setLogro] = useState(diario[claveDia(hoy)] ?? '');
+
+  const marcarListo = () => {
+    if (completadoHoy) return;
+    marcarDiaCompletado(dia.reto);
+    celebrar({ titulo: 'Hecho.', sub: subCelebracion(racha + 1) });
+  };
+
+  const saludo = `${SALUDOS[franjaDelDia(hoy)]}, ${perfil.nombre}.`;
+
+  return (
+    <Pantalla>
+      <View style={est.encabezado}>
+        <Text style={est.fecha}>{fechaLarga(hoy)}</Text>
+
+        <View style={est.acciones}>
+          <PildoraRacha dias={racha} />
+          <Pressable
+            onPress={() => navigation.navigate('Perfil')}
+            accessibilityRole="button"
+            accessibilityLabel="Tu perfil"
+            hitSlop={8}
+            style={({ pressed }) => [est.avatar, pressed && est.presionado]}
+          >
+            <Text style={est.inicial}>
+              {perfil.nombre?.trim()?.charAt(0)?.toUpperCase() || '·'}
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+
+      <View style={est.bloqueSaludo}>
+        <Text style={T.saludo}>{saludo}</Text>
+        <Text style={est.frase}>{fraseDelDia({ completadoHoy, racha, rota })}</Text>
+      </View>
+
+      <Tarjeta>
+        <Etiqueta>{esDescanso(dia) ? 'hoy descansas' : 'reto de hoy'}</Etiqueta>
+        <Text style={est.reto}>{dia.reto}</Text>
+        <Text style={est.resumen}>{resumenReto(dia, perfil.lugar)}</Text>
+
+        {dia.ejercicios.length > 0 && (
+          <View style={est.ejercicios}>
+            {dia.ejercicios.map((e) => (
+              <View key={e.nombre} style={est.ejercicio}>
+                <Text style={est.ejercicioNombre}>{e.nombre}</Text>
+                <Text style={T.secundario}>{e.detalle}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        <Text style={est.mensaje}>{dia.mensaje}</Text>
+
+        <Boton
+          variante={completadoHoy ? 'salvia' : 'coral'}
+          onPress={marcarListo}
+          style={est.botonListo}
+        >
+          {completadoHoy ? textoHecho(racha) : 'Listo por hoy'}
+        </Boton>
+      </Tarjeta>
+
+      <Tarjeta>
+        <Etiqueta>hoy en la mesa</Etiqueta>
+        <View style={est.filaTip}>
+          <PuntoSemaforo color={dia.comida_color} />
+          <Text style={[T.cuerpo, est.tip]}>{dia.comida_tip}</Text>
+        </View>
+      </Tarjeta>
+
+      <Tarjeta>
+        <View style={est.filaDiario}>
+          <Etiqueta>tu diario</Etiqueta>
+          <Pressable
+            onPress={() => navigation.navigate('Diario')}
+            accessibilityRole="button"
+            hitSlop={8}
+          >
+            <Text style={est.verTodo}>Ver todo</Text>
+          </Pressable>
+        </View>
+
+        <Text style={est.pregunta}>¿Un logro de hoy?</Text>
+        <TextInput
+          value={logro}
+          onChangeText={setLogro}
+          onBlur={() => guardarLogro(logro.trim())}
+          placeholder="Una línea basta"
+          placeholderTextColor={C.apagado}
+          style={est.input}
+          multiline
+        />
+      </Tarjeta>
+    </Pantalla>
+  );
+}

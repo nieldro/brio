@@ -1,80 +1,10 @@
-import {
-  View,
-  Text,
-  Pressable,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, Pressable, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { C, S, R, T } from '../../theme';
+import { useEstilos } from '../../state/TemaContext';
 import Boton from '../../components/Boton';
 
-// Marco común de todos los pasos: una pregunta por pantalla, mucho aire,
-// avance visible arriba y la acción siempre abajo, al alcance del pulgar.
-export default function Marco({
-  titulo,
-  sub,
-  pie,
-  paso,
-  total,
-  onAtras,
-  boton,
-  onBoton,
-  botonActivo = true,
-  children,
-}) {
-  const insets = useSafeAreaInsets();
-
-  return (
-    <KeyboardAvoidingView
-      style={styles.pantalla}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <View style={[styles.barra, { paddingTop: insets.top + S.md }]}>
-        <Pressable
-          onPress={onAtras}
-          disabled={!onAtras}
-          hitSlop={12}
-          accessibilityRole="button"
-          accessibilityLabel="Atrás"
-          style={styles.atras}
-        >
-          <Text style={[styles.atrasTexto, !onAtras && styles.atrasOculto]}>‹</Text>
-        </Pressable>
-
-        <View style={styles.puntos}>
-          {Array.from({ length: total }).map((_, i) => (
-            <View key={i} style={[styles.punto, i <= paso && styles.puntoActivo]} />
-          ))}
-        </View>
-      </View>
-
-      <ScrollView
-        contentContainerStyle={styles.contenido}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        {!!titulo && <Text style={styles.titulo}>{titulo}</Text>}
-        {!!sub && <Text style={styles.sub}>{sub}</Text>}
-        {children}
-        {!!pie && <Text style={styles.pie}>{pie}</Text>}
-      </ScrollView>
-
-      {!!boton && (
-        <View style={[styles.zonaBoton, { paddingBottom: insets.bottom + S.lg }]}>
-          <Boton onPress={onBoton} disabled={!botonActivo} style={!botonActivo && styles.apagado}>
-            {boton}
-          </Boton>
-        </View>
-      )}
-    </KeyboardAvoidingView>
-  );
-}
-
-const styles = StyleSheet.create({
+const crear = ({ C, T, R, S }) => ({
   pantalla: {
     flex: 1,
     backgroundColor: C.crema,
@@ -140,3 +70,66 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
 });
+
+// Marco común de todos los pasos: una pregunta por pantalla, mucho aire,
+// avance visible arriba y la acción siempre abajo, al alcance del pulgar.
+export default function Marco({
+  titulo,
+  sub,
+  pie,
+  paso,
+  total,
+  onAtras,
+  boton,
+  onBoton,
+  botonActivo = true,
+  children,
+}) {
+  const insets = useSafeAreaInsets();
+  const est = useEstilos(crear);
+
+  return (
+    <KeyboardAvoidingView
+      style={est.pantalla}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <View style={[est.barra, { paddingTop: insets.top + 12 }]}>
+        <Pressable
+          onPress={onAtras}
+          disabled={!onAtras}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel="Atrás"
+          style={est.atras}
+        >
+          <Text style={[est.atrasTexto, !onAtras && est.atrasOculto]}>‹</Text>
+        </Pressable>
+
+        <View style={est.puntos}>
+          {Array.from({ length: total }).map((_, i) => (
+            <View key={i} style={[est.punto, i <= paso && est.puntoActivo]} />
+          ))}
+        </View>
+      </View>
+
+      <ScrollView
+        contentContainerStyle={est.contenido}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {!!titulo && <Text style={est.titulo}>{titulo}</Text>}
+        {!!sub && <Text style={est.sub}>{sub}</Text>}
+        {children}
+        {!!pie && <Text style={est.pie}>{pie}</Text>}
+      </ScrollView>
+
+      {!!boton && (
+        <View style={[est.zonaBoton, { paddingBottom: insets.bottom + 16 }]}>
+          <Boton onPress={onBoton} disabled={!botonActivo} style={!botonActivo && est.apagado}>
+            {boton}
+          </Boton>
+        </View>
+      )}
+    </KeyboardAvoidingView>
+  );
+}

@@ -1,20 +1,8 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { C, R, S } from '../theme';
+import { View, Text } from 'react-native';
+import { useEstilos } from '../state/TemaContext';
 import Chispa from './Chispa';
 
-// Píldora de racha. Muestra días seguidos, nunca días perdidos.
-export default function PildoraRacha({ dias = 0 }) {
-  return (
-    <View style={styles.pildora}>
-      <Chispa size={13} />
-      <Text style={styles.texto}>
-        {dias} {dias === 1 ? 'día' : 'días'}
-      </Text>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
+const crear = ({ C, R, S }) => ({
   pildora: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -32,3 +20,17 @@ const styles = StyleSheet.create({
     color: C.cafe,
   },
 });
+
+// Píldora de racha. Muestra días seguidos, nunca días perdidos.
+export default function PildoraRacha({ dias = 0 }) {
+  const est = useEstilos(crear);
+
+  return (
+    <View style={est.pildora}>
+      <Chispa size={13} />
+      <Text style={est.texto}>
+        {dias} {dias === 1 ? 'día' : 'días'}
+      </Text>
+    </View>
+  );
+}

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 
-import { C, S, T } from '../../theme';
+import { useEstilos } from '../../state/TemaContext';
 import { useUsuario } from '../../state/UsuarioContext';
 import { generarPlan, hayApi } from '../../lib/api';
 import { pedirPermisoYToken } from '../../lib/notificaciones';
@@ -32,6 +32,7 @@ const enRango = (clave, texto) => {
 
 export default function Onboarding() {
   const { terminarOnboarding, actualizarPerfil } = useUsuario();
+  const est = useEstilos(crear);
 
   const [indice, setIndice] = useState(0);
   const [respuestas, setRespuestas] = useState({});
@@ -205,9 +206,9 @@ export default function Onboarding() {
           boton={paso.boton}
           onBoton={terminar}
         >
-          <View style={styles.cierre}>
-            <Text style={styles.linea}>Empezamos suave. Hoy: {diaDeHoy.reto}.</Text>
-            <Text style={styles.linea}>Y recuerda. Esto es por {porqueFinal || 'ti'}.</Text>
+          <View style={est.cierre}>
+            <Text style={est.linea}>Empezamos suave. Hoy: {diaDeHoy.reto}.</Text>
+            <Text style={est.linea}>Y recuerda. Esto es por {porqueFinal || 'ti'}.</Text>
           </View>
         </Marco>
       );
@@ -217,7 +218,7 @@ export default function Onboarding() {
   }
 }
 
-const styles = StyleSheet.create({
+const crear = ({ C, T, S }) => ({
   cierre: {
     marginTop: S.lg,
     gap: S.md,

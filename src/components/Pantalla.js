@@ -1,30 +1,8 @@
-import { View, ScrollView, StyleSheet } from 'react-native';
+import { View, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { C, S } from '../theme';
+import { useEstilos } from '../state/TemaContext';
 
-// Contenedor común de todas las pantallas: fondo crema, aire arriba y abajo,
-// respeto por el notch y por la barra de pestañas.
-export default function Pantalla({ children, contentStyle }) {
-  const insets = useSafeAreaInsets();
-
-  return (
-    <View style={styles.pantalla}>
-      <ScrollView
-        contentContainerStyle={[
-          styles.contenido,
-          { paddingTop: insets.top + S.xl },
-          contentStyle,
-        ]}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        {children}
-      </ScrollView>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
+const crear = ({ C, S }) => ({
   pantalla: {
     flex: 1,
     backgroundColor: C.crema,
@@ -35,3 +13,22 @@ const styles = StyleSheet.create({
     gap: S.lg,
   },
 });
+
+// Contenedor común de todas las pantallas: fondo del tema, aire arriba y abajo,
+// respeto por el notch y por la barra de pestañas.
+export default function Pantalla({ children, contentStyle }) {
+  const insets = useSafeAreaInsets();
+  const est = useEstilos(crear);
+
+  return (
+    <View style={est.pantalla}>
+      <ScrollView
+        contentContainerStyle={[est.contenido, { paddingTop: insets.top + 24 }, contentStyle]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {children}
+      </ScrollView>
+    </View>
+  );
+}

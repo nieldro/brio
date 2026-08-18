@@ -7,11 +7,10 @@ import {
   Pressable,
   KeyboardAvoidingView,
   Platform,
-  StyleSheet,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { C, S, R, T } from '../theme';
+import { useEstilos, useTema } from '../state/TemaContext';
 import { useUsuario } from '../state/UsuarioContext';
 import { preguntarCoach, hayApi } from '../lib/api';
 import { leerMensajes } from '../lib/repositorio';
@@ -23,129 +22,7 @@ const SIN_CONEXION = 'No pude conectarme ahora mismo. Escríbeme en un rato y se
 let contador = 0;
 const nuevoId = (rol) => `${rol}-${(contador += 1)}`;
 
-export default function Chat() {
-  const insets = useSafeAreaInsets();
-  const scroll = useRef(null);
-  const { userId, enNube } = useUsuario();
-
-  const [mensajes, setMensajes] = useState(mensajesDemo);
-  const [texto, setTexto] = useState('');
-  const [esperando, setEsperando] = useState(false);
-
-  // Historial real cuando hay nube; si no, la conversación de arranque.
-  useEffect(() => {
-    if (!enNube || !userId) return;
-    let vivo = true;
-    leerMensajes(userId).then((guardados) => {
-      if (vivo && guardados?.length) setMensajes(guardados);
-    });
-    return () => {
-      vivo = false;
-    };
-  }, [enNube, userId]);
-
-  const enviar = async (contenido, respuestaLocal) => {
-    const limpio = contenido.trim();
-    if (!limpio || esperando) return;
-
-    setMensajes((prev) => [...prev, { id: nuevoId('u'), rol: 'user', texto: limpio }]);
-    setTexto('');
-    setEsperando(true);
-
-    let respuesta = null;
-    if (hayApi) respuesta = (await preguntarCoach(limpio))?.texto ?? null;
-
-    setMensajes((prev) => [
-      ...prev,
-      { id: nuevoId('b'), rol: 'brio', texto: respuesta ?? respuestaLocal ?? SIN_CONEXION },
-    ]);
-    setEsperando(false);
-  };
-
-  return (
-    <KeyboardAvoidingView
-      style={styles.pantalla}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView
-        ref={scroll}
-        contentContainerStyle={[styles.hilo, { paddingTop: insets.top + S.xl }]}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: true })}
-      >
-        {mensajes.map((m) => (
-          <View
-            key={m.id}
-            style={[styles.burbuja, m.rol === 'user' ? styles.deUsuario : styles.deBrio]}
-          >
-            <Text style={m.rol === 'user' ? styles.textoUsuario : styles.textoBrio}>
-              {m.texto}
-            </Text>
-          </View>
-        ))}
-
-        {esperando && (
-          <View style={[styles.burbuja, styles.deBrio]}>
-            <Text style={styles.escribiendo}>Brío está escribiendo…</Text>
-          </View>
-        )}
-      </ScrollView>
-
-      <View style={[styles.zonaBaja, { paddingBottom: S.md + insets.bottom / 2 }]}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.chips}
-        >
-          {CHIPS.map((chip) => (
-            <Pressable
-              key={chip.texto}
-              onPress={() => enviar(chip.texto, chip.respuesta)}
-              disabled={esperando}
-              accessibilityRole="button"
-              style={({ pressed }) => [
-                styles.chip,
-                (pressed || esperando) && styles.chipApagado,
-              ]}
-            >
-              <Text style={styles.chipTexto}>{chip.texto}</Text>
-            </Pressable>
-          ))}
-        </ScrollView>
-
-        <View style={styles.barraEscritura}>
-          <TextInput
-            value={texto}
-            onChangeText={setTexto}
-            placeholder="Escríbele a Brío"
-            placeholderTextColor={C.apagado}
-            style={styles.entrada}
-            multiline
-            maxLength={1000}
-            onSubmitEditing={() => enviar(texto)}
-          />
-          <Pressable
-            onPress={() => enviar(texto)}
-            disabled={!texto.trim() || esperando}
-            accessibilityRole="button"
-            accessibilityLabel="Enviar"
-            style={({ pressed }) => [
-              styles.enviar,
-              (!texto.trim() || esperando) && styles.enviarApagado,
-              pressed && styles.chipApagado,
-            ]}
-          >
-            <Text style={styles.enviarTexto}>↑</Text>
-          </Pressable>
-        </View>
-      </View>
-    </KeyboardAvoidingView>
-  );
-}
-
-const styles = StyleSheet.create({
+const crear = ({ C, T, R, S, RELLENO }) => ({
   pantalla: {
     flex: 1,
     backgroundColor: C.crema,
@@ -163,7 +40,7 @@ const styles = StyleSheet.create({
   },
   deUsuario: {
     alignSelf: 'flex-end',
-    backgroundColor: C.coral,
+    backgroundColor: RELLENO.coral,
     borderBottomRightRadius: 6,
   },
   deBrio: {
@@ -175,7 +52,8 @@ const styles = StyleSheet.create({
   },
   textoUsuario: {
     ...T.cuerpo,
-    color: C.blanco,
+    // Va encima del relleno coral, no de una superficie del tema.
+    color: '#FFFFFF',
   },
   textoBrio: {
     ...T.cuerpo,
@@ -232,7 +110,7 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor: C.coral,
+    backgroundColor: RELLENO.coral,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -240,8 +118,127 @@ const styles = StyleSheet.create({
     backgroundColor: C.apagado,
   },
   enviarTexto: {
-    color: C.blanco,
+    color: '#FFFFFF',
     fontSize: 20,
     fontWeight: '700',
   },
 });
+
+export default function Chat() {
+  const insets = useSafeAreaInsets();
+  const scroll = useRef(null);
+  const est = useEstilos(crear);
+  const { C, S } = useTema();
+  const { userId, enNube } = useUsuario();
+
+  const [mensajes, setMensajes] = useState(mensajesDemo);
+  const [texto, setTexto] = useState('');
+  const [esperando, setEsperando] = useState(false);
+
+  // Historial real cuando hay nube; si no, la conversación de arranque.
+  useEffect(() => {
+    if (!enNube || !userId) return;
+    let vivo = true;
+    leerMensajes(userId).then((guardados) => {
+      if (vivo && guardados?.length) setMensajes(guardados);
+    });
+    return () => {
+      vivo = false;
+    };
+  }, [enNube, userId]);
+
+  const enviar = async (contenido, respuestaLocal) => {
+    const limpio = contenido.trim();
+    if (!limpio || esperando) return;
+
+    setMensajes((prev) => [...prev, { id: nuevoId('u'), rol: 'user', texto: limpio }]);
+    setTexto('');
+    setEsperando(true);
+
+    let respuesta = null;
+    if (hayApi) respuesta = (await preguntarCoach(limpio))?.texto ?? null;
+
+    setMensajes((prev) => [
+      ...prev,
+      { id: nuevoId('b'), rol: 'brio', texto: respuesta ?? respuestaLocal ?? SIN_CONEXION },
+    ]);
+    setEsperando(false);
+  };
+
+  return (
+    <KeyboardAvoidingView
+      style={est.pantalla}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView
+        ref={scroll}
+        contentContainerStyle={[est.hilo, { paddingTop: insets.top + S.xl }]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: true })}
+      >
+        {mensajes.map((m) => (
+          <View
+            key={m.id}
+            style={[est.burbuja, m.rol === 'user' ? est.deUsuario : est.deBrio]}
+          >
+            <Text style={m.rol === 'user' ? est.textoUsuario : est.textoBrio}>{m.texto}</Text>
+          </View>
+        ))}
+
+        {esperando && (
+          <View style={[est.burbuja, est.deBrio]}>
+            <Text style={est.escribiendo}>Brío está escribiendo…</Text>
+          </View>
+        )}
+      </ScrollView>
+
+      <View style={[est.zonaBaja, { paddingBottom: S.md + insets.bottom / 2 }]}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={est.chips}
+        >
+          {CHIPS.map((chip) => (
+            <Pressable
+              key={chip.texto}
+              onPress={() => enviar(chip.texto, chip.respuesta)}
+              disabled={esperando}
+              accessibilityRole="button"
+              style={({ pressed }) => [est.chip, (pressed || esperando) && est.chipApagado]}
+            >
+              <Text style={est.chipTexto}>{chip.texto}</Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+
+        <View style={est.barraEscritura}>
+          <TextInput
+            value={texto}
+            onChangeText={setTexto}
+            placeholder="Escríbele a Brío"
+            placeholderTextColor={C.apagado}
+            style={est.entrada}
+            multiline
+            maxLength={1000}
+            onSubmitEditing={() => enviar(texto)}
+          />
+          <Pressable
+            onPress={() => enviar(texto)}
+            disabled={!texto.trim() || esperando}
+            accessibilityRole="button"
+            accessibilityLabel="Enviar"
+            style={({ pressed }) => [
+              est.enviar,
+              (!texto.trim() || esperando) && est.enviarApagado,
+              pressed && est.chipApagado,
+            ]}
+          >
+            <Text style={est.enviarTexto}>↑</Text>
+          </Pressable>
+        </View>
+      </View>
+    </KeyboardAvoidingView>
+  );
+}

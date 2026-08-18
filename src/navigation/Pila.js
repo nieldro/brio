@@ -1,6 +1,6 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import { C, T } from '../theme';
+import { useTema } from '../state/TemaContext';
 import Tabs from './Tabs';
 import Perfil from '../screens/Perfil';
 import Diario from '../screens/Diario';
@@ -10,12 +10,14 @@ const Pila = createNativeStackNavigator();
 // Las 4 pestañas son la app. Perfil y Diario se abren encima, a un toque,
 // y se cierran volviendo. No son pestañas: no compiten con lo diario.
 export default function PilaPrincipal() {
+  const { C, T } = useTema();
+
   return (
     <Pila.Navigator
       screenOptions={{
         headerStyle: { backgroundColor: C.crema },
         headerShadowVisible: false,
-        headerTintColor: C.coral,
+        headerTintColor: C.coralTexto,
         headerTitleStyle: { ...T.subtitulo, fontSize: 18 },
         contentStyle: { backgroundColor: C.crema },
       }}
