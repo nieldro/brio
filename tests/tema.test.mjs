@@ -66,15 +66,26 @@ test('cero negro puro y cero blanco puro como fondo, en ningún modo', () => {
   }
 });
 
-test('el oscuro conserva la calidez de la marca: rojo mayor o igual que azul', () => {
-  // Un oscuro gris azulado traicionaría la identidad. En cada color de
-  // superficie y texto, el canal rojo manda sobre el azul.
-  for (const clave of ['crema', 'blanco', 'borde', 'cafe', 'gris', 'apagado']) {
-    const hex = PALETAS.oscuro[clave].replace('#', '');
-    const r = parseInt(hex.slice(0, 2), 16);
-    const b = parseInt(hex.slice(4, 6), 16);
-    assert.ok(r >= b, `oscuro.${clave} es más azul que rojo: ${PALETAS.oscuro[clave]}`);
+test('las superficies siguen la familia azul del logo', () => {
+  // La identidad de Brío es el navy del wordmark, no un café. Antes esta
+  // prueba exigía lo contrario, cuando la paleta era cálida: se cambió con
+  // la adopción del logo, no por descuido.
+  for (const modo of MODOS) {
+    for (const clave of ['crema', 'blanco', 'borde', 'cafe', 'gris', 'apagado']) {
+      const hex = PALETAS[modo][clave].replace('#', '');
+      const r = parseInt(hex.slice(0, 2), 16);
+      const b = parseInt(hex.slice(4, 6), 16);
+      assert.ok(b >= r, `${modo}.${clave} perdió el azul de la marca: ${PALETAS[modo][clave]}`);
+    }
   }
+});
+
+test('el fondo oscuro es azul profundo, no negro ni gris', () => {
+  const hex = PALETAS.oscuro.crema.replace('#', '');
+  const r = parseInt(hex.slice(0, 2), 16);
+  const b = parseInt(hex.slice(4, 6), 16);
+  assert.ok(b - r >= 15, 'el fondo oscuro perdió el tinte azul del logo');
+  assert.ok(luminancia(PALETAS.oscuro.crema) < 0.03, 'el fondo oscuro no es lo bastante oscuro');
 });
 
 test('el coral sigue siendo el mismo en los dos modos', () => {

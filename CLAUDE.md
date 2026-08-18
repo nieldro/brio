@@ -30,20 +30,34 @@ Diferenciador: acompañamiento emocional + personalización con IA + precio Lata
 
 ## Identidad visual
 
-Colores (usar constante `C` en `src/theme.js`):
+Colores tomados del logo. Viven en `PALETAS` dentro de `src/theme.js`, con
+dos modos de las mismas claves. Los componentes NO importan colores: los
+piden con `useTema()` o `useEstilos()`, que leen el modo activo.
 
 ```
-crema   #FFF6EC  fondos
-coral   #E2725B  botones y acción
-cafe    #3A2E2A  textos
-gris    #8A7A6E  textos secundarios
-blanco  #FFFFFF  tarjetas
-borde   #E8D9C8  bordes
-salvia  #7FA98E  éxito y verde semáforo
-ambar   #E8A94C  ámbar semáforo
-rojo    #D96C5F  rojo semáforo (informa, nunca castiga)
-apagado #B4A79B  pestañas inactivas
+              claro      oscuro
+crema        #F7F6FB    #131A2E   fondos
+blanco       #FFFFFF    #1E2740   tarjetas
+cafe         #141B34    #EDEFF7   textos (el navy del wordmark)
+gris         #5A6480    #A3ACC7   textos secundarios
+borde        #E4E3F0    #333E5E   bordes
+coral        #F2604C    #F2604C   botones, chispa y acción
+coralTexto   #C43B26    #F2604C   coral para texto pequeño
+salvia       #3DBFA0    #4ECFAE   éxito y verde semáforo
+salviaTexto  #1B7A63    #4ECFAE   verde para texto
+ambar        #F5A623    #F7B84B   ámbar semáforo
+rojo         #E8574A    #F2796B   rojo semáforo (informa, nunca castiga)
+rojoTexto    #C0392B    #F2796B   rojo para texto
+apagado      #6B7590    #8792B5   pestañas inactivas
 ```
+
+Los que llevan sufijo `Texto` existen porque el color de marca no llegaba al
+mínimo de contraste: un color puede servir para una forma y no para una letra.
+Todos están medidos contra su superficie en `tests/tema.test.mjs`.
+
+Del logo se hereda la familia de color, NO los degradados ni los azules
+eléctricos: sobre pantallas de texto son ilegibles, y sigue mandando la regla
+de cero neón.
 
 Tipografía: Nunito para títulos, Inter para textos (Google Fonts vía expo-font, fase 2). Mientras tanto, fuente del sistema.
 

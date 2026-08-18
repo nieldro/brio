@@ -5,42 +5,53 @@
 // nombre semántico (`C.crema` es "el fondo", no "el color crema"), así que
 // cambiar de tema no obliga a cambiar ni una línea de las pantallas.
 
+// Paleta tomada del logo de Brío.
+//
+// Los colores salen de la identidad: el navy del wordmark, el coral de la
+// figura, el verde azulado de la hoja, el ámbar de la chispa. Lo que NO se
+// hereda del logo son los degradados ni los azules eléctricos: sobre una
+// pantalla de texto son ilegibles, y el documento pide cero neón.
+//
+// Cada color de texto está medido contra su superficie. Los que llevan
+// sufijo Texto existen porque el color de marca no alcanzaba el mínimo:
+// un color puede ser perfecto para una forma y no servir para una letra.
+
 export const PALETAS = {
   claro: {
-    crema: '#FFF6EC', // fondos
-    coral: '#E2725B', // botones, chispa y acción: la marca, intacta
-    coralTexto: '#B34A35', // coral para TEXTO pequeño: el de marca daba 2,89:1
-    cafe: '#3A2E2A', // textos
-    gris: '#7A6A5E', // textos secundarios: #8A7A6E daba 3,86:1 sobre crema
+    crema: '#F7F6FB', // fondos: el lavanda muy claro del logo
     blanco: '#FFFFFF', // tarjetas
-    borde: '#E8D9C8', // bordes
-    salvia: '#7FA98E', // éxito y verde semáforo: puntos y rellenos, no texto
-    salviaTexto: '#3F6B4F', // "listo, ya lo tengo": el salvia daba 2,25:1
-    ambar: '#E8A94C', // ámbar semáforo
-    rojo: '#D96C5F', // rojo semáforo (informa, nunca castiga)
-    rojoTexto: '#B03A2E', // avisos de formulario: el rojo daba 3,1:1
-    apagado: '#B4A79B', // pestañas inactivas
-    coralSuave: '#FDF0EC', // fondo de opción elegida
+    cafe: '#141B34', // textos: el navy del wordmark (15,8:1)
+    gris: '#5A6480', // textos secundarios (5,5:1)
+    borde: '#E4E3F0', // bordes
+    coral: '#F2604C', // botones, chispa y acción: el coral de la figura
+    coralTexto: '#C43B26', // coral para TEXTO pequeño: el de marca daba 2,9:1
+    salvia: '#3DBFA0', // éxito y verde semáforo: puntos y rellenos, no texto
+    salviaTexto: '#1B7A63', // el verde del logo como texto daba 1,9:1
+    ambar: '#F5A623', // ámbar semáforo: el de la chispa
+    rojo: '#E8574A', // rojo semáforo (informa, nunca castiga)
+    rojoTexto: '#C0392B', // avisos de formulario (5,1:1)
+    apagado: '#6B7590', // pestañas inactivas (4,6:1)
+    coralSuave: '#FDEDE9', // fondo de opción elegida
   },
 
-  // Oscuro cálido, no gris azulado: Brío no se vuelve otra app de noche.
-  // Cero negro puro, como manda el documento. El más oscuro es #1F1917,
-  // un café casi negro que conserva la temperatura de la marca.
+  // El azul profundo del logo en su versión oscura. Cero negro puro, como
+  // manda el documento: el más oscuro es #131A2E, el mismo del ícono en
+  // fondo oscuro de tu identidad.
   oscuro: {
-    crema: '#1F1917', // fondos
-    coral: '#E2725B', // se mantiene: 5,6:1 sobre el fondo, sigue siendo la marca
-    coralTexto: '#E2725B', // en oscuro el coral de marca ya se lee, no hace falta variante
-    cafe: '#F5EAE0', // textos (blanco cálido, 12,9:1 sobre tarjeta)
-    gris: '#B3A49A', // textos secundarios (6,3:1)
-    blanco: '#2B2320', // tarjetas: un paso por encima del fondo
-    borde: '#3D332E', // bordes
-    salvia: '#8FBA9D', // aclarado para que se lea sobre oscuro
-    salviaTexto: '#8FBA9D', // sobre oscuro ya da 7:1, no hace falta variante
-    ambar: '#EFB964',
-    rojo: '#E58274',
-    rojoTexto: '#E58274', // sobre oscuro ya da 5,6:1
-    apagado: '#9C8C81', // pestañas inactivas (4,7:1, se lee de verdad)
-    coralSuave: '#3A2724', // fondo de opción elegida
+    crema: '#131A2E', // fondos
+    blanco: '#1E2740', // tarjetas: un paso por encima del fondo
+    cafe: '#EDEFF7', // textos (12,9:1 sobre tarjeta)
+    gris: '#A3ACC7', // textos secundarios (6,5:1)
+    borde: '#333E5E', // bordes
+    coral: '#F2604C', // el mismo de la marca: 4,6:1 sobre tarjeta
+    coralTexto: '#F2604C', // en oscuro el coral ya se lee, no hace falta variante
+    salvia: '#4ECFAE',
+    salviaTexto: '#4ECFAE', // sobre oscuro da 7,6:1
+    ambar: '#F7B84B',
+    rojo: '#F2796B',
+    rojoTexto: '#F2796B', // sobre oscuro da 5,4:1
+    apagado: '#8792B5', // pestañas inactivas (4,8:1)
+    coralSuave: '#3A2A2E', // fondo de opción elegida
   },
 };
 
@@ -48,8 +59,8 @@ export const PALETAS = {
 // Separado del semáforo a propósito: un punto de color no necesita el mismo
 // contraste que un botón con texto dentro.
 export const RELLENOS = {
-  claro: { coral: '#E2725B', salvia: '#6F9A7E' },
-  oscuro: { coral: '#E2725B', salvia: '#5E8A6E' },
+  claro: { coral: '#F2604C', salvia: '#2A9D82' },
+  oscuro: { coral: '#F2604C', salvia: '#2A9D82' },
 };
 
 export function semaforoDe(C) {
