@@ -44,6 +44,23 @@ en las variables de entorno del proyecto en EAS.
 
 Todo lo demás sí se prueba en Expo Go.
 
+## Landing
+
+Publicada en Azure Static Web Apps, capa **gratuita**:
+
+**https://mango-smoke-0a5b7bf10.7.azurestaticapps.net**
+
+Para volver a desplegarla después de editar `landing/`:
+
+```powershell
+$token = az staticwebapp secrets list --name brio-landing --resource-group rg-brio --query "properties.apiKey" -o tsv
+npx @azure/static-web-apps-cli deploy ./landing --env production --deployment-token $token
+```
+
+La primera vez puede fallar con «Could not find StaticSitesClient local binary»:
+el CLI descarga un binario aparte y a veces no lo logra al primer intento.
+Reintentar funciona.
+
 ## Pruebas
 
 ```bash
