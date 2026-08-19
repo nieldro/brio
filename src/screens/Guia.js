@@ -1,10 +1,12 @@
-import { View, Text } from 'react-native';
+import { View, Text, Linking } from 'react-native';
+import { openBrowserAsync } from 'expo-web-browser';
 
 import { useEstilos } from '../state/TemaContext';
 import Pantalla from '../components/Pantalla';
 import Tarjeta from '../components/Tarjeta';
 import Etiqueta from '../components/Etiqueta';
-import { guiaDe } from '../services/guias';
+import Boton from '../components/Boton';
+import { guiaDe, busquedaDeVideo } from '../services/guias';
 
 const crear = ({ C, T, R, S }) => ({
   contenido: {
@@ -66,6 +68,12 @@ const crear = ({ C, T, R, S }) => ({
     textAlign: 'center',
     marginTop: S.lg,
   },
+  pieVideo: {
+    ...T.secundario,
+    fontSize: 13,
+    textAlign: 'center',
+    marginTop: -S.sm,
+  },
 });
 
 // Cómo se hace el movimiento. Las indicaciones salen de una biblioteca
@@ -75,6 +83,17 @@ export default function Guia({ route }) {
   const est = useEstilos(crear);
   const ejercicio = route?.params?.ejercicio ?? {};
   const g = guiaDe(ejercicio);
+
+  // Se intenta primero con la app de YouTube, que es donde la persona ya
+  // tiene su sesión y su idioma. Si no está instalada, se abre el navegador.
+  const verVideo = async () => {
+    const url = busquedaDeVideo(g);
+    try {
+      await Linking.openURL(url);
+    } catch {
+      await openBrowserAsync(url);
+    }
+  };
 
   return (
     <Pantalla contentStyle={est.contenido}>
@@ -120,6 +139,14 @@ export default function Guia({ route }) {
           <Text style={est.texto}>{g.masFacil}</Text>
         </View>
       </Tarjeta>
+
+      {/* Leer cómo se hace no siempre alcanza: hay movimientos que se
+          entienden al verlos. Va a una búsqueda y no a un video fijo, para
+          que nunca sea un enlace muerto ni uno inventado. */}
+      <Boton variante="suave" onPress={verVideo}>
+        Verlo en video
+      </Boton>
+      <Text style={est.pieVideo}>Se abre YouTube con la búsqueda del movimiento.</Text>
 
       <Text style={est.legal}>
         Brío acompaña, no diagnostica. Ante dolor, lesión o enfermedad, consulta a un profesional.

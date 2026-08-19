@@ -125,6 +125,20 @@ export async function salir() {
   return { ok: true };
 }
 
+const GOOGLE_APAGADO = 'Entrar con Google todavía no está disponible.';
+
+const NO_SE_PUEDE_ENLAZAR =
+  'Para guardar lo que ya llevas, crea la cuenta con correo y clave. Con Google empezarías de cero.';
+
+// La URL de vuelta cambia según dónde corra la app, y las dos tienen que
+// estar en la lista de Supabase:
+//   Expo Go          exp://127.0.0.1:8081/--/auth
+//   build propio     brio://auth
+const uriDeVuelta = () => crearUri({ scheme: 'brio', path: 'auth' });
+
+const proveedorApagado = (e) => /provider is not enabled|unsupported provider/i.test(e?.message ?? '');
+const enlaceApagado = (e) => /manual linking/i.test(e?.message ?? '');
+
 // Entrar con Google.
 //
 // Abre el navegador del sistema, no una vista dentro de la app: así el usuario
@@ -132,23 +146,44 @@ export async function salir() {
 // clave a Google y no a nosotros. Es la forma correcta y la que exigen las
 // tiendas.
 //
-// Requiere que Google esté habilitado en Supabase (Authentication > Providers).
-// Si no lo está, se dice claro en vez de dejar una pantalla en blanco.
-export async function entrarConGoogle() {
+// `hayDatosQuePerder` lo manda la pantalla. Cambia una decisión de verdad:
+// quien lleva dos semanas de racha en una sesión anónima NO puede entrar con
+// Google a secas, porque eso crea un usuario nuevo y deja lo suyo huérfano.
+// Ahí se ENLAZA la cuenta de Google a la sesión que ya existe, igual que hace
+// crearCuenta con el correo. Si Supabase no permite enlazar, se dice y se
+// ofrece el camino que sí conserva los datos, en vez de borrarlos en silencio.
+export async function entrarConGoogle({ hayDatosQuePerder = false } = {}) {
   if (!supabase) return { ok: false, error: SIN_NUBE };
 
   try {
-    const redirectTo = crearUri({ scheme: 'brio', path: 'auth' });
+    const redirectTo = uriDeVuelta();
+    const opciones = { redirectTo, skipBrowserRedirect: true };
 
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo, skipBrowserRedirect: true },
-    });
+    const { data: sesion } = await supabase.auth.getSession();
+    const esAnonimo = !!sesion?.session?.user?.is_anonymous;
+
+    let data = null;
+    let error = null;
+
+    if (esAnonimo) {
+      ({ data, error } = await supabase.auth.linkIdentity({ provider: 'google', options: opciones }));
+
+      // El orden importa: "Google apagado" también contiene "not enabled", y
+      // mirarlo después hacía que un proveedor apagado se anunciara como un
+      // problema de enlace. Primero lo específico.
+      if (proveedorApagado(error)) return { ok: false, error: GOOGLE_APAGADO };
+
+      // Enlazar exige "Manual linking" encendido en Supabase.
+      if (enlaceApagado(error)) {
+        if (hayDatosQuePerder) return { ok: false, error: NO_SE_PUEDE_ENLAZAR };
+        ({ data, error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: opciones }));
+      }
+    } else {
+      ({ data, error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: opciones }));
+    }
 
     if (error) {
-      if (/provider is not enabled|unsupported provider/i.test(error.message ?? '')) {
-        return { ok: false, error: 'Entrar con Google todavía no está disponible.' };
-      }
+      if (proveedorApagado(error)) return { ok: false, error: GOOGLE_APAGADO };
       return { ok: false, error: mensajeDeError(error) };
     }
     if (!data?.url) return { ok: false, error: mensajeDeError('') };
@@ -159,24 +194,45 @@ export async function entrarConGoogle() {
     // muestra nada, simplemente sigue donde estaba.
     if (resultado.type !== 'success') return { ok: false, cancelado: true };
 
-    // Supabase devuelve los tokens en el fragmento de la URL (#access_token=...)
-    const fragmento = resultado.url.split('#')[1] ?? '';
-    const params = new URLSearchParams(fragmento);
-    const access_token = params.get('access_token');
-    const refresh_token = params.get('refresh_token');
-
-    if (!access_token || !refresh_token) return { ok: false, error: mensajeDeError('') };
-
-    const { error: errorSesion } = await supabase.auth.setSession({
-      access_token,
-      refresh_token,
-    });
-    if (errorSesion) return { ok: false, error: mensajeDeError(errorSesion) };
-
-    return { ok: true };
+    return await sesionDesdeLaVuelta(resultado.url);
   } catch (e) {
     return { ok: false, error: mensajeDeError(e) };
   }
+}
+
+// Saca la sesión de la URL con la que Google devolvió al usuario.
+//
+// Se aceptan las dos formas porque Supabase usa una u otra según cómo esté
+// configurado el cliente, y fallar por eso daba un "algo salió mal" sin pista:
+//   #access_token=...  flujo implícito, los tokens vienen en el fragmento
+//   ?code=...          flujo PKCE, hay que canjear el código
+async function sesionDesdeLaVuelta(url) {
+  const [base, fragmento = ''] = String(url).split('#');
+  const consulta = base.includes('?') ? base.slice(base.indexOf('?') + 1) : '';
+
+  const enFragmento = new URLSearchParams(fragmento);
+  const enConsulta = new URLSearchParams(consulta);
+
+  // Google o Supabase dijeron que no. El motivo sirve más que un genérico.
+  const descripcion =
+    enFragmento.get('error_description') ?? enConsulta.get('error_description');
+  if (descripcion) return { ok: false, error: mensajeDeError({ message: descripcion }) };
+
+  const access_token = enFragmento.get('access_token');
+  const refresh_token = enFragmento.get('refresh_token');
+
+  if (access_token && refresh_token) {
+    const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+    return error ? { ok: false, error: mensajeDeError(error) } : { ok: true };
+  }
+
+  const codigo = enConsulta.get('code') ?? enFragmento.get('code');
+  if (codigo) {
+    const { error } = await supabase.auth.exchangeCodeForSession(codigo);
+    return error ? { ok: false, error: mensajeDeError(error) } : { ok: true };
+  }
+
+  return { ok: false, error: mensajeDeError('') };
 }
 
 // Recuperar la clave. Supabase manda un correo con un enlace.

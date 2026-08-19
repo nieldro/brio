@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { normalizar, buscarGuia, guiaDe } from '../src/services/guias.js';
+import { normalizar, buscarGuia, guiaDe, busquedaDeVideo } from '../src/services/guias.js';
 import { GUIAS } from '../src/data/guias.js';
 
 // --- Normalización --------------------------------------------------------
@@ -129,3 +129,33 @@ test('ninguna clave es tan corta que empareje cualquier cosa', () => {
     }
   }
 });
+
+// --- Video ----------------------------------------------------------------
+
+test('el video es una búsqueda, nunca un enlace a un video concreto', () => {
+  // Si alguien cambia esto por un id de YouTube, esta prueba lo para: un id
+  // escrito a mano se muere y uno inventado por la IA lleva a cualquier parte.
+  for (const g of GUIAS) {
+    const url = busquedaDeVideo(g);
+    assert.match(url, /^https:\/\/www\.youtube\.com\/results\?search_query=/);
+    assert.ok(!/\/watch\?v=|youtu\.be\//.test(url), `${g.nombre} apunta a un video fijo`);
+  }
+});
+
+test('la búsqueda lleva el nombre del movimiento', () => {
+  const url = busquedaDeVideo({ nombre: 'Sentadilla a la silla' });
+  assert.ok(decodeURIComponent(url).includes('Sentadilla a la silla'));
+});
+
+test('un ejercicio desconocido igual tiene búsqueda', () => {
+  const url = busquedaDeVideo(guiaDe({ nombre: 'Burpee con salto' }));
+  assert.ok(decodeURIComponent(url).includes('Burpee con salto'));
+  assert.doesNotThrow(() => busquedaDeVideo(undefined));
+});
+
+test('la url queda bien formada aunque el nombre traiga tildes y espacios', () => {
+  const url = busquedaDeVideo({ nombre: 'Elevación de talones & más' });
+  assert.ok(!/\s/.test(url), 'la url no puede llevar espacios sin escapar');
+  assert.doesNotThrow(() => new URL(url));
+});
+

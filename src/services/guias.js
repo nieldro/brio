@@ -50,3 +50,17 @@ export function guiaDe(ejercicio) {
     esGenerica: true,
   };
 }
+
+// El video del movimiento.
+//
+// Es una BÚSQUEDA, no un enlace a un video concreto, y eso es deliberado:
+//   - Un id de YouTube escrito a mano se muere el día que el autor borra el
+//     video, y la app queda con un enlace roto que nadie va a revisar.
+//   - Un id pedido a la IA es peor: los inventa, y un enlace inventado
+//     lleva a cualquier cosa. No se le puede mandar eso a nadie.
+// Una búsqueda siempre responde, y responde con lo que existe hoy.
+export function busquedaDeVideo(guia) {
+  const que = guia?.busqueda || guia?.nombre || 'ejercicio en casa';
+  const consulta = `como hacer ${que} tecnica correcta principiantes`;
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(consulta)}`;
+}

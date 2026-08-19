@@ -111,7 +111,12 @@ export default function Cuenta({ route, navigation }) {
   const est = useEstilos(crear);
   const { C } = useTema();
   const insets = useSafeAreaInsets();
-  const { puedeGuardarCuenta, refrescarSesion } = useUsuario();
+  const { puedeGuardarCuenta, refrescarSesion, onboardingListo, diasCompletados } = useUsuario();
+
+  // Entrar con Google crea un usuario nuevo si Supabase no puede enlazarlo al
+  // que ya existe. Saber si hay algo construido decide si eso se permite o si
+  // se le ofrece el correo, que sí conserva la racha.
+  const hayDatosQuePerder = onboardingListo || diasCompletados.length > 0;
 
   const [modo, setModo] = useState(modoInicial);
   const [correo, setCorreo] = useState('');
@@ -175,7 +180,7 @@ export default function Cuenta({ route, navigation }) {
     setOcupado(true);
     setError(null);
 
-    const r = await entrarConGoogle();
+    const r = await entrarConGoogle({ hayDatosQuePerder });
 
     setOcupado(false);
     // Cerrar el navegador a medias no es un error: no se dice nada.
