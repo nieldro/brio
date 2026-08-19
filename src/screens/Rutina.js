@@ -9,7 +9,7 @@ import Pantalla from '../components/Pantalla';
 import Tarjeta from '../components/Tarjeta';
 import Etiqueta from '../components/Etiqueta';
 import Casilla from '../components/Casilla';
-import FiguraEjercicio from '../components/FiguraEjercicio';
+import FiguraEjercicio, { useRelojDeFiguras } from '../components/FiguraEjercicio';
 import Aparece from '../components/Aparece';
 import { guiaDe, busquedaDeVideo } from '../services/guias';
 import { resumenReto, porBloques, avanceDeRutina, claveEjercicio } from '../services/plan';
@@ -59,7 +59,7 @@ const crear = ({ C, T, R, S }) => ({
   fila: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: S.md,
+    gap: S.sm,
   },
   centro: {
     flex: 1,
@@ -81,16 +81,21 @@ const crear = ({ C, T, R, S }) => ({
     color: C.coralTexto,
     fontWeight: '700',
   },
+  enlaceGuia: {
+    marginTop: S.md,
+    marginLeft: 42,
+  },
   guia: {
-    marginTop: S.lg,
+    marginTop: S.md,
     marginLeft: 42,
     gap: S.md,
   },
   escenario: {
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: C.crema,
     borderRadius: R.chico,
-    paddingVertical: S.md,
+    paddingHorizontal: S.xs,
   },
   bloque: {
     gap: S.xs,
@@ -164,6 +169,9 @@ export default function Rutina({ route }) {
 
   const [hechos, setHechos] = useState({});
   const [abierto, setAbierto] = useState(-1);
+
+  // Todas las figuras de la rutina se mueven con el mismo reloj.
+  const reloj = useRelojDeFiguras('lento');
 
   const bloques = useMemo(() => porBloques(dia), [dia]);
   const avance = useMemo(() => avanceDeRutina(dia, hechos), [dia, hechos]);
@@ -239,23 +247,29 @@ export default function Rutina({ route }) {
                       <Text style={est.detalle}>{e.detalle}</Text>
                     </Pressable>
 
-                    <Pressable
-                      onPress={() => setAbierto(estaAbierto ? -1 : e.n)}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Cómo se hace: ${e.nombre}`}
-                      accessibilityState={{ expanded: estaAbierto }}
-                      hitSlop={10}
-                    >
-                      <Text style={est.comoSeHace}>{estaAbierto ? 'cerrar' : 'cómo'}</Text>
-                    </Pressable>
+                    {/* El movimiento va aquí, siempre a la vista. Escondido
+                        detrás de un botón no lo encontraba nadie, y ver la
+                        forma es justo lo que hace falta antes de empezar. */}
+                    <View style={est.escenario}>
+                      <FiguraEjercicio postura={g.figura} size={82} reloj={reloj} />
+                    </View>
                   </View>
+
+                  <Pressable
+                    onPress={() => setAbierto(estaAbierto ? -1 : e.n)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Cómo se hace: ${e.nombre}`}
+                    accessibilityState={{ expanded: estaAbierto }}
+                    hitSlop={8}
+                    style={est.enlaceGuia}
+                  >
+                    <Text style={est.comoSeHace}>
+                      {estaAbierto ? 'cerrar la guía' : 'cómo se hace'}
+                    </Text>
+                  </Pressable>
 
                   {estaAbierto && (
                     <View style={est.guia}>
-                      <View style={est.escenario}>
-                        <FiguraEjercicio postura={g.figura} size={120} />
-                      </View>
-
                       <View style={est.bloque}>
                         <Text style={est.subtitulo}>cómo se hace</Text>
                         {g.como.map((paso, n) => (

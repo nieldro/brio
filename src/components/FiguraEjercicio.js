@@ -14,15 +14,18 @@ const DURACIONES = { lento: 2200, normal: 1500, rapido: 950 };
 const AnimatedLine = Animated.createAnimatedComponent(Line);
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-export default function FiguraEjercicio({ postura, size = 120, ritmo = 'normal' }) {
-  const { C } = useTema();
+// Un solo reloj para muchas figuras.
+//
+// En la rutina hay cinco ejercicios a la vista y cada uno se mueve. Si cada
+// figura llevara su propio temporizador serían cinco animaciones corriendo a
+// la vez y el desplazamiento se sentiría pesado en un teléfono normal. Con un
+// reloj compartido hay una sola, y todas respiran al mismo tiempo, que además
+// se ve mejor.
+export function useRelojDeFiguras(ritmo = 'normal') {
   const avance = useRef(new Animated.Value(0)).current;
-
-  const [a, b] = POSTURAS[postura] ?? POSTURAS[POSTURA_POR_DEFECTO];
   const duracion = DURACIONES[ritmo] ?? DURACIONES.normal;
 
   useEffect(() => {
-    avance.setValue(0);
     const ciclo = Animated.loop(
       Animated.sequence([
         Animated.timing(avance, { toValue: 1, duration: duracion, useNativeDriver: false }),
@@ -31,7 +34,33 @@ export default function FiguraEjercicio({ postura, size = 120, ritmo = 'normal' 
     );
     ciclo.start();
     return () => ciclo.stop();
-  }, [avance, duracion, postura]);
+  }, [avance, duracion]);
+
+  return avance;
+}
+
+export default function FiguraEjercicio({ postura, size = 120, ritmo = 'normal', reloj }) {
+  const { C } = useTema();
+  const propio = useRef(new Animated.Value(0)).current;
+  const avance = reloj ?? propio;
+
+  const [a, b] = POSTURAS[postura] ?? POSTURAS[POSTURA_POR_DEFECTO];
+  const duracion = DURACIONES[ritmo] ?? DURACIONES.normal;
+
+  useEffect(() => {
+    // Con reloj prestado, el ciclo lo lleva quien lo presta.
+    if (reloj) return undefined;
+
+    propio.setValue(0);
+    const ciclo = Animated.loop(
+      Animated.sequence([
+        Animated.timing(propio, { toValue: 1, duration: duracion, useNativeDriver: false }),
+        Animated.timing(propio, { toValue: 0, duration: duracion, useNativeDriver: false }),
+      ]),
+    );
+    ciclo.start();
+    return () => ciclo.stop();
+  }, [propio, duracion, postura, reloj]);
 
   // Cada número de la postura se convierte en una coordenada que viaja de la
   // primera a la segunda.
