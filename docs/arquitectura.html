@@ -1,0 +1,1042 @@
+<title>Arquitectura de Brío</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  /* ------------------------------------------------------------------
+     Los colores son los de Brío (src/theme.js). El documento se ve como
+     el producto que describe, y las capas se distinguen por color: ese
+     mismo color reaparece junto a cada ruta de archivo, así que la
+     etiqueta de color dice algo cierto y no adorna.
+     ------------------------------------------------------------------ */
+
+  :root {
+    --fondo: #F7F6FB;
+    --tarjeta: #FFFFFF;
+    --tinta: #141B34;
+    --suave: #5A6480;
+    --regla: #E4E3F0;
+    --coral: #F2604C;
+    --coral-texto: #C43B26;
+    --salvia: #3DBFA0;
+    --salvia-texto: #1B7A63;
+    --ambar: #F5A623;
+    --ambar-texto: #9A6708;
+    --apagado: #6B7590;
+    --hundido: #EFEDF7;
+    --sombra: 0 1px 2px rgba(20, 27, 52, .06), 0 8px 24px rgba(20, 27, 52, .05);
+    --peso-titulo: 800;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --fondo: #131A2E;
+      --tarjeta: #1E2740;
+      --tinta: #EDEFF7;
+      --suave: #A3ACC7;
+      --regla: #333E5E;
+      --coral: #F2604C;
+      --coral-texto: #F2604C;
+      --salvia: #4ECFAE;
+      --salvia-texto: #4ECFAE;
+      --ambar: #F7B84B;
+      --ambar-texto: #F7B84B;
+      --apagado: #8792B5;
+      --hundido: #182137;
+      --sombra: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .22);
+      --peso-titulo: 700;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --fondo: #131A2E;
+    --tarjeta: #1E2740;
+    --tinta: #EDEFF7;
+    --suave: #A3ACC7;
+    --regla: #333E5E;
+    --coral: #F2604C;
+    --coral-texto: #F2604C;
+    --salvia: #4ECFAE;
+    --salvia-texto: #4ECFAE;
+    --ambar: #F7B84B;
+    --ambar-texto: #F7B84B;
+    --apagado: #8792B5;
+    --hundido: #182137;
+    --sombra: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .22);
+    --peso-titulo: 700;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--fondo);
+    color: var(--tinta);
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 16.5px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3 {
+    font-family: Nunito, system-ui, sans-serif;
+    font-weight: var(--peso-titulo);
+    text-wrap: balance;
+    line-height: 1.18;
+    margin: 0;
+  }
+
+  code, .ruta, .dato {
+    font-family: "IBM Plex Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+  }
+
+  a { color: var(--coral-texto); }
+
+  :focus-visible {
+    outline: 2px solid var(--coral);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  /* --- Armazón ---------------------------------------------------- */
+
+  .hoja {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 24px 96px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0 56px;
+  }
+
+  @media (min-width: 1060px) {
+    .hoja { grid-template-columns: 210px minmax(0, 1fr); }
+    .indice { display: block; }
+  }
+
+  .portada {
+    grid-column: 1 / -1;
+    padding: 72px 0 40px;
+    border-bottom: 1px solid var(--regla);
+    margin-bottom: 48px;
+  }
+
+  .sello {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12.5px;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--coral-texto);
+    margin-bottom: 20px;
+  }
+
+  .sello svg { display: block; }
+
+  .portada h1 {
+    font-size: clamp(38px, 6vw, 62px);
+    letter-spacing: -.022em;
+    margin-bottom: 18px;
+  }
+
+  .bajada {
+    font-size: clamp(17px, 2.1vw, 20px);
+    color: var(--suave);
+    max-width: 62ch;
+    margin: 0 0 34px;
+  }
+
+  .cifras {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .cifra {
+    background: var(--tarjeta);
+    border: 1px solid var(--regla);
+    border-radius: 14px;
+    padding: 12px 18px;
+    min-width: 122px;
+  }
+
+  .cifra b {
+    display: block;
+    font-family: Nunito, sans-serif;
+    font-weight: 800;
+    font-size: 25px;
+    letter-spacing: -.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cifra span {
+    font-size: 12.5px;
+    color: var(--suave);
+  }
+
+  /* --- Índice lateral ---------------------------------------------- */
+
+  .indice {
+    display: none;
+    position: sticky;
+    top: 32px;
+    align-self: start;
+    font-size: 13.5px;
+  }
+
+  .indice p {
+    margin: 0 0 12px;
+    font-size: 11.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--apagado);
+    font-weight: 600;
+  }
+
+  .indice ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    counter-reset: idx;
+  }
+
+  .indice a {
+    color: var(--suave);
+    text-decoration: none;
+    display: flex;
+    gap: 9px;
+    line-height: 1.4;
+  }
+
+  .indice a::before {
+    counter-increment: idx;
+    content: counter(idx);
+    color: var(--apagado);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    padding-top: 1px;
+  }
+
+  .indice a:hover { color: var(--coral-texto); }
+
+  /* --- Secciones ---------------------------------------------------- */
+
+  main { min-width: 0; }
+
+  section { margin-bottom: 64px; scroll-margin-top: 24px; }
+
+  section > h2 {
+    font-size: clamp(25px, 3.2vw, 32px);
+    letter-spacing: -.018em;
+    margin-bottom: 8px;
+  }
+
+  .sub {
+    color: var(--suave);
+    font-size: 15px;
+    margin: 0 0 26px;
+    max-width: 64ch;
+  }
+
+  h3 {
+    font-size: 19px;
+    margin: 34px 0 10px;
+    letter-spacing: -.008em;
+  }
+
+  p { max-width: 66ch; margin: 0 0 16px; }
+
+  ul { max-width: 66ch; padding-left: 20px; margin: 0 0 16px; }
+  li { margin-bottom: 8px; }
+
+  strong { font-weight: 600; }
+
+  code {
+    font-size: .875em;
+    background: var(--hundido);
+    border: 1px solid var(--regla);
+    border-radius: 5px;
+    padding: 1px 5px;
+  }
+
+  /* --- Capas: el color dice en qué capa vive cada archivo ----------- */
+
+  .capa-pantallas { --tono: var(--coral); --tono-texto: var(--coral-texto); }
+  .capa-estado    { --tono: var(--ambar);  --tono-texto: var(--ambar-texto); }
+  .capa-pura      { --tono: var(--salvia); --tono-texto: var(--salvia-texto); }
+  .capa-efectos   { --tono: var(--apagado);--tono-texto: var(--apagado); }
+  .capa-servidor  { --tono: var(--tinta);  --tono-texto: var(--tinta); }
+
+  .ruta {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    background: var(--hundido);
+    border: 1px solid var(--regla);
+    border-radius: 6px;
+    padding: 2px 8px 2px 6px;
+    white-space: nowrap;
+  }
+
+  .ruta::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 2px;
+    background: var(--tono, var(--apagado));
+    flex: none;
+  }
+
+  /* --- Diagrama de capas -------------------------------------------- */
+
+  .pila {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 26px 0 30px;
+  }
+
+  .banda {
+    background: var(--tarjeta);
+    border: 1px solid var(--regla);
+    border-left: 5px solid var(--tono);
+    border-radius: 12px;
+    padding: 16px 20px;
+    box-shadow: var(--sombra);
+  }
+
+  .banda-cabeza {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+
+  .banda h4 {
+    margin: 0;
+    font-family: Nunito, sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+  }
+
+  .banda-tag {
+    font-size: 11.5px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--tono-texto);
+  }
+
+  .banda p { margin: 0 0 10px; font-size: 14.5px; color: var(--suave); max-width: none; }
+
+  .archivos { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  .frontera {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 8px 2px;
+    color: var(--apagado);
+    font-size: 12px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .frontera::before,
+  .frontera::after {
+    content: "";
+    height: 1px;
+    background: var(--regla);
+    flex: 1;
+  }
+
+  /* --- Bloques destacados ------------------------------------------- */
+
+  .nota {
+    background: var(--tarjeta);
+    border: 1px solid var(--regla);
+    border-left: 4px solid var(--coral);
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin: 24px 0;
+    box-shadow: var(--sombra);
+  }
+
+  .nota.buena { border-left-color: var(--salvia); }
+  .nota.aviso { border-left-color: var(--ambar); }
+
+  .nota h4 {
+    margin: 0 0 8px;
+    font-family: Nunito, sans-serif;
+    font-weight: 700;
+    font-size: 16.5px;
+  }
+
+  .nota p:last-child { margin-bottom: 0; }
+  .nota p { max-width: none; font-size: 15px; }
+
+  /* --- Diagramas mermaid --------------------------------------------- */
+
+  .lienzo {
+    background: var(--tarjeta);
+    border: 1px solid var(--regla);
+    border-radius: 14px;
+    padding: 22px 18px;
+    margin: 24px 0;
+    overflow-x: auto;
+    box-shadow: var(--sombra);
+  }
+
+  .lienzo .mermaid { background: transparent; }
+
+  .pie-figura {
+    font-size: 13px;
+    color: var(--suave);
+    margin: -12px 0 26px;
+    padding-left: 2px;
+  }
+
+  /* --- Tabla de decisiones ------------------------------------------- */
+
+  .marco-tabla { overflow-x: auto; margin: 22px 0 26px; }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 620px;
+    font-size: 14.5px;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--regla);
+    vertical-align: top;
+  }
+
+  th {
+    font-family: Nunito, sans-serif;
+    font-weight: 700;
+    font-size: 12.5px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--apagado);
+    border-bottom-width: 2px;
+  }
+
+  td:first-child { font-weight: 600; width: 30%; }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  /* --- Estado de los entregables ------------------------------------- */
+
+  .chip {
+    display: inline-block;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .chip.listo { background: color-mix(in srgb, var(--salvia) 18%, transparent); color: var(--salvia-texto); }
+  .chip.falta { background: color-mix(in srgb, var(--ambar) 20%, transparent); color: var(--ambar-texto); }
+
+  footer {
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--regla);
+    padding-top: 26px;
+    color: var(--apagado);
+    font-size: 13.5px;
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="hoja">
+
+  <header class="portada">
+    <div class="sello">
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 1.5c.5 4.3 1.6 6.2 4.3 6.7-2.7.5-3.8 2.4-4.3 6.7-.5-4.3-1.6-6.2-4.3-6.7 2.7-.5 3.8-2.4 4.3-6.7z" fill="#F2604C"/>
+        <path d="M12 9.1c.4 3.5 1.3 5.1 3.5 5.5-2.2.4-3.1 2-3.5 5.5-.4-3.5-1.3-5.1-3.5-5.5 2.2-.4 3.1-2 3.5-5.5z" fill="#F2604C" opacity=".55"/>
+      </svg>
+      Brío · Documentación de arquitectura
+    </div>
+
+    <h1>Arquitectura de Brío</h1>
+
+    <p class="bajada">
+      Cómo está construida una app de hábitos con coach de IA en la que las
+      reglas del producto no son textos de pantalla: son restricciones que el
+      código obliga a cumplir.
+    </p>
+
+    <div class="cifras">
+      <div class="cifra"><b>451</b><span>pruebas automáticas</span></div>
+      <div class="cifra"><b>13.5k</b><span>líneas de código</span></div>
+      <div class="cifra"><b>21</b><span>pantallas</span></div>
+      <div class="cifra"><b>5</b><span>Azure Functions</span></div>
+      <div class="cifra"><b>0 €</b><span>coste mensual</span></div>
+    </div>
+  </header>
+
+  <nav class="indice" aria-label="Índice">
+    <p>Contenido</p>
+    <ol>
+      <li><a href="#producto">El producto manda</a></li>
+      <li><a href="#capas">Vista de capas</a></li>
+      <li><a href="#regla">Puro contra efectos</a></li>
+      <li><a href="#dia">Flujo: marcar el día</a></li>
+      <li><a href="#plan">Flujo: generar el plan</a></li>
+      <li><a href="#plato">Flujo: mirar un plato</a></li>
+      <li><a href="#seguridad">Seguridad y datos</a></li>
+      <li><a href="#decisiones">Decisiones y porqués</a></li>
+      <li><a href="#despliegue">Despliegue</a></li>
+      <li><a href="#pendiente">Lo que falta</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <!-- 1 -->
+    <section id="producto">
+      <h2>El producto manda sobre la arquitectura</h2>
+      <p class="sub">Ocho reglas duras que no se pueden desobedecer, ni siquiera por error.</p>
+
+      <p>
+        Brío acompaña a gente que ya intentó cambiar de hábitos y lo dejó.
+        Ese usuario define ocho reglas no negociables: nunca contar calorías
+        como métrica, nunca culpa, nunca consejos médicos, nunca dietas
+        restrictivas, máximo dos avisos al día, y las fotos de la persona
+        no salen de su teléfono.
+      </p>
+
+      <p>
+        La decisión de arquitectura que atraviesa todo el proyecto es que
+        <strong>esas reglas no viven en los textos de la interfaz</strong>.
+        Un texto se cambia sin querer, y una IA generativa puede escribir lo
+        que le dé la gana. Viven en validadores que corren en el servidor y
+        en pruebas que fallan cuando alguien las rompe.
+      </p>
+
+      <div class="nota">
+        <h4>El principio que resume el diseño</h4>
+        <p>
+          <strong>El prompt pide, el validador obliga.</strong> A Gemini se le
+          explica cómo debe responder, pero nada de lo que devuelve llega al
+          usuario sin pasar por código que lo comprueba. Si el modelo se
+          inventa un ejercicio, escribe una cifra de calorías o propone un
+          ayuno, la respuesta se rechaza y se reintenta.
+        </p>
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section id="capas">
+      <h2>Vista de capas</h2>
+      <p class="sub">
+        Cinco capas y una frontera de proceso. El color de cada banda se repite
+        junto a las rutas de archivo del resto del documento, para poder ubicar
+        cualquier módulo de un vistazo.
+      </p>
+
+      <div class="pila">
+
+        <div class="banda capa-pantallas">
+          <div class="banda-cabeza">
+            <h4>Pantallas y componentes</h4>
+            <span class="banda-tag">React Native</span>
+          </div>
+          <p>
+            Lo que se ve y se toca. No contienen reglas de negocio: piden datos
+            derivados al estado y dibujan. Ninguna importa colores directamente;
+            los pide con <code>useTema()</code>, que resuelve el modo claro u
+            oscuro activo.
+          </p>
+          <div class="archivos">
+            <span class="ruta">src/screens/Hoy.js</span>
+            <span class="ruta">src/screens/Rutina.js</span>
+            <span class="ruta">src/screens/Chat.js</span>
+            <span class="ruta">src/components/FiguraEjercicio.js</span>
+          </div>
+        </div>
+
+        <div class="banda capa-estado">
+          <div class="banda-cabeza">
+            <h4>Estado</h4>
+            <span class="banda-tag">Context + reducer</span>
+          </div>
+          <p>
+            Una sola fuente de verdad. La máquina de estado es una función pura
+            con pruebas; el proveedor se encarga de los efectos: leer disco,
+            leer nube, guardar y sincronizar. Los datos derivados
+            (<code>racha</code>, <code>completadoHoy</code>,
+            <code>retoEnMinima</code>) se calculan aquí una vez, no en cada
+            pantalla.
+          </p>
+          <div class="archivos">
+            <span class="ruta">src/state/usuarioReducer.js</span>
+            <span class="ruta">src/state/UsuarioContext.js</span>
+            <span class="ruta">src/state/TemaContext.js</span>
+            <span class="ruta">src/state/useMarcarDia.js</span>
+          </div>
+        </div>
+
+        <div class="banda capa-pura">
+          <div class="banda-cabeza">
+            <h4>Lógica pura</h4>
+            <span class="banda-tag">sin React, sin red</span>
+          </div>
+          <p>
+            Todas las reglas del producto que se pueden decidir sin salir del
+            teléfono: la racha, la adaptación del plan al historial, las
+            insignias, el acompañamiento que se va retirando, qué se enseña en
+            un día difícil. Se prueban con Node, sin emulador y sin señal.
+          </p>
+          <div class="archivos">
+            <span class="ruta">src/services/racha.js</span>
+            <span class="ruta">src/services/adaptacion.js</span>
+            <span class="ruta">src/services/acompanamiento.js</span>
+            <span class="ruta">src/services/animo.js</span>
+            <span class="ruta">src/services/cola.js</span>
+            <span class="ruta">src/services/porque.js</span>
+          </div>
+        </div>
+
+        <div class="banda capa-efectos">
+          <div class="banda-cabeza">
+            <h4>Efectos</h4>
+            <span class="banda-tag">disco, red, cámara, voz</span>
+          </div>
+          <p>
+            El único sitio donde el mundo exterior existe. Cada módulo envuelve
+            una frontera concreta y no toma decisiones: qué mandar y cuándo lo
+            decide la capa pura.
+          </p>
+          <div class="archivos">
+            <span class="ruta">src/lib/supabase.js</span>
+            <span class="ruta">src/lib/api.js</span>
+            <span class="ruta">src/lib/sincronizador.js</span>
+            <span class="ruta">src/lib/album.js</span>
+            <span class="ruta">src/lib/notificaciones.js</span>
+          </div>
+        </div>
+
+        <div class="frontera">Frontera de proceso · red · token de sesión</div>
+
+        <div class="banda capa-servidor">
+          <div class="banda-cabeza">
+            <h4>Azure Functions</h4>
+            <span class="banda-tag">Node 4, plan de consumo</span>
+          </div>
+          <p>
+            Todo lo que necesita una llave que no puede viajar en el teléfono.
+            Tres disparadores HTTP (<code>coach</code>, <code>plan</code>,
+            <code>plato</code>) y dos temporizadores
+            (<code>recordatorios</code> cada hora, <code>plan-semanal</code> los
+            lunes). Los módulos compartidos viven aparte de los disparadores
+            para poder probarlos sin levantar el host.
+          </p>
+          <div class="archivos">
+            <span class="ruta">azure-functions/src/lib/catalogo.js</span>
+            <span class="ruta">azure-functions/src/lib/planJson.js</span>
+            <span class="ruta">azure-functions/src/lib/platoJson.js</span>
+            <span class="ruta">azure-functions/src/lib/rutina.js</span>
+            <span class="ruta">azure-functions/src/lib/tanda.js</span>
+          </div>
+        </div>
+
+      </div>
+
+      <p>
+        Por debajo está <strong>Supabase</strong> (Postgres con Row Level
+        Security) y, fuera del dibujo, <strong>Gemini</strong>, al que solo
+        habla el servidor. La app nunca tiene una llave de IA.
+      </p>
+    </section>
+
+    <!-- 3 -->
+    <section id="regla">
+      <h2>La regla que sostiene el resto: puro contra efectos</h2>
+      <p class="sub">Por qué hay 451 pruebas que corren en menos de dos segundos.</p>
+
+      <p>
+        Una app móvil es cara de probar: hace falta un emulador, una sesión, una
+        red. Por eso toda decisión que se puede tomar sin tocar el mundo vive en
+        <span class="ruta capa-pura">src/services/</span> como función pura, y
+        los efectos quedan aislados en
+        <span class="ruta capa-efectos">src/lib/</span>.
+      </p>
+
+      <p>
+        La cola de sincronización es el ejemplo más claro de la separación.
+        <code>services/cola.js</code> decide qué está pendiente, cuándo toca
+        reintentar y cuánto esperar: es aritmética sobre una lista, y se prueba
+        con listas. <code>lib/sincronizador.js</code> solo pone el disco, la red
+        y el temporizador.
+      </p>
+
+      <div class="nota buena">
+        <h4>Lo que compra esta separación</h4>
+        <p>
+          Las reglas más delicadas del producto &mdash;cómo se cuenta una racha,
+          qué se le dice a alguien en su peor día, cuándo Brío deja de
+          hablar&mdash; están cubiertas por pruebas que un estudiante puede
+          correr con <code>npm test</code> en dos segundos, sin desplegar nada.
+        </p>
+      </div>
+
+      <h3>Las pruebas también cuidan la voz</h3>
+      <p>
+        No solo se comprueba que el código funcione. Hay pruebas que leen los
+        textos que la persona va a ver y fallan si aparece un signo de
+        admiración, una palabra prohibida, una forma que supone el género o una
+        frase que exige algo en un día difícil. La voz de Brío es un requisito
+        verificado, no una recomendación.
+      </p>
+    </section>
+
+    <!-- 4 -->
+    <section id="dia">
+      <h2>Flujo: marcar el día</h2>
+      <p class="sub">Primero el teléfono, después la nube. Nunca al revés.</p>
+
+      <p>
+        El gesto central de la app es pulsar <em>Listo por hoy</em>. Si eso
+        esperara a la red, alguien sin señal vería un botón que no responde y
+        perdería su día. La escritura entra en una cola local y la interfaz
+        avanza de inmediato.
+      </p>
+
+      <div class="lienzo">
+        <pre class="mermaid">
+sequenceDiagram
+    autonumber
+    participant P as Pantalla Hoy
+    participant E as Estado
+    participant C as Cola local
+    participant S as Supabase
+    P->>E: marcarDiaCompletado(reto)
+    E->>E: completarDia() calcula la racha
+    E-->>P: día marcado, sello y celebración
+    E->>C: anotar({tipo: registro, fecha, racha})
+    C->>C: guardar en disco
+    C->>S: intentar enviar
+    alt el servidor confirma
+        S-->>C: ok
+        C->>C: quitar de la cola
+    else sin señal o error
+        S-->>C: falla
+        C->>C: dejar en cola y reprogramar
+    end
+        </pre>
+      </div>
+      <p class="pie-figura">
+        Figura 1 &mdash; La operación solo sale de la cola cuando el servidor
+        confirma. Es preferible mandarla dos veces que perderla una.
+      </p>
+
+      <h3>Dónde se reintenta</h3>
+      <p>
+        La cola se vacía al anotar algo nuevo, al volver la app del segundo
+        plano &mdash;que suele coincidir con recuperar la señal&mdash; y con un
+        temporizador de espera creciente. Al cerrar sesión se vacía por
+        completo: lo pendiente era del usuario anterior y no se le manda al
+        siguiente que entre en ese teléfono.
+      </p>
+    </section>
+
+    <!-- 5 -->
+    <section id="plan">
+      <h2>Flujo: generar el plan semanal</h2>
+      <p class="sub">Dónde la IA decide y dónde no se le deja decidir.</p>
+
+      <p>
+        Es el flujo con más ingeniería del proyecto, porque es donde un modelo
+        generativo podría hacer daño. La solución es acotarlo por los dos lados:
+        antes de llamarlo se le entrega una <strong>lista cerrada</strong> de
+        ejercicios, y después de responder se le <strong>valida</strong> todo.
+      </p>
+
+      <div class="lienzo">
+        <pre class="mermaid">
+flowchart TD
+    A[La app pide el plan] --> B[Leer perfil desde Supabase]
+    B --> C[rutina.js: reglas por edad e IMC]
+    C --> D[catalogo.js: lista cerrada de 44 ejercicios]
+    D --> E[prompts.js arma la instruccion]
+    E --> F[Gemini]
+    F --> G{planJson.js valida}
+    G -->|invalido| H[Reintentar una vez con los errores]
+    H --> F
+    G -->|valido| I[Guardar en planes]
+    I --> J[Actualizar el nivel del perfil]
+        </pre>
+      </div>
+      <p class="pie-figura">
+        Figura 2 &mdash; El modelo escribe el plan, pero no elige qué ejercicios
+        existen ni si el plan es aceptable.
+      </p>
+
+      <h3>Qué comprueba el validador</h3>
+      <ul>
+        <li>Que los siete días estén y con nombre reconocible &mdash; los modelos escriben <em>miercoles</em> sin tilde, y eso tumbaba planes enteros.</li>
+        <li>Que un día de entrenamiento traiga entre tres y cinco ejercicios, nunca uno solo.</li>
+        <li>Que la duración no pase del tiempo que la persona dijo tener.</li>
+        <li>Que no haya ejercicios de impacto si el perfil no los admite.</li>
+        <li>Que ningún ejercicio esté fuera del catálogo.</li>
+      </ul>
+
+      <div class="nota aviso">
+        <h4>El número que no sale del servidor</h4>
+        <p>
+          Para decidir si un plan puede llevar saltos hace falta el IMC. Se
+          calcula en <code>rutina.js</code>, se usa para esa decisión y
+          <strong>no se guarda, no se muestra y no entra en ningún mensaje</strong>.
+          Es seguridad para las rodillas, no una opinión sobre el cuerpo de
+          nadie. Sacarlo a la interfaz rompería la regla dura número uno.
+        </p>
+      </div>
+
+      <h3>La adaptación la deciden reglas, no la IA</h3>
+      <p>
+        Qué ajustar de una semana a la siguiente sale de
+        <code>services/adaptacion.js</code>, que analiza el historial con reglas
+        explícitas: qué día de la semana se le atraviesa, cuál es el más fuerte,
+        si va subiendo o bajando. El resultado viaja como instrucciones concretas
+        dentro del prompt.
+      </p>
+      <p>
+        La razón es la explicabilidad. Si el ajuste lo decidiera el modelo, dos
+        semanas iguales darían planes distintos y no habría forma de justificar
+        por qué. Con reglas, la app puede decirle a la persona
+        <em>&laquo;noté que los lunes te cuestan&raquo;</em> y enseñar la
+        evidencia.
+      </p>
+    </section>
+
+    <!-- 6 -->
+    <section id="plato">
+      <h2>Flujo: mirar un plato</h2>
+      <p class="sub">La regla dura número uno, escrita como código ejecutable.</p>
+
+      <p>
+        La cámara puede mirar un plato y devolver un semáforo, el nombre de lo
+        que se ve y <strong>una cosa para sumarle</strong>. Nunca una nota, nunca
+        un reproche. Es el punto del producto donde más fácil sería resbalar
+        hacia un contador de calorías, así que es el que tiene el validador más
+        estricto.
+      </p>
+
+      <h3>Lo que <code>platoJson.js</code> rechaza</h3>
+      <ul>
+        <li>Cualquier cifra de calorías, macros, gramos o mililitros dentro de un texto que la persona vaya a leer.</li>
+        <li>Palabras de juicio: <em>engorda</em>, <em>chatarra</em>, <em>culpa</em>, <em>prohibido</em>, <em>dieta</em>, <em>bajar de peso</em>.</li>
+        <li>Rangos falsamente precisos. Un rango demasiado estrecho se lee como una cifra exacta, y de una foto no sale ninguna cifra exacta.</li>
+      </ul>
+
+      <p>
+        La estimación de energía es opcional, <strong>viene apagada</strong> y
+        hay que encenderla a mano en Ajustes. Cuando está encendida, los macros
+        salen como <em>poca</em>, <em>media</em> o <em>alta</em>, jamás en
+        gramos, y nada de eso se guarda: se mira una vez y se va con la foto.
+      </p>
+
+      <div class="nota">
+        <h4>Por qué un validador y no solo un prompt</h4>
+        <p>
+          Pedirle a un modelo que no escriba números funciona casi siempre, y
+          &laquo;casi siempre&raquo; no sirve cuando el usuario es alguien que
+          dejó de contar calorías. El validador convierte una petición en una
+          garantía.
+        </p>
+      </div>
+    </section>
+
+    <!-- 7 -->
+    <section id="seguridad">
+      <h2>Seguridad y datos</h2>
+      <p class="sub">Qué sabe cada parte del sistema, y qué no puede saber.</p>
+
+      <h3>La identidad sale del token, nunca del cuerpo</h3>
+      <p>
+        El servidor usa la <em>service role key</em> de Supabase, que se salta
+        Row Level Security. Eso lo obliga a filtrar siempre por el
+        <code>user_id</code> que viene del token firmado. Si ese identificador
+        se tomara del cuerpo de la petición, cualquiera podría pedir los datos
+        de otra persona cambiando un campo del JSON.
+      </p>
+
+      <h3>Dónde vive cada llave</h3>
+      <div class="marco-tabla">
+        <table>
+          <thead>
+            <tr><th>Secreto</th><th>Dónde vive</th><th>Por qué ahí</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Llave anónima de Supabase</td>
+              <td>Dentro de la app</td>
+              <td>Es pública por diseño. La protección real es Row Level Security en la base.</td>
+            </tr>
+            <tr>
+              <td>Service role de Supabase</td>
+              <td>Application Settings de Azure</td>
+              <td>Se salta RLS. En la app permitiría leer los datos de todo el mundo.</td>
+            </tr>
+            <tr>
+              <td>Llave de Gemini</td>
+              <td>Application Settings de Azure</td>
+              <td>En la app cualquiera podría extraerla del APK y gastar la cuota.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Las fotos de la persona</h3>
+      <p>
+        El álbum de fotos diarias es la parte más sensible del producto y por eso
+        es la más simple: <strong>las fotos no salen del teléfono</strong>. No se
+        suben a ningún servidor, no se guardan en la galería del sistema y la IA
+        no las ve nunca. La película de evolución se compone en el propio
+        dispositivo. No hay comparación lado a lado ni racha de fotos, porque el
+        diseño tiene que evitar la obsesión, no alimentarla.
+      </p>
+
+      <h3>Inyección de prompt</h3>
+      <p>
+        El mensaje del usuario se añade al final del historial de conversación,
+        nunca dentro de la instrucción del sistema. Así el modelo no puede
+        confundir lo que escribe la persona con sus propias reglas. Además el
+        prompt lleva una orden explícita de ignorar cualquier intento de
+        cambiarlas.
+      </p>
+    </section>
+
+    <!-- 8 -->
+    <section id="decisiones">
+      <h2>Decisiones y sus porqués</h2>
+      <p class="sub">Las que costaron discusión, con la alternativa que se descartó.</p>
+
+      <div class="marco-tabla">
+        <table>
+          <thead>
+            <tr><th>Decisión</th><th>Alternativa descartada</th><th>Razón</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Catálogo cerrado de ejercicios</td>
+              <td>Dejar que la IA invente nombres</td>
+              <td>Un ejercicio inventado no tiene guía escrita ni animación. La persona abría «cómo se hace» y no había nada.</td>
+            </tr>
+            <tr>
+              <td>Adaptación con reglas</td>
+              <td>Pedirle a la IA que decida los ajustes</td>
+              <td>Reproducible y explicable. La app puede enseñar la evidencia de lo que afirma.</td>
+            </tr>
+            <tr>
+              <td>Cola local para escribir</td>
+              <td>Escribir directo a Supabase</td>
+              <td>Sin señal, el día marcado se perdía. Ahora la interfaz avanza y la nube se entera cuando puede.</td>
+            </tr>
+            <tr>
+              <td>Monigote vectorial animado</td>
+              <td>Vídeos o GIF de ejercicios</td>
+              <td>Pesa cero, funciona sin señal, toma el color del tema y no saca a nadie de la app.</td>
+            </tr>
+            <tr>
+              <td>Solo capa gratuita permanente</td>
+              <td>Créditos de la cuenta estudiantil</td>
+              <td>Los créditos vencen. La app moriría a mitad de semestre.</td>
+            </tr>
+            <tr>
+              <td>Timer semanal acotado</td>
+              <td>Regenerar el plan de todos los usuarios</td>
+              <td>Con la lista entera no cabía en el tiempo máximo de la función y se cortaba en silencio.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 9 -->
+    <section id="despliegue">
+      <h2>Despliegue</h2>
+      <p class="sub">Tres artefactos y ningún servidor que administrar.</p>
+
+      <ul>
+        <li><strong>La app</strong> se compila con EAS Build en la capa gratuita (15 compilaciones de Android al mes). El perfil <code>vista</code> produce un APK suelto para instalar y compartir.</li>
+        <li><strong>Las correcciones de JavaScript</strong> viajan por EAS Update sin recompilar: la app instalada se pone al día sola al abrirse. Un cambio en permisos o en módulos nativos sí exige compilar de nuevo.</li>
+        <li><strong>Las Functions</strong> se publican con compilación remota, para que Azure instale las dependencias del lado del servidor.</li>
+        <li><strong>La observabilidad</strong> es Application Insights con la cuota gratuita: es lo que permitió descubrir que el temporizador semanal no cabía en su tiempo máximo.</li>
+      </ul>
+    </section>
+
+    <!-- 10 -->
+    <section id="pendiente">
+      <h2>Lo que falta</h2>
+      <p class="sub">Estado honesto del proyecto en agosto de 2026.</p>
+
+      <div class="marco-tabla">
+        <table>
+          <thead>
+            <tr><th>Pieza</th><th>Estado</th><th>Qué falta</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Zonas del cuerpo e hábitos</td>
+              <td><span class="chip falta">local</span></td>
+              <td>Dos migraciones sin ejecutar en Supabase. Hoy solo persisten en el teléfono.</td>
+            </tr>
+            <tr>
+              <td>Notificaciones push</td>
+              <td><span class="chip falta">sin verificar</span></td>
+              <td>El temporizador está desplegado; falta comprobar la entrega en un dispositivo real.</td>
+            </tr>
+            <tr>
+              <td>Exportar la película en vídeo</td>
+              <td><span class="chip falta">pendiente</span></td>
+              <td>Requiere un módulo nativo propio; no hay codificador gratuito disponible en Expo Go.</td>
+            </tr>
+            <tr>
+              <td>Entrar con Google</td>
+              <td><span class="chip falta">sin verificar</span></td>
+              <td>Configurado en Supabase; falta la prueba completa en un teléfono.</td>
+            </tr>
+            <tr>
+              <td>Plan semanal automático</td>
+              <td><span class="chip listo">corregido</span></td>
+              <td>Verificado a mano: la tanda se resuelve en un segundo. La primera ejecución programada confirmará el ciclo completo.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <span>Brío &mdash; Ingeniería de Software II &mdash; Universidad Central</span>
+    <span>Paquete de trabajo 1.3.2 de la EDT</span>
+  </footer>
+
+</div>
