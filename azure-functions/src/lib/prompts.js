@@ -123,6 +123,7 @@ export function promptPlan(d) {
     objetivo: d.objetivo,
     tiempo: d.tiempo,
     impacto: d.impacto,
+    lugar: d.lugar,
   });
 
   // Las órdenes salen del motor de adaptación de la app, que analiza el

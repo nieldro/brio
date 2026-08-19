@@ -7,6 +7,8 @@
 // Aquí se decide qué exige cada día y qué se le puede pedir a esta persona en
 // concreto. El validador lo comprueba después: el prompt pide, esto obliga.
 
+import { listaParaElPrompt } from './catalogo.js';
+
 export const BLOQUES = ['calentamiento', 'principal', 'cierre'];
 
 // El tiempo que la persona dijo tener es un compromiso, no un techo lejano.
@@ -99,7 +101,7 @@ export function enfoqueDe(objetivo) {
 
 // --- El bloque que se le pega al prompt -----------------------------------
 
-export function instruccionesDeRutina({ objetivo, tiempo, impacto }) {
+export function instruccionesDeRutina({ objetivo, tiempo, impacto, lugar }) {
   const sinImpacto =
     impacto === 'bajo'
       ? `
@@ -135,5 +137,6 @@ Esta persona apartó ${tiempo} minutos al día. Úsalos.
 - La suma de lo que pidas en los ejercicios tiene que dar la duracion del dia.
 
 ## Enfoque de esta persona
-${enfoqueDe(objetivo)}${sinImpacto}`;
+${enfoqueDe(objetivo)}${sinImpacto}
+${listaParaElPrompt(lugar)}`;
 }

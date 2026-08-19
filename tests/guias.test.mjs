@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { normalizar, buscarGuia, guiaDe, busquedaDeVideo } from '../src/services/guias.js';
 import { GUIAS } from '../src/data/guias.js';
 import { POSTURAS, POSTURA_POR_DEFECTO } from '../src/data/posturas.js';
+import { todosLosNombres, ejerciciosDe } from '../azure-functions/src/lib/catalogo.js';
 
 // --- Normalización --------------------------------------------------------
 
@@ -46,7 +47,16 @@ test('empareja los nombres que la IA generó de verdad', () => {
 test('gana la clave más específica, no la primera que aparezca', () => {
   // "paso lateral" tiene que ganarle a "marcha".
   assert.equal(buscarGuia('Pasos laterales').nombre, 'Pasos laterales');
-  assert.equal(buscarGuia('Sentadilla búlgara').nombre, 'Sentadilla a la silla');
+
+  // "sentadilla bulgara" le gana a "sentadilla" a secas, que es otra cosa.
+  assert.equal(buscarGuia('Sentadilla búlgara').nombre, 'Sentadilla búlgara');
+  assert.equal(buscarGuia('Sentadilla a la silla').nombre, 'Sentadilla a la silla');
+
+  // Estos tres comparten palabra con guías más generales y tienen que ganar.
+  assert.equal(buscarGuia('Jalón al pecho').nombre, 'Jalón al pecho');
+  assert.equal(buscarGuia('Press de hombro').nombre, 'Press de hombro');
+  assert.equal(buscarGuia('Curl de bíceps').nombre, 'Curl de bíceps');
+  assert.equal(buscarGuia('Polea de tríceps').nombre, 'Polea de tríceps');
 });
 
 test('sin coincidencia devuelve null, no una guía al azar', () => {
@@ -163,6 +173,55 @@ test('ninguna clave es tan corta que empareje cualquier cosa', () => {
       assert.ok(clave.length >= 4, `la clave "${clave}" de ${g.nombre} es demasiado corta`);
     }
   }
+});
+
+// --- El catálogo y la biblioteca no se pueden separar ---------------------
+//
+// El servidor le da al modelo una lista cerrada de ejercicios y le prohíbe
+// inventar. Esa lista solo sirve si CADA nombre encuentra aquí su guía y su
+// figura. Si alguien agrega uno al catálogo y se le olvida la guía, la
+// persona abre "cómo se hace" y recibe el consejo genérico con un monigote
+// que no es el de su ejercicio. Estas pruebas atan las dos puntas.
+
+test('todo ejercicio del catálogo tiene guía escrita a mano', () => {
+  const huerfanos = todosLosNombres().filter((nombre) => guiaDe({ nombre }).esGenerica);
+  assert.deepEqual(huerfanos, [], 'ejercicios del catálogo sin guía');
+});
+
+test('todo ejercicio del catálogo tiene su animación', () => {
+  const sinFigura = todosLosNombres().filter((nombre) => {
+    const g = guiaDe({ nombre });
+    return !g.figura || !Object.keys(POSTURAS).includes(g.figura);
+  });
+  assert.deepEqual(sinFigura, [], 'ejercicios del catálogo sin figura');
+});
+
+test('el nombre del catálogo cae en la guía que le toca, no en una parecida', () => {
+  // "Curl de bíceps" comparte palabra con "Trabajo con mancuernas", y
+  // "Jalón al pecho" con "Remo en máquina". Si el emparejamiento se afloja,
+  // la persona ve la técnica de otro ejercicio.
+  for (const nombre of todosLosNombres()) {
+    const g = guiaDe({ nombre });
+    assert.equal(g.nombre, nombre, `"${nombre}" cae en la guía de "${g.nombre}"`);
+  }
+});
+
+test('cada lugar ofrece con qué armar un día completo', () => {
+  for (const lugar of ['En casa', 'En el gym', 'Mezclado']) {
+    const e = ejerciciosDe(lugar);
+    assert.ok(e.calentamiento.length >= 1, `${lugar} sin con qué calentar`);
+    assert.ok(e.fuerza.length >= 6, `${lugar} tiene pocos de fuerza`);
+    assert.ok(e.cardio.length >= 2, `${lugar} tiene poco cardio`);
+    assert.ok(e.cierre.length >= 1, `${lugar} sin con qué cerrar`);
+  }
+});
+
+test('el catálogo entero sirve para quien no puede saltar', () => {
+  // Si algún día entra un ejercicio de impacto, el plan de alguien con
+  // restricción se rechazaría en el servidor y se quedaría sin plan.
+  const impacto = /\b(salt\w*|brinc\w*|burpee\w*|correr|carrera|trote|trotar|sprint\w*)\b/i;
+  const malos = todosLosNombres().filter((n) => impacto.test(n));
+  assert.deepEqual(malos, [], 'el catálogo trae ejercicios de impacto');
 });
 
 // --- Video ----------------------------------------------------------------

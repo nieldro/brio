@@ -85,14 +85,13 @@ const crear = ({ C, T, R, S }) => ({
     color: C.coralTexto,
     fontWeight: '700',
   },
-  enlaceGuia: {
-    marginTop: S.md,
-    marginLeft: 42,
-  },
   guia: {
-    marginTop: S.md,
-    marginLeft: 42,
+    marginTop: S.lg,
     gap: S.md,
+  },
+  tarjeta: {
+    // Más apretada que una tarjeta normal: aquí manda la figura, no el aire.
+    padding: S.md,
   },
   escenario: {
     alignItems: 'center',
@@ -264,50 +263,41 @@ export default function Rutina({ route, navigation }) {
 
             return (
               <Aparece key={`${e.nombre}-${e.n}`} orden={2 + b}>
-                <Tarjeta style={hecho && est.tarjetaHecha}>
-                  <View style={est.fila}>
-                    <Pressable
-                      onPress={() => alternar(clave)}
-                      accessibilityRole="checkbox"
-                      accessibilityState={{ checked: hecho }}
-                      accessibilityLabel={`${e.nombre}, ${hecho ? 'hecho' : 'sin hacer'}`}
-                      hitSlop={10}
-                    >
-                      <Casilla marcada={hecho} />
-                    </Pressable>
+                {/* La tarjeta entera abre la guía. La casilla, y solo ella,
+                    marca el ejercicio. Antes había un enlace de texto para
+                    cada cosa y la pantalla parecía un formulario. */}
+                <Pressable
+                  onPress={() => setAbierto(estaAbierto ? -1 : e.n)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${e.nombre}. ${e.detalle}`}
+                  accessibilityState={{ expanded: estaAbierto }}
+                >
+                  <Tarjeta style={[est.tarjeta, hecho && est.tarjetaHecha]}>
+                    <View style={est.fila}>
+                      {/* El movimiento manda: es lo primero que se mira y lo
+                          que de verdad enseña. */}
+                      <View style={est.escenario}>
+                        <FiguraEjercicio postura={g.figura} size={98} reloj={reloj} />
+                      </View>
 
-                    <Pressable
-                      style={est.centro}
-                      onPress={() => alternar(clave)}
-                      accessibilityRole="button"
-                    >
-                      <Text style={[est.nombre, hecho && est.nombreHecho]}>{e.nombre}</Text>
-                      <Text style={est.detalle}>{e.detalle}</Text>
-                    </Pressable>
+                      <View style={est.centro}>
+                        <Text style={[est.nombre, hecho && est.nombreHecho]}>{e.nombre}</Text>
+                        <Text style={est.detalle}>{e.detalle}</Text>
+                      </View>
 
-                    {/* El movimiento va aquí, siempre a la vista. Escondido
-                        detrás de un botón no lo encontraba nadie, y ver la
-                        forma es justo lo que hace falta antes de empezar. */}
-                    <View style={est.escenario}>
-                      <FiguraEjercicio postura={g.figura} size={82} reloj={reloj} />
+                      <Pressable
+                        onPress={() => alternar(clave)}
+                        accessibilityRole="checkbox"
+                        accessibilityState={{ checked: hecho }}
+                        accessibilityLabel={`${e.nombre}, ${hecho ? 'hecho' : 'sin hacer'}`}
+                        hitSlop={14}
+                      >
+                        <Casilla marcada={hecho} size={34} />
+                      </Pressable>
                     </View>
-                  </View>
 
-                  <Pressable
-                    onPress={() => setAbierto(estaAbierto ? -1 : e.n)}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Cómo se hace: ${e.nombre}`}
-                    accessibilityState={{ expanded: estaAbierto }}
-                    hitSlop={8}
-                    style={est.enlaceGuia}
-                  >
-                    <Text style={est.comoSeHace}>
-                      {estaAbierto ? 'cerrar la guía' : 'cómo se hace'}
-                    </Text>
-                  </Pressable>
-
-                  {estaAbierto && (
-                    <View style={est.guia}>
+                    {estaAbierto && (
+                      <View style={est.guia}>
                       <View style={est.bloque}>
                         <Text style={est.subtitulo}>cómo se hace</Text>
                         {g.como.map((paso, n) => (
@@ -339,9 +329,10 @@ export default function Rutina({ route, navigation }) {
                       >
                         <Text style={est.comoSeHace}>▸ verlo en video</Text>
                       </Pressable>
-                    </View>
-                  )}
-                </Tarjeta>
+                      </View>
+                    )}
+                  </Tarjeta>
+                </Pressable>
               </Aparece>
             );
           })}
