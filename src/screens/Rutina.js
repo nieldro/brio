@@ -8,9 +8,11 @@ import { DEGRADADOS } from '../theme';
 import Pantalla from '../components/Pantalla';
 import Tarjeta from '../components/Tarjeta';
 import Etiqueta from '../components/Etiqueta';
+import Boton from '../components/Boton';
 import Casilla from '../components/Casilla';
 import FiguraEjercicio, { useRelojDeFiguras } from '../components/FiguraEjercicio';
 import Aparece from '../components/Aparece';
+import { useMarcarDia } from '../state/useMarcarDia';
 import { guiaDe, busquedaDeVideo } from '../services/guias';
 import { resumenReto, porBloques, avanceDeRutina, claveEjercicio } from '../services/plan';
 
@@ -133,6 +135,12 @@ const crear = ({ C, T, R, S }) => ({
     textAlign: 'center',
     marginTop: S.lg,
   },
+  pieBoton: {
+    ...T.secundario,
+    fontSize: 13,
+    textAlign: 'center',
+    marginTop: S.sm,
+  },
   legal: {
     ...T.secundario,
     fontSize: 13,
@@ -151,10 +159,19 @@ const crear = ({ C, T, R, S }) => ({
 // marca con un botón, como siempre: si tachar ejercicios empezara a decidir si
 // el día vale, dejar uno a medias se volvería una falta, y eso es justo lo que
 // el producto no hace.
-export default function Rutina({ route }) {
+export default function Rutina({ route, navigation }) {
   const est = useEstilos(crear);
   const dia = route?.params?.dia ?? {};
   const lugar = route?.params?.lugar;
+
+  // Solo se puede cerrar el día de HOY. Mirar la rutina del viernes desde el
+  // martes no puede marcar el martes.
+  const esDeHoy = route?.params?.esDeHoy !== false;
+  const { marcar, completadoHoy, texto } = useMarcarDia();
+
+  const cerrarDia = () => {
+    if (marcar(dia.reto)) navigation.goBack();
+  };
 
   // Se intenta con la app de YouTube antes que con el navegador: es donde la
   // persona ya tiene su sesión y su idioma.
@@ -311,6 +328,24 @@ export default function Rutina({ route }) {
       ))}
 
       <Text style={est.cierre}>{dia.mensaje}</Text>
+
+      {/* El día se cierra desde aquí. Antes había que tachar los cinco
+          ejercicios, volver atrás y buscar el botón en otra pantalla: quien
+          acababa de entrenar se quedaba sin dónde decir que ya. */}
+      {esDeHoy && (
+        <Aparece orden={9}>
+          <Boton variante={completadoHoy ? 'salvia' : 'coral'} onPress={cerrarDia}>
+            {texto}
+          </Boton>
+          {!completadoHoy && avance.total > 0 && (
+            <Text style={est.pieBoton}>
+              {avance.completa
+                ? 'Terminaste la rutina completa.'
+                : 'Puedes marcarlo aunque no hayas hecho todo.'}
+            </Text>
+          )}
+        </Aparece>
+      )}
 
       <Text style={est.legal}>
         Brío acompaña, no diagnostica. Ante dolor, lesión o enfermedad, consulta a un profesional.

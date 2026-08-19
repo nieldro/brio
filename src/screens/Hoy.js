@@ -9,16 +9,16 @@ import Etiqueta from '../components/Etiqueta';
 import PildoraRacha from '../components/PildoraRacha';
 import PuntoSemaforo from '../components/PuntoSemaforo';
 import Chispa from '../components/Chispa';
+import Logo from '../components/Logo';
 import Aparece from '../components/Aparece';
-import { useCelebracion } from '../state/CelebracionContext';
 import { useUsuario } from '../state/UsuarioContext';
 import { useAlbum } from '../state/useAlbum';
+import { useMarcarDia } from '../state/useMarcarDia';
 
 import { planDemo } from '../data/planDemo';
 import { fechaLarga, franjaDelDia, claveDia } from '../services/fecha';
-import { diaDelPlan, resumenReto, esDescanso, versionMinima, asomoDeEjercicios } from '../services/plan';
-import { textoHecho, fraseDelDia, subCelebracion } from '../services/racha';
-import { hoySeriaRegreso, celebrarRegreso, contarRegresos, diasSinVolver } from '../services/regresos';
+import { diaDelPlan, esDescanso, versionMinima, asomoDeEjercicios } from '../services/plan';
+import { fraseDelDia } from '../services/racha';
 import { textoDelAlbum } from '../services/album';
 
 const SALUDOS = {
@@ -32,6 +32,7 @@ const crear = ({ C, T, R, S }) => ({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: S.sm,
   },
   fecha: {
     ...T.secundario,
@@ -83,9 +84,23 @@ const crear = ({ C, T, R, S }) => ({
     ...T.titulo,
     marginTop: S.md,
   },
-  resumen: {
+  fichas: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: S.sm,
+    marginTop: S.md,
+  },
+  ficha: {
+    backgroundColor: C.crema,
+    borderRadius: R.pildora,
+    paddingVertical: S.xs + 2,
+    paddingHorizontal: S.md,
+  },
+  fichaTexto: {
     ...T.secundario,
-    marginTop: S.xs,
+    fontSize: 13,
+    fontWeight: '700',
+    color: C.gris,
   },
   ejercicios: {
     marginTop: S.lg,
@@ -198,7 +213,6 @@ const crear = ({ C, T, R, S }) => ({
 export default function Hoy({ navigation }) {
   const est = useEstilos(crear);
   const { C, T } = useTema();
-  const { celebrar } = useCelebracion();
   const {
     hoy, // viva: cambia sola al cruzar la medianoche
     perfil,
@@ -206,8 +220,6 @@ export default function Hoy({ navigation }) {
     racha,
     rota,
     completadoHoy,
-    diasCompletados,
-    marcarDiaCompletado,
     diario,
     guardarLogro,
   } = useUsuario();
@@ -220,10 +232,9 @@ export default function Hoy({ navigation }) {
   const [enMinima, setEnMinima] = useState(false);
   const dia = enMinima ? versionMinima(diaCompleto) : diaCompleto;
 
-  const esRegreso = useMemo(
-    () => hoySeriaRegreso({ diasCompletados }, hoy),
-    [diasCompletados, hoy],
-  );
+  // Cerrar el día vive en un solo sitio (state/useMarcarDia.js): Hoy y la
+  // rutina lo hacen igual, y ninguna de las dos puede celebrar distinto.
+  const { marcar, texto: textoBoton } = useMarcarDia();
 
   const { estado: album } = useAlbum();
 
@@ -246,17 +257,7 @@ export default function Hoy({ navigation }) {
   };
 
   const marcarListo = () => {
-    if (completadoHoy) return;
-
-    // Volver se celebra distinto que seguir. Para quien paró, esto es lo
-    // difícil, y es justo lo que ninguna app le ha reconocido nunca.
-    const felicitacion = esRegreso
-      ? celebrarRegreso(contarRegresos(diasCompletados) + 1, diasSinVolver(diasCompletados, hoy))
-      : { titulo: 'Hecho.', sub: subCelebracion(racha + 1) };
-
-    marcarDiaCompletado(dia.reto);
-    celebrar(felicitacion);
-    setEnMinima(false);
+    if (marcar(dia.reto)) setEnMinima(false);
   };
 
   const saludo = `${SALUDOS[franjaDelDia(hoy)]}, ${perfil.nombre}.`;
@@ -264,6 +265,8 @@ export default function Hoy({ navigation }) {
   return (
     <Pantalla>
       <View style={est.encabezado}>
+        {/* La marca acompaña todos los días, no solo el primer arranque. */}
+        <Logo size={30} />
         <Text style={est.fecha}>{fechaLarga(hoy)}</Text>
 
         <View style={est.acciones}>
@@ -306,7 +309,29 @@ export default function Hoy({ navigation }) {
           )}
         </View>
         <Text style={est.reto}>{dia.reto}</Text>
-        <Text style={est.resumen}>{resumenReto(dia, perfil.lugar)}</Text>
+
+        {/* Los datos del día sueltos en una línea de texto se leían como una
+            nota al pie. En fichas se ven de un vistazo, que es como se mira
+            una pantalla antes de entrenar. */}
+        <View style={est.fichas}>
+          {dia.duracion_min > 0 && (
+            <View style={est.ficha}>
+              <Text style={est.fichaTexto}>{dia.duracion_min} min</Text>
+            </View>
+          )}
+          {!!perfil.lugar && (
+            <View style={est.ficha}>
+              <Text style={est.fichaTexto}>{perfil.lugar}</Text>
+            </View>
+          )}
+          {dia.ejercicios.length > 0 && (
+            <View style={est.ficha}>
+              <Text style={est.fichaTexto}>
+                {dia.ejercicios.length} {dia.ejercicios.length === 1 ? 'ejercicio' : 'ejercicios'}
+              </Text>
+            </View>
+          )}
+        </View>
 
         {asomo.visibles.length > 0 && (
           <View style={est.ejercicios}>
@@ -352,7 +377,7 @@ export default function Hoy({ navigation }) {
           onPress={marcarListo}
           style={est.botonListo}
         >
-          {completadoHoy ? textoHecho(racha) : 'Listo por hoy'}
+          {textoBoton}
         </Boton>
 
         {/* Lo que hace abandonar no es la falta de ganas: es el todo o nada.

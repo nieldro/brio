@@ -216,7 +216,14 @@ export default function Semana({ navigation }) {
             <Pressable
               onPress={
                 tieneRutina
-                  ? () => navigation.navigate('Rutina', { dia, lugar: perfil.lugar })
+                  ? () =>
+                      navigation.navigate('Rutina', {
+                        dia,
+                        lugar: perfil.lugar,
+                        // Mirar la rutina del viernes desde el martes no puede
+                        // marcar el martes.
+                        esDeHoy: esHoy,
+                      })
                   : undefined
               }
               accessibilityRole={tieneRutina ? 'button' : undefined}
