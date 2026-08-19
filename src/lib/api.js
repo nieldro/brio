@@ -66,3 +66,13 @@ export function preguntarCoach(texto) {
 export function mirarPlato(base64, tipo = 'image/jpeg', detalle = false) {
   return llamar('plato', { imagen: base64, tipo, detalle }, { timeoutMs: 40000 });
 }
+
+// Lee una factura y devuelve el gasto que ve. Paquete 1.7.1 de la EDT.
+//
+// La foto viaja y no se guarda, igual que la del plato: lo que queda es el
+// gasto, que la persona puede corregir antes de anotarlo. Escribirlo a mano
+// sigue siendo el camino principal —es más rápido y funciona sin señal—; la
+// foto está para el día que hay diez tirillas en el bolsillo.
+export function leerFactura(base64, tipo = 'image/jpeg') {
+  return llamar('gasto', { imagen: base64, tipo }, { timeoutMs: 40000 });
+}

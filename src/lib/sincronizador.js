@@ -1,7 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { supabase } from './supabase';
-import { guardarPerfil, marcarRegistro, guardarLogro, guardarHabito } from './repositorio';
+import {
+  guardarPerfil,
+  marcarRegistro,
+  guardarLogro,
+  guardarHabito,
+  guardarGasto,
+  borrarGastoNube,
+  guardarPresupuesto,
+} from './repositorio';
 import {
   encolar,
   pendientes,
@@ -72,6 +80,12 @@ async function enviar(op, userId) {
       return guardarLogro(userId, { fecha: op.fecha, texto: op.texto });
     case 'habito':
       return guardarHabito(userId, { habito: op.clave, fecha: op.fecha, hecho: op.hecho });
+    case 'gasto':
+      return guardarGasto(userId, op.gasto);
+    case 'gasto-borrado':
+      return borrarGastoNube(userId, op.id);
+    case 'presupuesto':
+      return guardarPresupuesto(userId, op.datos);
     default:
       return true; // desconocida: se descarta, no se reintenta para siempre
   }

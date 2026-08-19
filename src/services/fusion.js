@@ -56,6 +56,21 @@ export function fusionarHabitosHechos(local = {}, nube = {}) {
   return salida;
 }
 
+// Los gastos, por id. Un gasto anotado sin señal todavía no está en la nube,
+// así que la lista de la nube NO puede ser la que manda: unir por id es lo
+// único que no pierde nada.
+//
+// La versión de la nube gana cuando el id está en los dos lados: si subió, es
+// porque el servidor la confirmó.
+export function fusionarGastos(local = [], nube = []) {
+  const porId = new Map();
+
+  for (const g of local ?? []) if (g?.id) porId.set(g.id, g);
+  for (const g of nube ?? []) if (g?.id) porId.set(g.id, g);
+
+  return [...porId.values()].sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
+}
+
 // Junta el estado guardado en disco con el que vino de la nube.
 // `nube` puede ser null: significa que no había nada que traer.
 export function fusionar(local = {}, nube = null) {
@@ -84,5 +99,17 @@ export function fusionar(local = {}, nube = null) {
 
     habitos: fusionarHabitos(local.habitos, nube.habitos),
     habitosHechos: fusionarHabitosHechos(local.habitosHechos, nube.habitosHechos),
+
+    gastos: fusionarGastos(local.gastos, nube.gastos),
+
+    // El presupuesto de la nube manda si existe; si no, se conserva el del
+    // teléfono. Un null de la nube no puede borrar el que la persona puso.
+    presupuesto: {
+      mensual: nube.presupuesto?.mensual ?? local.presupuesto?.mensual ?? null,
+      porCategoria: {
+        ...(local.presupuesto?.porCategoria ?? {}),
+        ...(nube.presupuesto?.porCategoria ?? {}),
+      },
+    },
   };
 }

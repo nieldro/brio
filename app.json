@@ -22,7 +22,8 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "permissions": [
-        "android.permission.CAMERA"
+        "android.permission.CAMERA",
+        "android.permission.ACTIVITY_RECOGNITION"
       ],
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO"
@@ -55,6 +56,12 @@
         {
           "photosPermission": "Brío pide tus fotos solo para que puedas elegir una del plato que quieras mostrarle.",
           "cameraPermission": "Brío usa la cámara para la foto de tu plato."
+        }
+      ],
+      [
+        "expo-sensors",
+        {
+          "motionPermission": "Brío usa el podómetro para acompañar tus caminatas. No hay meta que cumplir y la cuenta no sale de tu teléfono."
         }
       ]
     ],

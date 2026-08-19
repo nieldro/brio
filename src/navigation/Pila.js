@@ -16,6 +16,10 @@ import Movimientos from '../screens/Movimientos';
 import Album from '../screens/Album';
 import Camara from '../screens/Camara';
 import Pelicula from '../screens/Pelicula';
+import Escaner from '../screens/Escaner';
+import Dinero from '../screens/Dinero';
+import Ahorro from '../screens/Ahorro';
+import Pareja from '../screens/Pareja';
 
 const Pila = createNativeStackNavigator();
 
@@ -59,6 +63,18 @@ export default function PilaPrincipal() {
       {/* Sin encabezado: la cámara es la pantalla entera, y una barra encima
           le quitaría espacio justo al encuadre que se está pidiendo cuidar. */}
       <Pila.Screen name="Camara" component={Camara} options={{ headerShown: false }} />
+
+      {/* Paquete 1.4.2 de la EDT. Igual que la cámara del álbum: sin barra,
+          porque lo que hay que apuntar es un código pequeño. */}
+      <Pila.Screen name="Escaner" component={Escaner} options={{ headerShown: false }} />
+
+      {/* Paquete 1.7. Van en la pila y no en una pestaña: las cuatro pestañas
+          son lo diario, y el dinero no puede competir con el reto de hoy. */}
+      <Pila.Screen name="Dinero" component={Dinero} options={{ title: 'Tu dinero' }} />
+      <Pila.Screen name="Ahorro" component={Ahorro} options={{ title: 'Tu ahorro' }} />
+
+      {/* Paquete 1.3.4. */}
+      <Pila.Screen name="Pareja" component={Pareja} options={{ title: 'De a dos' }} />
     </Pila.Navigator>
   );
 }

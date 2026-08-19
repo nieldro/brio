@@ -17,6 +17,7 @@ import { hayModuloPush, pedirPermisoYToken } from '../lib/notificaciones';
 import { planDemo } from '../data/planDemo';
 import { diaDelPlan } from '../services/plan';
 import { porqueCorto } from '../services/porque';
+import { usePasos } from '../state/usePasos';
 // El MISMO módulo que usa el Timer del servidor para escribir el aviso. Se
 // importa en vez de copiarse: dos versiones del mismo texto se separan, y
 // entonces la vista previa miente sobre lo que de verdad va a llegar.
@@ -171,6 +172,7 @@ export default function Ajustes({ navigation }) {
     verNutricionDetallada,
   } = useUsuario();
   const { estado: album, setFotos } = useAlbum();
+  const pasos = usePasos();
 
   const [aviso, setAviso] = useState(null);
   const [editandoPorque, setEditandoPorque] = useState(false);
@@ -326,11 +328,37 @@ export default function Ajustes({ navigation }) {
         </Tarjeta>
       </Aparece>
 
+      {/* Paquete 1.8.3. Se enciende a mano, como la estimación del plato. El
+          permiso de actividad no se pide al abrir la app: en la cara se niega
+          por reflejo, y un permiso negado no se vuelve a pedir.
+
+          Va con botón y no con interruptor a propósito: el permiso del
+          sistema solo se puede encender desde aquí, y un interruptor que no
+          puede volver atrás miente sobre lo que hace. */}
+      <Aparece orden={4}>
+        <Tarjeta>
+          <Etiqueta>tus pasos</Etiqueta>
+          <Text style={est.campo}>
+            {pasos.permiso ? 'Los estoy contando' : 'Todavía no los cuento'}
+          </Text>
+          <Text style={est.pie}>
+            {pasos.explicacion ??
+              'Aparecen en Hoy cuando salgas a caminar. No hay meta que cumplir.'}
+          </Text>
+
+          {pasos.disponible && !pasos.permiso && (
+            <Boton variante="suave" onPress={pasos.activar} style={est.accion}>
+              Contar mis pasos
+            </Boton>
+          )}
+        </Tarjeta>
+      </Aparece>
+
       {/* El paso 4 del onboarding promete "esto queda entre tú y yo", y hasta
           ahora la persona no lo volvía a ver nunca. Aquí queda a la vista y
           se puede cambiar: un motivo de hace tres meses puede ya no ser el
           suyo, y el de ahora es el que sirve. */}
-      <Aparece orden={4}>
+      <Aparece orden={5}>
         <Tarjeta>
           <Etiqueta>tu porqué</Etiqueta>
 
@@ -370,7 +398,7 @@ export default function Ajustes({ navigation }) {
         </Tarjeta>
       </Aparece>
 
-      <Aparece orden={5}>
+      <Aparece orden={6}>
         <Tarjeta>
           <Etiqueta>tu cuenta</Etiqueta>
           {sesion === 'concuenta' ? (
@@ -400,7 +428,7 @@ export default function Ajustes({ navigation }) {
         </Tarjeta>
       </Aparece>
 
-      <Aparece orden={6}>
+      <Aparece orden={7}>
         <Tarjeta>
           <Etiqueta>tus datos</Etiqueta>
           <Text style={est.campo}>

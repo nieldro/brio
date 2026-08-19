@@ -25,6 +25,7 @@ import { nivelDeAcompanamiento, saludoSegunDistancia, porQueHabloMenos } from '.
 import { textoDelAlbum } from '../services/album';
 import { avanceDeHoy, frasePorAvance } from '../services/habitos';
 import { recordatorioDePorque, toca } from '../services/porque';
+import { usePasos } from '../state/usePasos';
 
 const SALUDOS = {
   manana: 'Buenos días',
@@ -102,6 +103,21 @@ const crear = ({ C, T, R, S }) => ({
     borderLeftColor: C.coral,
     paddingLeft: S.md,
     marginTop: S.md,
+  },
+  // Los dos sostenes van uno al lado del otro y a media altura: si ocuparan
+  // el ancho entero competirían con la tarjeta del reto, que es lo único que
+  // esta pantalla tiene que conseguir que la persona toque.
+  filaSostenes: {
+    flexDirection: 'row',
+    gap: S.md,
+  },
+  sosten: {
+    flex: 1,
+  },
+  sostenTexto: {
+    ...T.secundario,
+    color: C.cafe,
+    marginTop: S.xs,
   },
   reto: {
     ...T.titulo,
@@ -252,6 +268,10 @@ export default function Hoy({ navigation }) {
     avisarDistancia,
     retoEnMinima,
     aliviarReto,
+    gastos,
+    pareja,
+    diaPausado,
+    pausarDia,
   } = useUsuario();
 
   // Mientras la IA no haya entregado un plan, se muestra el de arranque.
@@ -270,6 +290,10 @@ export default function Hoy({ navigation }) {
   const { marcar, texto: textoBoton } = useMarcarDia();
 
   const { estado: album } = useAlbum();
+
+  // El podómetro. La suscripción al sensor se corta sola al salir: el hook
+  // devuelve la limpieza que da lib/pasos.js.
+  const { lectura: lecturaDePasos } = usePasos();
 
   const avanceHabitos = useMemo(
     () => avanceDeHoy(habitos, habitosHechos, hoy),
@@ -372,6 +396,36 @@ export default function Hoy({ navigation }) {
         </View>
       </Aparece>
 
+      {/* Si contó un dolor o una lesión en el chat, aquí no se le pide nada.
+          Antes el coach decía "hoy paramos" y esta misma pantalla seguía
+          enseñando el reto: la app decía una cosa y hacía la contraria, y en
+          un asunto de lesiones eso es peor que no decir nada.
+
+          El día se puede cerrar igual. Descansar una lesión ES lo que hay que
+          hacer, y no puede costar la racha: eso sería castigar por cuidarse. */}
+      {diaPausado && !completadoHoy && (
+        <Aparece orden={1}>
+          <Tarjeta>
+            <Etiqueta>hoy paramos</Etiqueta>
+            <Text style={est.reto}>Descanso</Text>
+            <Text style={est.tip}>
+              Me contaste que algo te duele. Hoy no entrenamos y el día cuenta igual.
+            </Text>
+            <View style={est.botonListo}>
+              <Boton onPress={() => marcar('Descanso por dolor')}>Listo por hoy</Boton>
+            </View>
+            <Pressable
+              onPress={() => pausarDia(false)}
+              accessibilityRole="button"
+              style={est.noPuedo}
+            >
+              <Text style={est.noPuedoTexto}>Ya estoy mejor, muéstrame el reto</Text>
+            </Pressable>
+          </Tarjeta>
+        </Aparece>
+      )}
+
+      {!diaPausado && (
       <Aparece orden={1}>
       <Tarjeta>
         <View style={est.filaDiario}>
@@ -483,6 +537,7 @@ export default function Hoy({ navigation }) {
         )}
       </Tarjeta>
       </Aparece>
+      )}
 
       <Aparece orden={2}>
       <Tarjeta>
@@ -524,6 +579,59 @@ export default function Hoy({ navigation }) {
             <Text style={est.preguntaFoto}>{frasePorAvance(avanceHabitos)}</Text>
           </Tarjeta>
         </Pressable>
+      </Aparece>
+
+      {/* Paquete 1.8.3. Los pasos aparecen SOLO cuando hay algo que afirmar.
+          Un día flojo no se comenta: la tarjeta simplemente no está, y esa
+          ausencia ES la regla 11. Sin meta, sin barra y sin comparar con
+          ayer, que es lo que convertiría esto en otra báscula. */}
+      {lecturaDePasos.visible && (
+        <Aparece orden={3}>
+          <Tarjeta>
+            <Etiqueta>{lecturaDePasos.detalle}</Etiqueta>
+            <Text style={est.pregunta}>{lecturaDePasos.texto}</Text>
+            <Text style={T.secundario}>{lecturaDePasos.frase}</Text>
+          </Tarjeta>
+        </Aparece>
+      )}
+
+      {/* Paquetes 1.3.4 y 1.7 de la EDT. Van juntos y en voz baja, después
+          de lo del día: son las dos cosas que sostienen el hábito desde
+          fuera —alguien al lado y el dinero— pero ninguna es el reto de hoy,
+          y ponerlas arriba sería quitarle el sitio a lo que sí lo es. */}
+      <Aparece orden={3}>
+        <View style={est.filaSostenes}>
+          <Pressable
+            onPress={() => navigation.navigate('Pareja')}
+            accessibilityRole="button"
+            accessibilityLabel="Tu reto de a dos"
+            style={est.sosten}
+          >
+            <Tarjeta>
+              <Etiqueta>de a dos</Etiqueta>
+              {/* Tener reto no es tener con quién: quien lo armó y todavía
+                  espera está solo, y decirle "van juntos" es mentirle en la
+                  primera pantalla de la app. */}
+              <Text style={est.sostenTexto}>
+                {(pareja?.miembros?.length ?? 0) >= 2 ? 'Van juntos' : 'Invita a alguien'}
+              </Text>
+            </Tarjeta>
+          </Pressable>
+
+          <Pressable
+            onPress={() => navigation.navigate('Dinero')}
+            accessibilityRole="button"
+            accessibilityLabel="Tu dinero"
+            style={est.sosten}
+          >
+            <Tarjeta>
+              <Etiqueta>tu dinero</Etiqueta>
+              <Text style={est.sostenTexto}>
+                {gastos.length > 0 ? 'Mira el mes' : 'Anota un gasto'}
+              </Text>
+            </Tarjeta>
+          </Pressable>
+        </View>
       </Aparece>
 
       {/* La foto del día. Va abajo, en voz baja y sin contador: el día que

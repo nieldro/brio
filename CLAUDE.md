@@ -42,6 +42,26 @@ Diferenciador: acompañamiento emocional + personalización con IA + precio Lata
 6. Público vulnerable: el diseño debe evitar obsesión.
 7. Las fotos de la persona viven solo en su teléfono. No se suben, no van a la galería y la IA nunca las ve. No hay comparación lado a lado ni racha de fotos: el movimiento se ve entero en la película, de tarde en tarde.
 8. La foto de un plato se mira para sumarle algo, jamás para calificarlo. La regla 1 manda también aquí, y se comprueba en el servidor con un validador, no solo pidiéndoselo al modelo.
+9. **El dinero avergüenza más que la comida.** El módulo de bienestar
+   financiero se rige por las mismas reglas: un gasto no es una falta, no hay
+   alarmas rojas ni "te pasaste", y la app nunca dice en qué NO gastar. Los
+   gastos hormiga son un dato sobre a dónde se fue el dinero, jamás una
+   acusación. Sin proyecciones de deuda, sin comparaciones con otras personas
+   y sin puntajes financieros. Romper una racha no borra lo ahorrado, nunca:
+   eso sería castigo.
+10. **Nadie compite con nadie.** El reto en pareja no lleva marcador, ni
+    porcentajes enfrentados, ni avisos de que el otro falló. En una app cuyo
+    usuario abandonó otras por sentirse juzgado, la comparación es veneno. Se
+    ve que el otro estuvo y lo que llevan juntos, y salirse es un toque.
+11. **Los pasos no son una métrica.** El podómetro suma otra prueba de que la
+    persona se movió, del mismo lado que "días en los que te moviste". No hay
+    meta diaria que se pueda fallar, no se convierten en calorías nunca, y un
+    día de pocos pasos no se comenta.
+12. **El riesgo lo detecta el código, no el prompt.** Ideas de hacerse daño,
+    autolesión, señales de trastorno alimentario y dolor agudo se detectan en
+    el servidor ANTES de llamar a la IA, y cortocircuitan la respuesta. Un
+    modelo puede desobedecer una instrucción; un detector con pruebas, no. En
+    esos casos nunca se propone ejercicio.
 
 ## Identidad visual
 
@@ -140,6 +160,10 @@ brio/
       Album.js         las fotos diarias
       Camara.js        la foto del día, con guía de encuadre
       Pelicula.js      todas las fotos, una detrás de otra
+      Escaner.js       semáforo de un producto empacado, por código de barras
+      Dinero.js        gastos del mes y semáforo del presupuesto
+      Ahorro.js        el reto de ahorro atado a la racha
+      Pareja.js        el reto que se lleva de a dos
     lib/
       supabase.js     cliente supabase
       api.js          llamadas a las Azure Functions
@@ -391,6 +415,10 @@ Navegación: 4 pestañas abajo (Hoy, Semana, Chat, Progreso). Todo a máximo 2 t
 - **Álbum**: las fotos diarias de cintura para arriba. Cuadrícula de las últimas, botón para la de hoy y acceso a la película. Sin racha, sin recordatorio y sin comparación lado a lado. Botón para borrarlas todas.
 - **Cámara**: pantalla completa con la foto anterior encima al 28 % y líneas de hombros y cintura, para que el encuadre coincida. Sin esa guía la película salta y no se entiende.
 - **Película**: todas las fotos seguidas, repartidas a lo largo del periodo. Se ve dentro de la app; exportar un archivo de video queda para cuando haya compilación propia, porque no hay codificador gratuito en Expo Go.
+- **Escáner**: lee el código de barras de un producto empacado y devuelve el mismo semáforo del plato, el nombre y UNA cosa para sumarle. Los datos salen de Open Food Facts, que trae calorías y azúcares: **nada de eso llega a la pantalla**. No se guarda nada.
+- **Dinero**: registrar un gasto escribiéndolo ("almuerzo 12 mil"), lo que va del mes y el semáforo del presupuesto. El análisis del texto es con reglas, no con IA: reproducible, sin red y probado. La foto de una factura sí pasa por el servidor, con su validador.
+- **Ahorro**: el reto de apartar algo pequeño **el mismo día** que se cumple el reto de movimiento. Es lo que une las dos mitades del producto. Romper la racha no borra lo ahorrado.
+- **Pareja**: un reto que avanza cuando cualquiera de los dos se mueve. Se entra con un código corto que se comparte por WhatsApp; no se pide la agenda del teléfono. Máximo una pareja a la vez.
 - **Perfil**: editar datos, hora de recordatorio, cerrar sesión.
 - **Onboarding**: una pregunta por pantalla, se siente conversación. Pasos y textos exactos:
 
@@ -425,6 +453,38 @@ Crear la Function App en plan de consumo (Node.js). Function `plan` (HTTP): reci
 
 ### Fase 6: notificaciones, cierre y despliegue
 Expo Push: pedir permiso en el paso 8 del onboarding y guardar el token en `profiles`. Function `recordatorios` (Timer Trigger cada hora): busca los usuarios cuya hora coincide y envía el push con voz de Brío, máximo dos al día. Function `plan-semanal` (Timer Trigger semanal): recalcula el plan según el cumplimiento. Pantalla Perfil funcional. Publicar la landing en Azure Static Web Apps. Pulir celebración y estados vacíos.
+
+## Dónde vive cada entregable de la EDT
+
+Ocho paquetes, veintitrés entregables. Esta tabla es lo que permite trazar la
+EDT hasta el código sin adivinar.
+
+| # | Entregable | Dónde vive |
+|---|---|---|
+| 1.1.1 | Registro y autenticación | `src/lib/auth.js`, `src/screens/Cuenta.js` |
+| 1.1.2 | Perfil y onboarding | `src/screens/onboarding/`, `src/screens/Perfil.js` |
+| 1.2.1 | Generación de planes con IA | `azure-functions/src/lib/planificador.js`, `catalogo.js`, `planJson.js` |
+| 1.2.2 | API y vista del plan diario | `azure-functions/src/functions/plan.js`, `src/screens/Semana.js`, `Hoy.js` |
+| 1.3.1 | Notificaciones push | `azure-functions/src/functions/recordatorios.js`, `src/lib/notificaciones.js` |
+| 1.3.2 | Registro de cumplimiento | `src/state/useMarcarDia.js`, `src/services/cola.js` |
+| 1.3.3 | Rachas y refuerzo positivo | `src/services/racha.js`, `insignias.js`, `celebracion.js` |
+| 1.3.4 | Retos en pareja | `src/services/pareja.js`, `src/screens/Pareja.js` |
+| 1.4.1 | Guía semáforo de alimentación | `comida_tip` del plan, `src/screens/Mesa.js` |
+| 1.4.2 | Escáner semáforo de productos | `src/services/producto.js`, `src/screens/Escaner.js` |
+| 1.5.1 | Coach conversacional | `azure-functions/src/functions/coach.js`, `src/screens/Chat.js` |
+| 1.5.2 | Mensajes de refuerzo programados | `azure-functions/src/lib/recordatorio.js` |
+| 1.5.3 | Diario de logros | `src/screens/Diario.js`, `src/services/animo.js` |
+| 1.5.4 | Detector de riesgo y derivación | `azure-functions/src/lib/riesgo.js` |
+| 1.6.1 | Métricas y progreso | `src/screens/Progreso.js`, `src/services/recorrido.js` |
+| 1.6.2 | Ajuste automático del plan | `src/services/adaptacion.js`, `renovacion.js`, `azure-functions/src/lib/tanda.js` |
+| 1.7.1 | Gastos por chat y OCR | `src/services/gastos.js`, `azure-functions/src/functions/gasto.js` |
+| 1.7.2 | Presupuesto y alertas | `src/services/presupuesto.js`, `src/screens/Dinero.js` |
+| 1.7.3 | Reto de ahorro ligado a rachas | `src/services/ahorro.js`, `src/screens/Ahorro.js` |
+| 1.7.4 | Gastos hormiga y suscripciones | `src/services/hormiga.js` |
+| 1.8.1 | Modelo de datos y persistencia | `supabase/schema.sql`, `supabase/migrations/` |
+| 1.8.2 | API REST del backend | `azure-functions/src/functions/`, `src/lib/api.js` |
+| 1.8.3 | Podómetro (Google Fit) | `src/services/movimiento.js`, `src/lib/pasos.js` |
+| 1.8.4 | Seguridad y despliegue | `azure-functions/src/lib/supabase.js`, `eas.json`, RLS |
 
 ## Compilar el APK
 
@@ -461,5 +521,6 @@ Lo que solo funciona con APK y no en Expo Go:
 - No agregar contador de calorías ni gráficas de peso.
 - No agregar librerías de UI pesadas. Componentes propios con el theme.
 - No exponer keys de IA en la app.
-- No módulo de finanzas. Es versión futura.
 - No pantallas de más. Solo las listadas.
+- No convertir el dinero en otro contador. Vale la regla 9.
+- No meter el peso, las calorías ni los pasos en el progreso como cifra.

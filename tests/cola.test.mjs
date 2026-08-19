@@ -16,6 +16,63 @@ const PERFIL = { tipo: 'perfil', datos: { nombre: 'Daniel' } };
 const REGISTRO = { tipo: 'registro', fecha: '2026-08-18', reto: 'Caminata' };
 const LOGRO = { tipo: 'logro', fecha: '2026-08-18', texto: 'Camine 20 min' };
 
+const gasto = (id, nota) => ({
+  tipo: 'gasto',
+  gasto: { id, fecha: '2026-08-18', monto: 12000, categoria: 'mercado', nota },
+});
+
+// --- Dinero ---------------------------------------------------------------
+//
+// Los gastos rompen el supuesto del resto de la cola. Todo lo demás es de
+// estado final —el perfil ES esto, el día ESTÁ marcado— y por eso se colapsa
+// por día. Un gasto es una cosa suelta: dos almuerzos del mismo martes son
+// dos gastos, y con la regla general uno de los dos se perdía en silencio.
+
+test('dos gastos del mismo día no se pisan', () => {
+  const cola = encolar(encolar([], gasto('g-1', 'almuerzo')), gasto('g-2', 'café'));
+  assert.equal(cola.length, 2);
+});
+
+test('anotar el mismo gasto dos veces manda uno solo', () => {
+  const cola = encolar(encolar([], gasto('g-1', 'almuerzo')), gasto('g-1', 'almuerzo del martes'));
+  assert.equal(cola.length, 1);
+  assert.equal(cola[0].gasto.nota, 'almuerzo del martes');
+});
+
+test('borrar un gasto que aún no subió cancela su envío', () => {
+  // Sin señal, anotar y borrar tiene que salir como un solo viaje. Mandar el
+  // gasto y después el borrado es hablar dos veces para no decir nada.
+  const cola = encolar(encolar([], gasto('g-1', 'almuerzo')), {
+    tipo: 'gasto-borrado',
+    id: 'g-1',
+  });
+
+  assert.equal(cola.length, 1);
+  assert.equal(cola[0].tipo, 'gasto-borrado');
+});
+
+test('el presupuesto es uno solo y gana el último', () => {
+  const cola = encolar(
+    encolar([], { tipo: 'presupuesto', datos: { mensual: 500000 } }),
+    { tipo: 'presupuesto', datos: { mensual: 600000 } },
+  );
+
+  assert.equal(cola.length, 1);
+  assert.equal(cola[0].datos.mensual, 600000);
+});
+
+test('las operaciones de dinero sí entran en la cola', () => {
+  // `encolar` descarta en silencio cualquier tipo que no esté en la lista
+  // blanca, así que olvidar registrarlo es perder el dato sin que nada avise.
+  for (const op of [
+    gasto('g-1', 'algo'),
+    { tipo: 'gasto-borrado', id: 'g-1' },
+    { tipo: 'presupuesto', datos: { mensual: 1 } },
+  ]) {
+    assert.equal(encolar([], op).length, 1, `${op.tipo} se cayó de la cola`);
+  }
+});
+
 // --- Encolar --------------------------------------------------------------
 
 test('encolar agrega y no muta la cola original', () => {

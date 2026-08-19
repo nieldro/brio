@@ -74,6 +74,44 @@ test('no se repiten días si el mismo está en los dos lados', () => {
   assert.deepEqual(juntos.agua, ['2026-08-18']);
 });
 
+// --- Dinero ---------------------------------------------------------------
+
+const g = (id, fecha, monto) => ({ id, fecha, monto, categoria: 'mercado', nota: '' });
+
+test('un gasto anotado sin señal no lo borra la nube', () => {
+  const fusionado = fusionar(
+    { gastos: [g('g-2', '2026-08-19', 9000)] },
+    { gastos: [g('g-1', '2026-08-18', 12000)] },
+  );
+
+  assert.equal(fusionado.gastos.length, 2);
+  assert.ok(fusionado.gastos.some((x) => x.id === 'g-2'), 'se perdió el que no había subido');
+});
+
+test('un gasto que está en los dos lados no se duplica', () => {
+  const fusionado = fusionar(
+    { gastos: [g('g-1', '2026-08-18', 12000)] },
+    { gastos: [g('g-1', '2026-08-18', 12500)] },
+  );
+
+  assert.equal(fusionado.gastos.length, 1);
+  assert.equal(fusionado.gastos[0].monto, 12500, 'lo confirmado por el servidor manda');
+});
+
+test('los gastos quedan del más nuevo al más viejo', () => {
+  const fusionado = fusionar(
+    { gastos: [g('a', '2026-08-01', 1)] },
+    { gastos: [g('b', '2026-08-19', 2), g('c', '2026-08-10', 3)] },
+  );
+
+  assert.deepEqual(fusionado.gastos.map((x) => x.id), ['b', 'c', 'a']);
+});
+
+test('un presupuesto vacío en la nube no borra el que la persona puso', () => {
+  const fusionado = fusionar({ presupuesto: { mensual: 500000, porCategoria: {} } }, { gastos: [] });
+  assert.equal(fusionado.presupuesto.mensual, 500000);
+});
+
 test('una nube vacía NO baja la racha', () => {
   const local = { rachaActual: 12, mejorRacha: 12, ultimoDiaCompletado: '2026-08-18' };
   const nube = { rachaActual: 0, mejorRacha: 0, ultimoDiaCompletado: null };

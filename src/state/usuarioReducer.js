@@ -71,6 +71,33 @@ export const estadoInicial = {
   // El último nivel de acompañamiento que se le explicó. Sirve para decirle
   // UNA vez que Brío va a hablar menos, y no cada vez que abre la app.
   distanciaAvisada: null,
+  // --- Bienestar financiero (paquete 1.7 de la EDT) ----------------------
+  //
+  // El dinero avergüenza más que la comida, así que aquí valen las mismas
+  // reglas: un gasto no es una falta y la app no dice en qué NO gastar.
+  // Por eso no hay ningún acumulador de "lo que te pasaste", ni nada que se
+  // pueda leer como una deuda con la app.
+  gastos: [], // [{ id, fecha, monto, categoria, nota, recurrente }]
+  presupuesto: { mensual: null, porCategoria: {} },
+  // El reto de ahorro va atado a la racha de movimiento: el mismo día que se
+  // cumple el reto, se aparta algo pequeño. Lo apartado NUNCA se borra por
+  // romper la racha; eso sería castigo.
+  ahorro: { porDia: null, desde: null },
+
+  // La pareja con la que se lleva un reto. Una sola: dos ya es una red social.
+  pareja: null, // { codigo, retoId, desde }
+
+  // El día en que el detector de riesgo vio un dolor o una lesión.
+  //
+  // Sin esto, el chat contestaba "hoy paramos, deja que lo mire un
+  // profesional" y la pantalla Hoy seguía enseñando el reto y el botón de
+  // "Listo por hoy". La app decía una cosa y hacía la contraria, que en un
+  // asunto de lesiones es peor que no decir nada.
+  //
+  // Es de UN día, como `retoAliviado`: mañana se arranca de cero, sin dejar
+  // la app en un modo de reposo que nadie recuerda haber puesto.
+  diaEnPausa: null, // '2026-08-19'
+
   // El día en que se pidió la versión corta del reto.
   //
   // Vivía dentro de la pantalla Hoy, y por eso el chip "Cambia mi reto" del
@@ -154,6 +181,28 @@ export function reducer(estado, accion) {
 
     case 'ALIVIAR_RETO':
       return { ...estado, retoAliviado: accion.valor ? claveDia(accion.hoy) : null };
+
+    case 'PAUSAR_DIA':
+      return { ...estado, diaEnPausa: accion.valor ? claveDia(accion.hoy) : null };
+
+    // --- Dinero ------------------------------------------------------------
+
+    case 'ANOTAR_GASTO':
+      return { ...estado, gastos: [accion.gasto, ...estado.gastos] };
+
+    // Se borra por id y no por posición: la lista se reordena al sincronizar,
+    // y borrar por índice terminaría quitando el gasto equivocado.
+    case 'BORRAR_GASTO':
+      return { ...estado, gastos: estado.gastos.filter((g) => g.id !== accion.id) };
+
+    case 'GUARDAR_PRESUPUESTO':
+      return { ...estado, presupuesto: { ...estado.presupuesto, ...accion.cambios } };
+
+    case 'GUARDAR_AHORRO':
+      return { ...estado, ahorro: { ...estado.ahorro, ...accion.cambios } };
+
+    case 'GUARDAR_PAREJA':
+      return { ...estado, pareja: accion.pareja };
 
     case 'NUTRICION_DETALLADA':
       return { ...estado, nutricionDetallada: !!accion.valor };

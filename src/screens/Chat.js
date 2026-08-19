@@ -9,6 +9,10 @@ import BotonVoz from '../components/BotonVoz';
 import { preguntarCoach, hayApi } from '../lib/api';
 import { leerMensajes } from '../lib/repositorio';
 import { primerMensaje, CHIPS } from '../data/chatDemo';
+// El MISMO detector que corre en el servidor antes de llamar a la IA. Se
+// importa en vez de copiarse: sin red esta pantalla contesta sola, y una
+// copia que se quede vieja sería justo la que falle el día que importe.
+import { detectarRiesgo, respuestaDeRiesgo } from '../../azure-functions/src/lib/riesgo';
 
 // Si el coach no contesta, Brío responde igual. Sin culpa y sin pantalla rota.
 const SIN_CONEXION = 'No pude conectarme ahora mismo. Escríbeme en un rato y seguimos.';
@@ -141,7 +145,8 @@ export default function Chat() {
   const scroll = useRef(null);
   const est = useEstilos(crear);
   const { C, S } = useTema();
-  const { userId, enNube, perfil, completadoHoy, retoEnMinima, aliviarReto } = useUsuario();
+  const { userId, enNube, perfil, completadoHoy, retoEnMinima, aliviarReto, pausarDia } =
+    useUsuario();
   const altoTeclado = useTeclado();
 
   // Con el teclado abierto, la barra de pestañas se esconde sola (Tabs.js), así
@@ -202,8 +207,31 @@ export default function Chat() {
     // igual cambió. Lo que se prometió se cumple con o sin conexión.
     const aviso = aplicar(accion);
 
+    // Antes de la red y antes de la IA.
+    //
+    // El servidor ya corta estas señales, pero sin conexión ni siquiera se
+    // llega al servidor: la pantalla contestaba "no pude conectarme ahora
+    // mismo", que a quien acaba de escribir que quiere hacerse daño lo deja
+    // exactamente a solas. Aquí el detector gana antes que nada.
+    //
+    // EFECTO DELIBERADO: cuando corta, la petición NO sale del teléfono, así
+    // que ni el mensaje ni la respuesta se guardan en `mensajes`. Se ven
+    // mientras el chat siga abierto y desaparecen al cerrar la app.
+    //
+    // Es una decisión, no un descuido. Lo que alguien escribe en su peor
+    // momento es lo más privado que va a pasar por esta app, y no tiene por
+    // qué quedar en una base de datos ni volver a aparecer meses después en
+    // un teléfono que quizá presta. El coste es que el hilo queda incompleto;
+    // el beneficio es que ese mensaje no existe en ninguna parte.
+    const riesgo = detectarRiesgo(limpio);
+
+    // Lo que dice el coach y lo que hace la app tienen que coincidir. Si le
+    // dice "hoy paramos", la pantalla Hoy no puede seguir pidiéndole el reto.
+    if (riesgo.nivel === 'dolor') pausarDia(true);
+
     let respuesta = null;
-    if (hayApi) respuesta = (await preguntarCoach(limpio))?.texto ?? null;
+    if (riesgo.corta) respuesta = respuestaDeRiesgo(riesgo.nivel, perfil?.nombre);
+    else if (hayApi) respuesta = (await preguntarCoach(limpio))?.texto ?? null;
 
     setMensajes((prev) => [
       ...(prev ?? saludo),

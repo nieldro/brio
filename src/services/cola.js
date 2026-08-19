@@ -24,7 +24,15 @@
 //    hasta un techo, pero la operación se queda. Perder el dato de alguien
 //    es peor que reintentar mil veces.
 
-export const OPERACIONES = ['perfil', 'registro', 'logro', 'habito'];
+export const OPERACIONES = [
+  'perfil',
+  'registro',
+  'logro',
+  'habito',
+  'gasto',
+  'gasto-borrado',
+  'presupuesto',
+];
 
 const ESPERA_BASE_MS = 2_000;
 const ESPERA_MAXIMA_MS = 5 * 60_000;
@@ -34,7 +42,19 @@ const ESPERA_MAXIMA_MS = 5 * 60_000;
 // porque marcar y desmarcar el mismo hábito debe quedarse con lo último.
 export function claveDe(op) {
   if (op.tipo === 'perfil') return 'perfil';
+  if (op.tipo === 'presupuesto') return 'presupuesto';
   if (op.tipo === 'habito') return `habito:${op.clave}:${op.fecha}`;
+
+  // Los gastos se colapsan por SU id y no por el día. Con la regla general
+  // (`tipo:fecha`) dos almuerzos del mismo martes se pisaban y solo subía uno:
+  // el resto de las operaciones son de estado final, pero un gasto es una
+  // cosa suelta y cada uno tiene que llegar.
+  //
+  // Anotar y borrar comparten clave a propósito: si la persona anota y borra
+  // sin señal, lo que sale es el borrado, y no dos viajes contradictorios.
+  if (op.tipo === 'gasto') return `gasto:${op.gasto?.id}`;
+  if (op.tipo === 'gasto-borrado') return `gasto:${op.id}`;
+
   return `${op.tipo}:${op.fecha}`;
 }
 

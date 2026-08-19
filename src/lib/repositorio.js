@@ -48,8 +48,18 @@ function aPerfil(fila) {
 
 // --- Lectura --------------------------------------------------------------
 
+// Hoy y la resta de días, sin librerías y en UTC, para el corte de lecturas.
+const hoyClave = () => new Date().toISOString().slice(0, 10);
+
+const restarDias = (clave, dias) => {
+  const [a, m, d] = clave.split('-').map(Number);
+  const t = new Date(Date.UTC(a, m - 1, d));
+  t.setUTCDate(t.getUTCDate() - dias);
+  return t.toISOString().slice(0, 10);
+};
+
 async function leerNube(userId) {
-  const [perfil, hechos, entradas, plan, habitos] = await Promise.all([
+  const [perfil, hechos, entradas, plan, habitos, gastos, presupuesto] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
     // Los últimos 30 días alcanzan para la semana en curso y para la racha.
     supabase
@@ -72,6 +82,16 @@ async function leerNube(userId) {
     // ruta de escritura entera —con cola y migración— sin lectura al otro
     // lado, y contradecía justo lo que la cuenta promete.
     supabase.from('habitos_hechos').select('habito, fecha').eq('user_id', userId),
+    // Los gastos se leen desde el principio, por lo mismo. Los últimos 120
+    // días: alcanzan para el mes en curso, para comparar con el anterior y
+    // para que el detector de gastos hormiga tenga con qué concluir.
+    supabase
+      .from('gastos')
+      .select('id, fecha, monto, categoria, nota, recurrente')
+      .eq('user_id', userId)
+      .gte('fecha', restarDias(hoyClave(), 120))
+      .order('fecha', { ascending: false }),
+    supabase.from('presupuestos').select('mensual, por_categoria').eq('user_id', userId).maybeSingle(),
   ]);
 
   // Estos tres casos son distintos y antes se confundían en un solo `null`:
@@ -111,6 +131,22 @@ async function leerNube(userId) {
       // y no lo miraba nadie.
       habitos: perfil.data.habitos ?? [],
       habitosHechos: porHabito,
+
+      // Si la migración 005 no se ha corrido, estas consultas fallan y aquí
+      // quedan vacías. El resto de los datos de la persona sí llegó, y eso
+      // no puede depender de una tabla que quizá no exista todavía.
+      gastos: (gastos.data ?? []).map((g) => ({
+        id: g.id,
+        fecha: g.fecha,
+        monto: Number(g.monto) || 0,
+        categoria: g.categoria ?? 'otros',
+        nota: g.nota ?? '',
+        recurrente: !!g.recurrente,
+      })),
+      presupuesto: {
+        mensual: presupuesto.data?.mensual ?? null,
+        porCategoria: presupuesto.data?.por_categoria ?? {},
+      },
     },
   };
 }
@@ -243,6 +279,57 @@ export async function guardarLogro(userId, { fecha, texto }) {
 
     const insertado = await supabase.from('diario').insert({ user_id: userId, fecha, texto });
     return !insertado.error;
+  } catch {
+    return false;
+  }
+}
+
+// --- Dinero ---------------------------------------------------------------
+//
+// El id lo pone la app y viaja tal cual, en vez de dejar que la base genere
+// uno. Es lo que permite anotar un gasto sin señal y poder borrarlo después
+// sin haber hablado nunca con el servidor.
+
+export async function guardarGasto(userId, gasto) {
+  if (!supabase || !userId || !gasto?.id) return false;
+  try {
+    const { error } = await supabase.from('gastos').upsert({
+      id: gasto.id,
+      user_id: userId,
+      fecha: gasto.fecha,
+      monto: gasto.monto,
+      categoria: gasto.categoria,
+      nota: gasto.nota ?? null,
+      recurrente: !!gasto.recurrente,
+    });
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+export async function borrarGastoNube(userId, id) {
+  if (!supabase || !userId || !id) return false;
+  try {
+    const { error } = await supabase.from('gastos').delete().eq('user_id', userId).eq('id', id);
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+export async function guardarPresupuesto(userId, datos) {
+  if (!supabase || !userId) return false;
+  try {
+    const { error } = await supabase.from('presupuestos').upsert(
+      {
+        user_id: userId,
+        mensual: datos?.mensual ?? null,
+        por_categoria: datos?.porCategoria ?? {},
+      },
+      { onConflict: 'user_id' },
+    );
+    return !error;
   } catch {
     return false;
   }

@@ -113,6 +113,14 @@ export default function Mesa({ navigation }) {
         <Boton onPress={() => navigation.navigate('Plato')}>Mírame el plato</Boton>
       </Aparece>
 
+      {/* El escáner vive aquí y no en Hoy: es la pantalla de la comida, y
+          mirar un empaque es lo mismo que mirar un plato, con otra cámara. */}
+      <Aparece orden={4}>
+        <Boton variante="suave" onPress={() => navigation.navigate('Escaner')}>
+          Mírame un producto
+        </Boton>
+      </Aparece>
+
       {/* La biblioteca entera, por si la del día no encaja con lo que hay
           hoy en la cocina. Se despliega, no se impone. */}
       {todas.map((m, i) => (

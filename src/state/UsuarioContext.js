@@ -12,6 +12,8 @@ import { completarDia, estaCompletado, rachaVigente, rachaRota } from '../servic
 import { claveDia } from '../services/fecha';
 import { alternarHecho, estaHecho } from '../services/habitos';
 import { queHacerConElPlan } from '../services/renovacion';
+import { motivoDelServidor, normalizarCodigo } from '../services/pareja';
+import { supabase } from '../lib/supabase';
 import { reducer, estadoInicial, persistible } from './usuarioReducer';
 import { useHoy } from './useHoy';
 import { cargar, guardarLocal, guardarPerfil, conLimite } from '../lib/repositorio';
@@ -147,6 +149,13 @@ export function UsuarioProvider({ children }) {
       retoEnMinima: estado.retoAliviado === claveDia(hoy),
       aliviarReto: (valor = true) => dispatch({ tipo: 'ALIVIAR_RETO', valor, hoy }),
 
+      // Lo enciende el detector de riesgo cuando alguien cuenta un dolor o
+      // una lesión. Hoy cambia el reto por un descanso, y el día se puede
+      // cerrar igual: descansar una lesión ES lo que hay que hacer, y no
+      // puede costar la racha.
+      diaPausado: estado.diaEnPausa === claveDia(hoy),
+      pausarDia: (valor = true) => dispatch({ tipo: 'PAUSAR_DIA', valor, hoy }),
+
       // El plan llega desde el paso 10 del onboarding; puede venir vacío si
       // la IA no respondió, y ahí las pantallas usan el plan de arranque.
       terminarOnboarding: (perfil, plan) => {
@@ -205,6 +214,54 @@ export function UsuarioProvider({ children }) {
       // Solo vive en el teléfono: es una preferencia de lo que se ve, no un
       // dato de la persona, y no tiene por qué viajar a la nube.
       verNutricionDetallada: (valor) => dispatch({ tipo: 'NUTRICION_DETALLADA', valor }),
+
+      // --- Dinero (paquete 1.7 de la EDT) ---------------------------------
+      //
+      // Van por la cola como todo lo demás: se ven al instante y la nube se
+      // entera cuando pueda. Un gasto anotado sin señal no se puede perder:
+      // volver a acordarse de él es justo lo que nadie hace.
+      anotarGasto: (gasto) => {
+        dispatch({ tipo: 'ANOTAR_GASTO', gasto });
+        anotar({ tipo: 'gasto', gasto });
+      },
+
+      borrarGasto: (id) => {
+        dispatch({ tipo: 'BORRAR_GASTO', id });
+        anotar({ tipo: 'gasto-borrado', id });
+      },
+
+      guardarPresupuesto: (cambios) => {
+        dispatch({ tipo: 'GUARDAR_PRESUPUESTO', cambios });
+        anotar({ tipo: 'presupuesto', datos: { ...estado.presupuesto, ...cambios } });
+      },
+
+      // El ahorro vive solo en el teléfono: es una cuenta de trabajo suya, no
+      // un dato que haga falta en el servidor.
+      guardarAhorro: (cambios) => dispatch({ tipo: 'GUARDAR_AHORRO', cambios }),
+
+      guardarPareja: (pareja) => dispatch({ tipo: 'GUARDAR_PAREJA', pareja }),
+
+      // Buscar el reto de otra persona por su código.
+      //
+      // Es la única operación de la app que mira datos que no son tuyos, y
+      // por eso la hace una función de Postgres con `security definer`
+      // (migración 006) en vez de una consulta directa: RLS impide leer el
+      // reto ajeno, y así debe ser. La función comprueba el código, la
+      // vigencia y el cupo, y mete a quien llama si todo cuadra.
+      buscarRetoPorCodigo: async (codigo) => {
+        if (!estado.enNube || !supabase) return { estado: 'sin-nube' };
+
+        try {
+          const { data, error } = await supabase.rpc('unirse_a_reto', {
+            p_codigo: normalizarCodigo(codigo),
+          });
+
+          if (error) return { estado: motivoDelServidor(error.message) };
+          return { estado: 'ok', reto: data };
+        } catch (e) {
+          return { estado: motivoDelServidor(e?.message) };
+        }
+      },
 
       // Terminar la rutina entera es un logro por su cuenta, distinto de
       // marcar el día. Vive solo en el teléfono: es una cuenta de trabajo,
