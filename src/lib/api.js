@@ -56,3 +56,11 @@ export function generarPlan(ajustes = []) {
 export function preguntarCoach(texto) {
   return llamar('coach', { texto }, { timeoutMs: 20000 });
 }
+
+// Mira una foto de comida y devuelve { hayPlato, plato, color, suma, mensaje }.
+//
+// La foto va en base64 dentro de la petición y NO se guarda en ningún lado:
+// ni en el teléfono, ni en Supabase, ni en un log de Azure. Se mira y se va.
+export function mirarPlato(base64, tipo = 'image/jpeg') {
+  return llamar('plato', { imagen: base64, tipo }, { timeoutMs: 40000 });
+}

@@ -30,7 +30,21 @@
           "defaultChannel": "brio"
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Brío usa la cámara para tu foto del día y para mirar tu plato. Las fotos del álbum se quedan en este teléfono.",
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Brío pide tus fotos solo para que puedas elegir una del plato que quieras mostrarle.",
+          "cameraPermission": "Brío usa la cámara para la foto de tu plato."
+        }
+      ]
     ]
   }
 }

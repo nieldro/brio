@@ -7,6 +7,10 @@ import Diario from '../screens/Diario';
 import Cuenta from '../screens/Cuenta';
 import GuiaEjercicio from '../screens/Guia';
 import Rutina from '../screens/Rutina';
+import Plato from '../screens/Plato';
+import Album from '../screens/Album';
+import Camara from '../screens/Camara';
+import Pelicula from '../screens/Pelicula';
 
 const Pila = createNativeStackNavigator();
 
@@ -35,6 +39,12 @@ export default function PilaPrincipal() {
       />
       <Pila.Screen name="Guia" component={GuiaEjercicio} options={{ title: 'Cómo se hace' }} />
       <Pila.Screen name="Rutina" component={Rutina} options={{ title: 'Rutina de hoy' }} />
+      <Pila.Screen name="Plato" component={Plato} options={{ title: 'Tu plato' }} />
+      <Pila.Screen name="Album" component={Album} options={{ title: 'Tu álbum' }} />
+      <Pila.Screen name="Pelicula" component={Pelicula} options={{ title: 'Tu película' }} />
+      {/* Sin encabezado: la cámara es la pantalla entera, y una barra encima
+          le quitaría espacio justo al encuadre que se está pidiendo cuidar. */}
+      <Pila.Screen name="Camara" component={Camara} options={{ headerShown: false }} />
     </Pila.Navigator>
   );
 }

@@ -27,6 +27,8 @@ Diferenciador: acompañamiento emocional + personalización con IA + precio Lata
 4. Nunca dietas restrictivas, ayunos ni promesas de kilos o fechas.
 5. Máximo 2 notificaciones al día, a la hora que el usuario eligió.
 6. Público vulnerable: el diseño debe evitar obsesión.
+7. Las fotos de la persona viven solo en su teléfono. No se suben, no van a la galería y la IA nunca las ve. No hay comparación lado a lado ni racha de fotos: el movimiento se ve entero en la película, de tarde en tarde.
+8. La foto de un plato se mira para sumarle algo, jamás para calificarlo. La regla 1 manda también aquí, y se comprueba en el servidor con un validador, no solo pidiéndoselo al modelo.
 
 ## Identidad visual
 
@@ -109,6 +111,10 @@ brio/
       Perfil.js
       Diario.js
       Celebracion.js
+      Plato.js         semáforo de una foto de comida
+      Album.js         las fotos diarias
+      Camara.js        la foto del día, con guía de encuadre
+      Pelicula.js      todas las fotos, una detrás de otra
     lib/
       supabase.js     cliente supabase
       api.js          llamadas a las Azure Functions
@@ -117,6 +123,7 @@ brio/
   azure-functions/
     coach/            chat con Brío (HTTP Trigger)
     plan/             generador del plan semanal (HTTP Trigger)
+    plato/            semáforo de una foto de comida (HTTP Trigger)
     recordatorios/    envío diario de push (Timer Trigger)
     plan-semanal/     regeneración del plan cada semana (Timer Trigger)
   landing/            página web para Azure Static Web Apps
@@ -343,6 +350,10 @@ Navegación: 4 pestañas abajo (Hoy, Semana, Chat, Progreso). Todo a máximo 2 t
 - **Progreso**: cumplimiento semanal, mejor racha, mensaje del coach.
 - **Diario**: una línea al día. Botón "día difícil" muestra logros pasados.
 - **Celebración**: pantalla completa coral 2 segundos con chispa al completar reto. Vuelve sola a Hoy.
+- **Plato**: se abre desde la tarjeta de comida de Hoy. Toma o elige una foto de un plato y devuelve punto de semáforo, nombre de lo que se ve y UNA cosa para sumarle. Nunca calorías, macros ni cantidades: eso lo comprueba `platoJson.js` en el servidor, no solo el prompt. La foto no se guarda en ninguna parte.
+- **Álbum**: las fotos diarias de cintura para arriba. Cuadrícula de las últimas, botón para la de hoy y acceso a la película. Sin racha, sin recordatorio y sin comparación lado a lado. Botón para borrarlas todas.
+- **Cámara**: pantalla completa con la foto anterior encima al 28 % y líneas de hombros y cintura, para que el encuadre coincida. Sin esa guía la película salta y no se entiende.
+- **Película**: todas las fotos seguidas, repartidas a lo largo del periodo. Se ve dentro de la app; exportar un archivo de video queda para cuando haya compilación propia, porque no hay codificador gratuito en Expo Go.
 - **Perfil**: editar datos, hora de recordatorio, cerrar sesión.
 - **Onboarding**: una pregunta por pantalla, se siente conversación. Pasos y textos exactos:
 

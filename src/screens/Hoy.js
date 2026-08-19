@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { View, Text, TextInput, Pressable } from 'react-native';
+import { View, Text, TextInput, Pressable, Image } from 'react-native';
 
 import { useEstilos, useTema } from '../state/TemaContext';
 import Pantalla from '../components/Pantalla';
@@ -8,14 +8,17 @@ import Boton from '../components/Boton';
 import Etiqueta from '../components/Etiqueta';
 import PildoraRacha from '../components/PildoraRacha';
 import PuntoSemaforo from '../components/PuntoSemaforo';
+import Chispa from '../components/Chispa';
 import { useCelebracion } from '../state/CelebracionContext';
 import { useUsuario } from '../state/UsuarioContext';
+import { useAlbum } from '../state/useAlbum';
 
 import { planDemo } from '../data/planDemo';
 import { fechaLarga, franjaDelDia, claveDia } from '../services/fecha';
 import { diaDelPlan, resumenReto, esDescanso, versionMinima } from '../services/plan';
 import { textoHecho, fraseDelDia, subCelebracion } from '../services/racha';
 import { hoySeriaRegreso, celebrarRegreso, contarRegresos, diasSinVolver } from '../services/regresos';
+import { textoDelAlbum } from '../services/album';
 
 const SALUDOS = {
   manana: 'Buenos días',
@@ -136,6 +139,36 @@ const crear = ({ C, T, R, S }) => ({
   tip: {
     flex: 1,
   },
+  filaFoto: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: S.lg,
+    marginTop: S.md,
+  },
+  miniatura: {
+    width: 54,
+    height: 72,
+    borderRadius: R.chico,
+    backgroundColor: C.crema,
+  },
+  huecoFoto: {
+    width: 54,
+    height: 72,
+    borderRadius: R.chico,
+    backgroundColor: C.crema,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  textoFoto: {
+    flex: 1,
+    gap: 2,
+  },
+  preguntaFoto: {
+    ...T.subtitulo,
+  },
+  botonFoto: {
+    marginTop: S.lg,
+  },
   pregunta: {
     ...T.subtitulo,
     marginTop: S.md,
@@ -181,6 +214,8 @@ export default function Hoy({ navigation }) {
     () => hoySeriaRegreso({ diasCompletados }, hoy),
     [diasCompletados, hoy],
   );
+
+  const { estado: album } = useAlbum();
 
   // Diario se abre ENCIMA de Hoy sin desmontarla. Si el usuario escribe allá,
   // este campo tiene que enterarse: antes seguía vacío y, al perder el foco,
@@ -314,11 +349,63 @@ export default function Hoy({ navigation }) {
       </Tarjeta>
 
       <Tarjeta>
-        <Etiqueta>hoy en la mesa</Etiqueta>
+        <View style={est.filaDiario}>
+          <Etiqueta>hoy en la mesa</Etiqueta>
+          <Pressable
+            onPress={() => navigation.navigate('Plato')}
+            accessibilityRole="button"
+            hitSlop={8}
+          >
+            <Text style={est.verTodo}>mirar mi plato</Text>
+          </Pressable>
+        </View>
         <View style={est.filaTip}>
           <PuntoSemaforo color={dia.comida_color} />
           <Text style={[T.cuerpo, est.tip]}>{dia.comida_tip}</Text>
         </View>
+      </Tarjeta>
+
+      {/* La foto del día. Va abajo, en voz baja y sin contador: el día que
+          saltarse una foto cueste algo, esto se vuelve otra báscula. */}
+      <Tarjeta>
+        <View style={est.filaDiario}>
+          <Etiqueta>tu álbum</Etiqueta>
+          <Pressable
+            onPress={() => navigation.navigate('Album')}
+            accessibilityRole="button"
+            hitSlop={8}
+          >
+            <Text style={est.verTodo}>Ver todo</Text>
+          </Pressable>
+        </View>
+
+        <View style={est.filaFoto}>
+          {album.ultima ? (
+            <Image source={{ uri: album.ultima.uri }} style={est.miniatura} />
+          ) : (
+            <View style={est.huecoFoto}>
+              <Chispa size={20} />
+            </View>
+          )}
+          <View style={est.textoFoto}>
+            <Text style={est.preguntaFoto}>
+              {album.tieneHoy ? 'Ya está la de hoy.' : '¿La foto de hoy?'}
+            </Text>
+            <Text style={T.secundario}>{textoDelAlbum(album)}</Text>
+          </View>
+        </View>
+
+        {!album.tieneHoy && (
+          <Boton
+            variante="suave"
+            style={est.botonFoto}
+            onPress={() =>
+              navigation.navigate('Camara', { anterior: album.ultima?.uri ?? null })
+            }
+          >
+            Tomar la de hoy
+          </Boton>
+        )}
       </Tarjeta>
 
       <Tarjeta>

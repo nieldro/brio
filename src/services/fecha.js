@@ -43,6 +43,34 @@ export function fechasDeLaSemana(fecha = new Date()) {
   return salida;
 }
 
+const DIA_MS = 86_400_000;
+
+// Las claves de día se comparan en UTC a propósito. Hacer la cuenta con
+// fechas locales se equivoca en los cambios de horario: un día de 23 horas
+// daba 0,96 días y, redondeando mal, la app se saltaba una jornada.
+const aUtc = (clave) => {
+  const [a, m, d] = String(clave).split('-').map(Number);
+  return Date.UTC(a, m - 1, d);
+};
+
+export function diasEntreClaves(desde, hasta) {
+  return Math.round((aUtc(hasta) - aUtc(desde)) / DIA_MS);
+}
+
+// '2026-08-19' + 182 → '2027-02-17'
+export function sumarDias(clave, dias) {
+  const f = new Date(aUtc(clave) + dias * DIA_MS);
+  const mes = String(f.getUTCMonth() + 1).padStart(2, '0');
+  const dia = String(f.getUTCDate()).padStart(2, '0');
+  return `${f.getUTCFullYear()}-${mes}-${dia}`;
+}
+
+// 'miércoles 17 de febrero' a partir de una clave, sin pasar por la zona local.
+export function fechaLargaDeClave(clave) {
+  const f = new Date(aUtc(clave));
+  return `${DIAS[f.getUTCDay()]} ${f.getUTCDate()} de ${MESES[f.getUTCMonth()]}`;
+}
+
 // Clave del día anterior. Sirve para saber si la racha sigue viva.
 export function claveAyer(fecha = new Date()) {
   const ayer = new Date(fecha);

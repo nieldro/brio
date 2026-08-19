@@ -11,7 +11,7 @@ const ESPERA_BASE_MS = 700;
 
 const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function unaLlamada(modelo, { instruccion, historial, temperatura, timeoutMs }) {
+async function unaLlamada(modelo, { instruccion, historial, temperatura, timeoutMs, imagen }) {
   const control = new AbortController();
   const corte = setTimeout(() => control.abort(), timeoutMs);
 
@@ -25,9 +25,17 @@ async function unaLlamada(modelo, { instruccion, historial, temperatura, timeout
       },
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: instruccion }] },
-        contents: historial.map((m) => ({
+        contents: historial.map((m, i) => ({
           role: m.rol === 'brio' ? 'model' : 'user',
-          parts: [{ text: m.texto }],
+          parts: [
+            { text: m.texto },
+            // La imagen viaja pegada al ÚLTIMO mensaje, que es al que el
+            // modelo responde. Va de paso: no se guarda ni aquí ni en
+            // Supabase, y Google no entrena con la capa gratuita de la API.
+            ...(imagen && i === historial.length - 1
+              ? [{ inlineData: { mimeType: imagen.tipo, data: imagen.datos } }]
+              : []),
+          ],
         })),
         generationConfig: { temperature: temperatura },
       }),
@@ -73,6 +81,7 @@ export async function generar({
   historial = [],
   temperatura = 0.7,
   timeoutMs = 20000,
+  imagen = null,
   log,
 }) {
   const modelos = config.geminiModelos;
@@ -86,6 +95,7 @@ export async function generar({
           historial,
           temperatura,
           timeoutMs,
+          imagen,
         });
         if (modelo !== modelos[0]) log?.warn?.(`respondió el modelo de relevo ${modelo}`);
         return texto;
