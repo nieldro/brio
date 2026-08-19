@@ -11,6 +11,39 @@ const caja = (size) => ({
   justifyContent: 'center',
 });
 
+// Tres barras con su punto, como los deslizadores de una mesa de mezclas.
+// Dice "aquí se ajusta" mejor que un engranaje, que además se confunde con
+// el botón de desarrollo de Expo Go.
+export function IconoAjustes({ color, size = 20 }) {
+  const linea = {
+    height: size * 0.1,
+    borderRadius: size * 0.05,
+    backgroundColor: color,
+    width: size,
+  };
+  const punto = (x) => ({
+    position: 'absolute',
+    left: x,
+    width: size * 0.26,
+    height: size * 0.26,
+    borderRadius: size * 0.13,
+    backgroundColor: color,
+  });
+
+  return (
+    <View style={[caja(size), { gap: size * 0.22 }]}>
+      <View>
+        <View style={linea} />
+        <View style={[punto(size * 0.58), { top: -size * 0.08 }]} />
+      </View>
+      <View>
+        <View style={linea} />
+        <View style={[punto(size * 0.16), { top: -size * 0.08 }]} />
+      </View>
+    </View>
+  );
+}
+
 export function IconoHoy({ color, size = 22 }) {
   return (
     <View style={caja(size)}>

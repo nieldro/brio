@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTema } from '../state/TemaContext';
 import Tabs from './Tabs';
 import Perfil from '../screens/Perfil';
+import Ajustes from '../screens/Ajustes';
 import Diario from '../screens/Diario';
 import Cuenta from '../screens/Cuenta';
 import GuiaEjercicio from '../screens/Guia';
@@ -31,6 +32,7 @@ export default function PilaPrincipal() {
     >
       <Pila.Screen name="Pestañas" component={Tabs} options={{ headerShown: false }} />
       <Pila.Screen name="Perfil" component={Perfil} options={{ title: 'Tu perfil' }} />
+      <Pila.Screen name="Ajustes" component={Ajustes} options={{ title: 'Ajustes' }} />
       <Pila.Screen name="Diario" component={Diario} options={{ title: 'Tu diario' }} />
       <Pila.Screen
         name="Cuenta"

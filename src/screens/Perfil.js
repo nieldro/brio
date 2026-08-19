@@ -1,14 +1,12 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Pressable, Alert } from 'react-native';
+import { View, Text, TextInput, Pressable } from 'react-native';
 
-import { useEstilos, useTema, PREFERENCIAS, NOMBRES_PREFERENCIA } from '../state/TemaContext';
+import { useEstilos, useTema } from '../state/TemaContext';
 import Pantalla from '../components/Pantalla';
 import Tarjeta from '../components/Tarjeta';
 import Boton from '../components/Boton';
 import Etiqueta from '../components/Etiqueta';
-import SelectorHora from '../components/SelectorHora';
 import { useUsuario } from '../state/UsuarioContext';
-import { pedirPermisoYToken, hayModuloPush } from '../lib/notificaciones';
 
 const OBJETIVOS = ['Perder peso', 'Ganar músculo', 'Sentirme mejor', 'Crear el hábito'];
 const LUGARES = ['En casa', 'En el gym', 'Mezclado'];
@@ -95,9 +93,6 @@ const crear = ({ C, T, R, S, RELLENO }) => ({
     ...T.secundario,
     marginTop: S.lg,
   },
-  activar: {
-    marginTop: S.lg,
-  },
   aviso: {
     ...T.cuerpo,
     // El salvia de marca sobre crema daba 2,25:1: ilegible para mucha gente.
@@ -144,8 +139,8 @@ function Opciones({ valores, valor, onElegir, etiquetaDe = (v) => String(v), est
 
 export default function Perfil({ navigation }) {
   const est = useEstilos(crear);
-  const { C, preferencia, cambiarPreferencia } = useTema();
-  const { perfil, actualizarPerfil, reiniciar, sesion, correo } = useUsuario();
+  const { C } = useTema();
+  const { perfil, actualizarPerfil } = useUsuario();
 
   const [borrador, setBorrador] = useState({
     ...perfil,
@@ -171,49 +166,6 @@ export default function Perfil({ navigation }) {
     setTimeout(() => setAviso(null), 2500);
   };
 
-  const activarRecordatorios = async () => {
-    // En Expo Go para Android no existe el módulo de push. Se dice claro,
-    // en vez de dejar al usuario buscando un permiso que no va a encontrar.
-    if (!hayModuloPush()) {
-      setAviso('Los recordatorios llegan en la app instalada, no en Expo Go.');
-      setTimeout(() => setAviso(null), 4000);
-      return;
-    }
-
-    const token = await pedirPermisoYToken();
-    if (!token) {
-      setAviso('No se pudo activar. Revisa los permisos del teléfono.');
-      setTimeout(() => setAviso(null), 3000);
-      return;
-    }
-
-    // Se guarda YA, no solo en el borrador. Antes decía "activados" y el
-    // token moría al salir de Perfil sin tocar "Guardar cambios": el usuario
-    // creía tener recordatorios y no le llegaba ninguno.
-    cambiar('push_token', token);
-    await actualizarPerfil({ push_token: token });
-
-    setAviso('Recordatorios activados.');
-    setTimeout(() => setAviso(null), 3000);
-  };
-
-  // No hace falta navegar: al reiniciar, `onboardingListo` vuelve a false
-  // y Raiz cambia el árbol entero al onboarding.
-  const cerrarSesion = () => reiniciar();
-
-  // Sin cuenta no hay a dónde volver: esto borra todo de verdad. Se ofrece
-  // igual, porque esconderlo deja a la persona sin salida, pero con el
-  // nombre correcto y una confirmación que dice qué se pierde.
-  const empezarDeCero = () => {
-    Alert.alert(
-      'Empezar de cero',
-      'Se borra tu racha, tu plan y tu diario. Como no tienes cuenta, esto no se puede deshacer.',
-      [
-        { text: 'Mejor no', style: 'cancel' },
-        { text: 'Borrar todo', style: 'destructive', onPress: () => reiniciar() },
-      ],
-    );
-  };
 
   return (
     <Pantalla contentStyle={est.contenido}>
@@ -280,76 +232,23 @@ export default function Perfil({ navigation }) {
         <Text style={est.pie}>Los cambios entran en el plan de la próxima semana.</Text>
       </Tarjeta>
 
-      <Tarjeta>
-        <Etiqueta>tu cuenta</Etiqueta>
-        {sesion === 'concuenta' ? (
-          <>
-            <Text style={est.campo}>{correo}</Text>
-            <Text style={est.pie}>
-              Tu progreso está guardado. Entra con este correo en cualquier teléfono.
-            </Text>
-          </>
-        ) : (
-          <>
-            <Text style={est.campo}>Todavía sin cuenta</Text>
-            <Text style={est.pie}>
-              Hoy tu racha vive solo en este teléfono. Con una cuenta te sigue a donde vayas.
-            </Text>
-            <Boton
-              variante="suave"
-              onPress={() => navigation.navigate('Cuenta', { modo: 'crear' })}
-              style={est.activar}
-            >
-              Guardar mi cuenta
-            </Boton>
-          </>
-        )}
-      </Tarjeta>
-
-      <Tarjeta>
-        <Etiqueta>cómo se ve</Etiqueta>
-        <Text style={est.campo}>Apariencia</Text>
-        <Opciones
-          valores={PREFERENCIAS}
-          valor={preferencia}
-          onElegir={cambiarPreferencia}
-          etiquetaDe={(p) => NOMBRES_PREFERENCIA[p]}
-          est={est}
-        />
-        <Text style={est.pie}>El cambio se ve de inmediato y se recuerda.</Text>
-      </Tarjeta>
-
-      <Tarjeta>
-        <Etiqueta>tu recordatorio</Etiqueta>
-        <SelectorHora
-          valor={borrador.hora_recordatorio}
-          onChange={(v) => cambiar('hora_recordatorio', v)}
-        />
-
-        {!borrador.push_token && (
-          <Boton variante="suave" onPress={activarRecordatorios} style={est.activar}>
-            Activar recordatorios
-          </Boton>
-        )}
-      </Tarjeta>
-
       {!!aviso && <Text style={est.aviso}>{aviso}</Text>}
 
       <Boton onPress={guardar} disabled={guardando}>
         {guardando ? 'Guardando…' : 'Guardar cambios'}
       </Boton>
 
-      {/* Con cuenta es reversible y se llama cerrar sesión. Sin cuenta es
-          irreversible, así que se llama por su nombre y pide confirmación. */}
-      {sesion === 'concuenta' ? (
-        <Pressable onPress={cerrarSesion} accessibilityRole="button" style={est.salir}>
-          <Text style={est.salirTexto}>Cerrar sesión</Text>
-        </Pressable>
-      ) : (
-        <Pressable onPress={empezarDeCero} accessibilityRole="button" style={est.salir}>
-          <Text style={est.salirTexto}>Empezar de cero</Text>
-        </Pressable>
-      )}
+      {/* La cuenta, la apariencia, los recordatorios y el borrado viven en
+          Ajustes. Aquí solo están TUS DATOS, los que arman el plan: tenerlo
+          todo junto hacía una pantalla donde el color de fondo y tu peso
+          estaban en la misma lista. */}
+      <Pressable
+        onPress={() => navigation.navigate('Ajustes')}
+        accessibilityRole="button"
+        style={est.salir}
+      >
+        <Text style={est.salirTexto}>Ajustes de la app</Text>
+      </Pressable>
 
       <Text style={est.legal}>
         Brío acompaña, no diagnostica. Ante dolor, lesión o enfermedad, consulta a un profesional.

@@ -11,6 +11,7 @@ import PuntoSemaforo from '../components/PuntoSemaforo';
 import Chispa from '../components/Chispa';
 import Logo from '../components/Logo';
 import SelloHecho from '../components/SelloHecho';
+import { IconoAjustes } from '../components/iconos';
 import Aparece from '../components/Aparece';
 import { useUsuario } from '../state/UsuarioContext';
 import { useAlbum } from '../state/useAlbum';
@@ -272,6 +273,16 @@ export default function Hoy({ navigation }) {
 
         <View style={est.acciones}>
           <PildoraRacha dias={racha} />
+          <Pressable
+            onPress={() => navigation.navigate('Ajustes')}
+            accessibilityRole="button"
+            accessibilityLabel="Ajustes"
+            hitSlop={8}
+            style={({ pressed }) => [est.avatar, pressed && est.presionado]}
+          >
+            <IconoAjustes color={C.gris} size={18} />
+          </Pressable>
+
           <Pressable
             onPress={() => navigation.navigate('Perfil')}
             accessibilityRole="button"
