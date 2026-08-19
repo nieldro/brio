@@ -5,7 +5,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEstilos, useTema } from '../state/TemaContext';
 import Boton from '../components/Boton';
 import { useUsuario } from '../state/UsuarioContext';
-import { crearCuenta, entrar, recuperarClave, entrarConGoogle } from '../lib/auth';
+import {
+  crearCuenta,
+  entrar,
+  recuperarClave,
+  entrarConGoogle,
+  confirmarCorreo,
+  reenviarCodigo,
+  LARGO_CODIGO,
+} from '../lib/auth';
 import {
   revisarCorreo,
   revisarClave,
@@ -51,6 +59,12 @@ const crear = ({ C, T, R, S }) => ({
   },
   entradaMal: {
     borderColor: C.rojo,
+  },
+  codigo: {
+    fontSize: 30,
+    fontWeight: '800',
+    letterSpacing: 10,
+    textAlign: 'center',
   },
   ayuda: {
     ...T.secundario,
@@ -127,6 +141,11 @@ export default function Cuenta({ route, navigation }) {
   const [error, setError] = useState(null);
   const [logrado, setLogrado] = useState(null);
 
+  // Cuando Supabase pide confirmar el correo, la pantalla cambia entera: ya
+  // no se está creando una cuenta, se está esperando un código.
+  const [esperandoCodigo, setEsperandoCodigo] = useState(false);
+  const [codigo, setCodigo] = useState('');
+
   const creando = modo === 'crear';
 
   // Los avisos solo aparecen después de que el usuario tocó el campo:
@@ -160,9 +179,8 @@ export default function Cuenta({ route, navigation }) {
     }
 
     if (r.faltaConfirmar) {
-      setLogrado(
-        `Te mandé un correo a ${r.correo}. Ábrelo para confirmar y tu cuenta queda lista.`,
-      );
+      setEsperandoCodigo(true);
+      setLogrado(`Te mandé un código de ${LARGO_CODIGO} números a ${r.correo}.`);
       setOcupado(false);
       return;
     }
@@ -194,6 +212,33 @@ export default function Cuenta({ route, navigation }) {
     if (navigation.canGoBack()) navigation.goBack();
   };
 
+  const confirmar = async () => {
+    setOcupado(true);
+    setError(null);
+
+    const r = await confirmarCorreo(correo, codigo);
+    setOcupado(false);
+
+    if (!r.ok) {
+      setError(r.error);
+      return;
+    }
+
+    await refrescarSesion();
+    if (navigation.canGoBack()) navigation.goBack();
+  };
+
+  const otroCodigo = async () => {
+    setOcupado(true);
+    setError(null);
+
+    const r = await reenviarCodigo(correo);
+    setOcupado(false);
+
+    if (r.ok) setLogrado('Listo, te mandé otro. Revisa también la carpeta de spam.');
+    else setError(r.error);
+  };
+
   const olvideLaClave = async () => {
     const mal = revisarCorreo(correo);
     if (mal) {
@@ -218,6 +263,63 @@ export default function Cuenta({ route, navigation }) {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
+        {/* Con el código pendiente, todo lo demás sobra: la persona ya dio
+            sus datos y lo único que le falta es escribir seis números. */}
+        {esperandoCodigo ? (
+          <>
+            <Text style={est.titulo}>Revisa tu correo.</Text>
+            <Text style={est.sub}>
+              Te llegó un código de {LARGO_CODIGO} números a {correo}. Escríbelo aquí y listo.
+            </Text>
+
+            <Text style={est.campo}>Tu código</Text>
+            <TextInput
+              value={codigo}
+              onChangeText={(t) => setCodigo(t.replace(/\D/g, '').slice(0, LARGO_CODIGO))}
+              placeholder="000000"
+              placeholderTextColor={C.apagado}
+              style={[est.entrada, est.codigo]}
+              keyboardType="number-pad"
+              maxLength={LARGO_CODIGO}
+              autoComplete="one-time-code"
+              textContentType="oneTimeCode"
+              autoFocus
+            />
+
+            {!!error && <Text style={est.aviso}>{error}</Text>}
+            {!!logrado && <Text style={[est.aviso, est.avisoBien]}>{logrado}</Text>}
+
+            <Boton
+              onPress={confirmar}
+              disabled={codigo.length !== LARGO_CODIGO || ocupado}
+              style={est.accion}
+            >
+              {ocupado ? 'Un momento…' : 'Confirmar'}
+            </Boton>
+
+            <Pressable onPress={otroCodigo} accessibilityRole="button" style={est.enlace}>
+              <Text style={est.enlaceTexto}>Mándame otro código</Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => {
+                setEsperandoCodigo(false);
+                setCodigo('');
+                setError(null);
+                setLogrado(null);
+              }}
+              accessibilityRole="button"
+              style={est.enlace}
+            >
+              <Text style={est.enlaceTexto}>Me equivoqué de correo</Text>
+            </Pressable>
+
+            <Text style={est.nota}>
+              Si no llega en unos minutos, mira en spam. A veces se demora.
+            </Text>
+          </>
+        ) : (
+          <>
         <Text style={est.titulo}>{creando ? 'Guarda tu cuenta.' : 'Bienvenido de vuelta.'}</Text>
         <Text style={est.sub}>
           {creando
@@ -308,6 +410,8 @@ export default function Cuenta({ route, navigation }) {
           <Text style={est.nota}>
             No pierdes nada de lo que llevas. Tu racha y tu diario se quedan contigo.
           </Text>
+        )}
+          </>
         )}
       </ScrollView>
     </KeyboardAvoidingView>

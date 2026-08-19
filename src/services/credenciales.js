@@ -79,7 +79,15 @@ const TRADUCCIONES = [
   },
   {
     busca: /rate limit|too many requests|over_email_send_rate_limit/i,
-    dice: 'Muchos intentos seguidos. Espera un momento y seguimos.',
+    dice: 'Se enviaron muchos correos seguidos. Espera unos minutos y te mando otro.',
+  },
+  {
+    busca: /token has expired|otp_expired|expired/i,
+    dice: 'Ese código ya venció. Pide uno nuevo y seguimos.',
+  },
+  {
+    busca: /invalid token|token not found|otp_disabled/i,
+    dice: 'Ese código no es. Revisa el correo y escríbelo otra vez.',
   },
   {
     busca: /network|fetch failed|timeout|failed to fetch/i,

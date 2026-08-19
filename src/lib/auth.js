@@ -18,6 +18,8 @@ const abrirSesionAuth = openAuthSessionAsync;
 
 const SIN_NUBE = 'La cuenta necesita conexión configurada. Por ahora sigues en este teléfono.';
 
+export const LARGO_CODIGO = 6;
+
 export function hayCuentas() {
   return hayNube;
 }
@@ -245,6 +247,52 @@ async function sesionDesdeLaVuelta(url) {
   }
 
   return { ok: false, error: mensajeDeError('') };
+}
+
+// Confirmar el correo con el código de seis dígitos que llegó al buzón.
+//
+// Solo hace falta si en Supabase está encendido "Confirm email". Con esa
+// opción apagada, crearCuenta ya devuelve la sesión y esto no se usa: la
+// pantalla lo sabe por `faltaConfirmar`.
+//
+// El código y el enlace del correo son el MISMO token, así que funciona
+// aunque la persona prefiera tocar el enlace.
+export async function confirmarCorreo(correoCrudo, codigo) {
+  if (!supabase) return { ok: false, error: SIN_NUBE };
+
+  const limpio = String(codigo ?? '').replace(/\D/g, '');
+  if (limpio.length !== LARGO_CODIGO) {
+    return { ok: false, error: `El código tiene ${LARGO_CODIGO} números. Revísalo y seguimos.` };
+  }
+
+  try {
+    const { error } = await supabase.auth.verifyOtp({
+      email: normalizarCorreo(correoCrudo),
+      token: limpio,
+      type: 'email',
+    });
+    if (error) return { ok: false, error: mensajeDeError(error) };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: mensajeDeError(e) };
+  }
+}
+
+// Volver a mandar el código. Supabase limita cuántos correos salen por hora,
+// así que el error de tope se traduce y no se esconde.
+export async function reenviarCodigo(correoCrudo) {
+  if (!supabase) return { ok: false, error: SIN_NUBE };
+
+  try {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: normalizarCorreo(correoCrudo),
+    });
+    if (error) return { ok: false, error: mensajeDeError(error) };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: mensajeDeError(e) };
+  }
 }
 
 // Recuperar la clave. Supabase manda un correo con un enlace.
