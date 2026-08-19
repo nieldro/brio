@@ -148,44 +148,67 @@ export async function cargar() {
 
 export const guardarLocal = guardarEstado;
 
+// Las tres funciones de escritura devuelven true SOLO si el servidor
+// confirmó. La cola de sincronización usa ese valor para decidir si saca la
+// operación o la reintenta: un `undefined` optimista perdería datos.
 export async function guardarPerfil(userId, perfil) {
-  if (!supabase || !userId) return;
+  if (!supabase || !userId) return false;
 
   const fila = aFila(perfil);
 
   try {
     const { error } = await supabase.from('profiles').upsert({ id: userId, ...fila });
-    if (!error) return;
+    if (!error) return true;
 
     // `zona_horaria` solo existe si se corrió migrations/002. Sin este
     // reintento, olvidar la migración haría perder el perfil entero en
     // silencio, que es mucho peor que quedarse sin recordatorios.
     const { zona_horaria, ...base } = fila;
-    await supabase.from('profiles').upsert({ id: userId, ...base });
-  } catch {}
+    const segundo = await supabase.from('profiles').upsert({ id: userId, ...base });
+    return !segundo.error;
+  } catch {
+    return false;
+  }
 }
 
 export async function marcarRegistro(userId, { fecha, reto, rachaActual, mejorRacha }) {
-  if (!supabase || !userId) return;
+  if (!supabase || !userId) return false;
   try {
-    await supabase
+    const registro = await supabase
       .from('registros')
       .upsert({ user_id: userId, fecha, completado: true, reto }, { onConflict: 'user_id,fecha' });
 
-    await supabase
-      .from('profiles')
-      .update({ racha_actual: rachaActual, mejor_racha: mejorRacha })
-      .eq('id', userId);
-  } catch {}
+    if (registro.error) return false;
+
+    // La racha del perfil es un derivado: si falla, el registro ya quedó y
+    // se recalcula al leer. No se reintenta todo por esto.
+    if (rachaActual != null) {
+      await supabase
+        .from('profiles')
+        .update({ racha_actual: rachaActual, mejor_racha: mejorRacha })
+        .eq('id', userId);
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function guardarLogro(userId, { fecha, texto }) {
-  if (!supabase || !userId) return;
+  if (!supabase || !userId) return false;
   try {
     // `diario` no tiene único por (user_id, fecha): se reemplaza la línea del día.
-    await supabase.from('diario').delete().eq('user_id', userId).eq('fecha', fecha);
-    if (texto) await supabase.from('diario').insert({ user_id: userId, fecha, texto });
-  } catch {}
+    const borrado = await supabase.from('diario').delete().eq('user_id', userId).eq('fecha', fecha);
+    if (borrado.error) return false;
+
+    if (!texto) return true;
+
+    const insertado = await supabase.from('diario').insert({ user_id: userId, fecha, texto });
+    return !insertado.error;
+  } catch {
+    return false;
+  }
 }
 
 // Cerrar sesión vive en lib/auth.js: es asunto de la cuenta, no del

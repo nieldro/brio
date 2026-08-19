@@ -1,15 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react';
+import { AppState } from 'react-native';
 import { completarDia, estaCompletado, rachaVigente, rachaRota } from '../services/racha';
 import { claveDia } from '../services/fecha';
 import { reducer, estadoInicial, persistible } from './usuarioReducer';
 import { useHoy } from './useHoy';
-import {
-  cargar,
-  guardarLocal,
-  guardarPerfil,
-  marcarRegistro,
-  guardarLogro as subirLogro,
-} from '../lib/repositorio';
+import { cargar, guardarLocal, guardarPerfil } from '../lib/repositorio';
+import { anotar, vaciar, vaciarCola } from '../lib/sincronizador';
 import { estadoDeSesion, salir as salirDeLaCuenta } from '../lib/auth';
 
 // Única fuente de verdad de la app.
@@ -36,14 +32,25 @@ export function UsuarioProvider({ children }) {
   // Leer una sola vez, al abrir.
   useEffect(() => {
     let vivo = true;
-    hidratar().catch(() => {
-      // Sin datos la app arranca igual, en modo local.
-      if (vivo) dispatch({ tipo: 'HIDRATAR', datos: null });
-    });
+    hidratar()
+      .then(() => vaciar()) // lo que quedó pendiente de la última sesión
+      .catch(() => {
+        // Sin datos la app arranca igual, en modo local.
+        if (vivo) dispatch({ tipo: 'HIDRATAR', datos: null });
+      });
     return () => {
       vivo = false;
     };
   }, [hidratar]);
+
+  // Al volver del segundo plano suele haber red otra vez: buen momento para
+  // intentar de nuevo sin esperar al temporizador.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (s) => {
+      if (s === 'active') vaciar();
+    });
+    return () => sub.remove();
+  }, []);
 
   // Guardar en disco en cada cambio, nunca antes de haber leído
   // (guardar antes borraría lo que ya estaba).
@@ -84,11 +91,15 @@ export function UsuarioProvider({ children }) {
       // `reto` va al registro para que el Progreso pueda mostrar qué se hizo.
       // La fecha se pasa explícita para que marcar a las 23:59 y el registro
       // que se guarda hablen del mismo día.
+      // Las escrituras van a la COLA, no directo a la red. El usuario ve su
+      // día marcado al instante y la nube se entera cuando pueda: sin señal
+      // el dato ya no se pierde, que era lo que pasaba antes.
       marcarDiaCompletado: (reto) => {
         const siguiente = completarDia(estado, hoy);
         if (siguiente === estado) return; // ya estaba marcado hoy
         dispatch({ tipo: 'COMPLETAR_DIA', hoy });
-        marcarRegistro(estado.userId, {
+        anotar({
+          tipo: 'registro',
           fecha: siguiente.ultimoDiaCompletado,
           reto: reto ?? null,
           rachaActual: siguiente.rachaActual,
@@ -98,7 +109,7 @@ export function UsuarioProvider({ children }) {
 
       guardarLogro: (texto) => {
         dispatch({ tipo: 'GUARDAR_LOGRO', texto, hoy });
-        subirLogro(estado.userId, { fecha: claveDia(hoy), texto });
+        anotar({ tipo: 'logro', fecha: claveDia(hoy), texto });
       },
 
       // Después de entrar o de crear cuenta: los datos cambiaron de dueño,
@@ -111,6 +122,9 @@ export function UsuarioProvider({ children }) {
       // "Cerrar sesión" del Perfil. Con cuenta, los datos siguen en la nube
       // y vuelven al entrar; lo que se borra es la copia de este teléfono.
       reiniciar: async () => {
+        // Lo que quedara pendiente era del usuario anterior: no se le manda
+        // al siguiente que entre en este teléfono.
+        await vaciarCola();
         await salirDeLaCuenta();
         dispatch({ tipo: 'REHIDRATAR' });
         await hidratar();
