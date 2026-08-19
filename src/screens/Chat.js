@@ -64,6 +64,13 @@ const crear = ({ C, T, R, S, RELLENO }) => ({
     ...T.secundario,
     fontStyle: 'italic',
   },
+  aviso: {
+    ...T.secundario,
+    alignSelf: 'center',
+    textAlign: 'center',
+    color: C.salviaTexto,
+    paddingHorizontal: S.lg,
+  },
   vozBurbuja: {
     marginTop: S.md,
   },
@@ -134,7 +141,7 @@ export default function Chat() {
   const scroll = useRef(null);
   const est = useEstilos(crear);
   const { C, S } = useTema();
-  const { userId, enNube } = useUsuario();
+  const { userId, enNube, completadoHoy, retoEnMinima, aliviarReto } = useUsuario();
   const altoTeclado = useTeclado();
 
   // Con el teclado abierto, la barra de pestañas se esconde sola (Tabs.js), así
@@ -157,7 +164,20 @@ export default function Chat() {
     };
   }, [enNube, userId]);
 
-  const enviar = async (contenido, respuestaLocal) => {
+  // Lo que un chip CAMBIA en la app, además de lo que contesta.
+  //
+  // Devuelve el aviso que se muestra, o null si no había nada que hacer.
+  // Se decide aquí y no en el chip porque depende del día: ofrecerle la
+  // versión corta a quien ya terminó sería decirle algo falso.
+  const aplicar = (accion) => {
+    if (accion !== 'aliviar') return null;
+    if (completadoHoy || retoEnMinima) return null;
+
+    aliviarReto(true);
+    return 'Tu reto de hoy quedó en la versión corta.';
+  };
+
+  const enviar = async (contenido, respuestaLocal, accion) => {
     const limpio = contenido.trim();
     if (!limpio || esperando) return;
 
@@ -165,12 +185,20 @@ export default function Chat() {
     setTexto('');
     setEsperando(true);
 
+    // Se hace de una, antes de esperar a la IA: si la red está mala, el reto
+    // igual cambió. Lo que se prometió se cumple con o sin conexión.
+    const aviso = aplicar(accion);
+
     let respuesta = null;
     if (hayApi) respuesta = (await preguntarCoach(limpio))?.texto ?? null;
 
     setMensajes((prev) => [
       ...prev,
       { id: nuevoId('b'), rol: 'brio', texto: respuesta ?? respuestaLocal ?? SIN_CONEXION },
+      // El aviso va aparte de lo que dice Brío: es la app contando lo que
+      // hizo, no el coach hablando. Así no depende de que la IA se acuerde
+      // de mencionarlo.
+      ...(aviso ? [{ id: nuevoId('a'), rol: 'aviso', texto: aviso }] : []),
     ]);
     setEsperando(false);
   };
@@ -198,6 +226,16 @@ export default function Chat() {
         onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: true })}
       >
         {mensajes.map((m, i) => {
+          // Lo que hizo la app, no lo que dijo el coach. Sin burbuja: es una
+          // nota al margen y no tiene que parecer que alguien la escribió.
+          if (m.rol === 'aviso') {
+            return (
+              <Text key={m.id} style={est.aviso}>
+                {m.texto}
+              </Text>
+            );
+          }
+
           // Solo la última respuesta de Brío se puede escuchar. Un botón en
           // cada burbuja llenaría el hilo de botones, y lo que alguien quiere
           // oír es lo que le acaban de decir.
@@ -235,7 +273,7 @@ export default function Chat() {
           {CHIPS.map((chip) => (
             <Pressable
               key={chip.texto}
-              onPress={() => enviar(chip.texto, chip.respuesta)}
+              onPress={() => enviar(chip.texto, chip.respuesta, chip.accion)}
               disabled={esperando}
               accessibilityRole="button"
               style={({ pressed }) => [est.chip, (pressed || esperando) && est.chipApagado]}

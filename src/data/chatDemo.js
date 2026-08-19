@@ -11,11 +11,17 @@ export const mensajesDemo = [
   },
 ];
 
-// Chips de respuesta rápida y su respuesta local mientras no hay IA.
+// Chips de respuesta rápida.
+//
+// `respuesta` es lo que contesta Brío mientras no hay IA. `accion` es lo que
+// el chip HACE en la app, y por eso existe: "Cambia mi reto" contestaba
+// "listo, lo cambio" y no cambiaba nada. Un botón que promete y no cumple
+// enseña que la app no vale la pena, y eso no se recupera con una frase.
 export const CHIPS = [
   {
     texto: 'No pude hoy',
-    respuesta: 'Ayer no se pudo. Normal. Hoy arrancamos suave, con diez minutos.',
+    accion: 'aliviar',
+    respuesta: 'Ayer no se pudo. Normal. Te dejé la versión corta de hoy, de dos minutos.',
   },
   {
     texto: 'Me siento bajo',
@@ -23,6 +29,7 @@ export const CHIPS = [
   },
   {
     texto: 'Cambia mi reto',
-    respuesta: 'Listo, lo cambio por una caminata corta. Tú eliges cuándo.',
+    accion: 'aliviar',
+    respuesta: 'Hecho. Te dejé el reto en su versión corta, de dos minutos. Cuenta igual.',
   },
 ];

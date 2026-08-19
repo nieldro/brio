@@ -240,6 +240,8 @@ export default function Hoy({ navigation }) {
     diasCompletados,
     distanciaAvisada,
     avisarDistancia,
+    retoEnMinima,
+    aliviarReto,
   } = useUsuario();
 
   // Mientras la IA no haya entregado un plan, se muestra el de arranque.
@@ -247,8 +249,11 @@ export default function Hoy({ navigation }) {
 
   // "Hoy no puedo" cambia el reto por su versión de dos minutos. No es un
   // modo aparte: el día se marca igual y cuenta igual.
-  const [enMinima, setEnMinima] = useState(false);
-  const dia = enMinima ? versionMinima(diaCompleto) : diaCompleto;
+  //
+  // El estado es compartido (UsuarioContext) y no de esta pantalla: el chip
+  // "Cambia mi reto" del chat cambia esto mismo, y así lo que Brío dice ahí
+  // se ve aquí. Además aguanta cerrar la app y volver.
+  const dia = retoEnMinima ? versionMinima(diaCompleto) : diaCompleto;
 
   // Cerrar el día vive en un solo sitio (state/useMarcarDia.js): Hoy y la
   // rutina lo hacen igual, y ninguna de las dos puede celebrar distinto.
@@ -300,7 +305,7 @@ export default function Hoy({ navigation }) {
   };
 
   const marcarListo = () => {
-    if (marcar(dia.reto)) setEnMinima(false);
+    if (marcar(dia.reto)) aliviarReto(false);
   };
 
   const saludo = `${SALUDOS[franjaDelDia(hoy)]}, ${perfil.nombre}.`;
@@ -352,7 +357,7 @@ export default function Hoy({ navigation }) {
       <Tarjeta>
         <View style={est.filaDiario}>
           <Etiqueta>
-            {enMinima ? 'versión corta' : esDescanso(dia) ? 'hoy descansas' : 'reto de hoy'}
+            {retoEnMinima ? 'versión corta' : esDescanso(dia) ? 'hoy descansas' : 'reto de hoy'}
           </Etiqueta>
           {dia.ejercicios.length > 0 && (
             <Pressable
@@ -438,9 +443,9 @@ export default function Hoy({ navigation }) {
 
         {/* Lo que hace abandonar no es la falta de ganas: es el todo o nada.
             Este botón le quita a la app el poder de romperle la semana. */}
-        {!completadoHoy && !enMinima && dia.ejercicios.length > 0 && (
+        {!completadoHoy && !retoEnMinima && dia.ejercicios.length > 0 && (
           <Pressable
-            onPress={() => setEnMinima(true)}
+            onPress={() => aliviarReto(true)}
             accessibilityRole="button"
             style={est.noPuedo}
           >
@@ -448,9 +453,9 @@ export default function Hoy({ navigation }) {
           </Pressable>
         )}
 
-        {!completadoHoy && enMinima && (
+        {!completadoHoy && retoEnMinima && (
           <Pressable
-            onPress={() => setEnMinima(false)}
+            onPress={() => aliviarReto(false)}
             accessibilityRole="button"
             style={est.noPuedo}
           >

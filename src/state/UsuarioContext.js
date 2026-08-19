@@ -1,13 +1,23 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+} from 'react';
 import { AppState } from 'react-native';
 import { completarDia, estaCompletado, rachaVigente, rachaRota } from '../services/racha';
 import { claveDia } from '../services/fecha';
 import { alternarHecho, estaHecho } from '../services/habitos';
+import { queHacerConElPlan } from '../services/renovacion';
 import { reducer, estadoInicial, persistible } from './usuarioReducer';
 import { useHoy } from './useHoy';
 import { cargar, guardarLocal, guardarPerfil } from '../lib/repositorio';
 import { anotar, vaciar, vaciarCola } from '../lib/sincronizador';
 import { estadoDeSesion, salir as salirDeLaCuenta } from '../lib/auth';
+import { generarPlan, hayApi } from '../lib/api';
 
 // Única fuente de verdad de la app.
 // La máquina de estado vive en usuarioReducer.js (pura, con pruebas).
@@ -74,6 +84,40 @@ export function UsuarioProvider({ children }) {
     guardarLocal(persistible(estado));
   }, [estado]);
 
+  // Plan vencido: se pide uno nuevo al abrir.
+  //
+  // El Timer del lunes solo atiende a quien se está moviendo, así que quien
+  // se fue tres semanas volvía al plan que dejó abandonado. Volver y
+  // encontrar exactamente lo que dejaste es la forma más rápida de volverse
+  // a ir. Aquí también es donde el motor de adaptación llega por fin a la
+  // IA: los ajustes que salen del historial viajan con la petición.
+  const ultimoIntento = useRef(null);
+
+  useEffect(() => {
+    if (!estado.hidratado || !estado.onboardingListo) return undefined;
+    if (!hayApi || !estado.enNube || !estado.userId) return undefined;
+
+    const que = queHacerConElPlan(estado, hoy, ultimoIntento.current);
+    if (!que.renovar) return undefined;
+
+    // Se marca ANTES de pedir: sin esto, un teléfono sin señal reintentaría
+    // en cada cambio de estado.
+    ultimoIntento.current = Date.now();
+
+    let vivo = true;
+    generarPlan(que.ajustes)
+      .then((respuesta) => {
+        if (vivo && respuesta?.plan) dispatch({ tipo: 'GUARDAR_PLAN', plan: respuesta.plan, hoy });
+      })
+      .catch(() => {
+        // Se sigue con el plan que hay. Se reintenta en unas horas.
+      });
+
+    return () => {
+      vivo = false;
+    };
+  }, [estado, hoy]);
+
   const valor = useMemo(() => {
     return {
       ...estado,
@@ -86,14 +130,19 @@ export function UsuarioProvider({ children }) {
       racha: rachaVigente(estado, hoy),
       rota: rachaRota(estado, hoy),
 
+      // La versión corta del reto de hoy. Vive aquí y no dentro de Hoy para
+      // que el chat pueda cambiarla de verdad cuando alguien lo pide.
+      retoEnMinima: estado.retoAliviado === claveDia(hoy),
+      aliviarReto: (valor = true) => dispatch({ tipo: 'ALIVIAR_RETO', valor, hoy }),
+
       // El plan llega desde el paso 10 del onboarding; puede venir vacío si
       // la IA no respondió, y ahí las pantallas usan el plan de arranque.
       terminarOnboarding: (perfil, plan) => {
-        dispatch({ tipo: 'TERMINAR_ONBOARDING', perfil, plan });
+        dispatch({ tipo: 'TERMINAR_ONBOARDING', perfil, plan, hoy });
         guardarPerfil(estado.userId, perfil);
       },
 
-      guardarPlan: (plan) => dispatch({ tipo: 'GUARDAR_PLAN', plan }),
+      guardarPlan: (plan) => dispatch({ tipo: 'GUARDAR_PLAN', plan, hoy }),
 
       // Devuelve promesa a propósito: el onboarding necesita que el perfil
       // esté en Supabase ANTES de pedirle el plan a la Azure Function,

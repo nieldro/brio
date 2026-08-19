@@ -31,6 +31,12 @@ export const estadoInicial = {
     zonas: [],
   },
   plan: null, // jsonb de `planes.plan`; null mientras no lo genere la IA
+  // El día en que se armó el plan, para saber cuándo está vencido.
+  //
+  // Sin esta fecha, quien se fue tres semanas volvía al plan que abandonó:
+  // la semana 4 de alguien que ya no está en la semana 4. Volver y encontrar
+  // lo mismo que dejaste es la forma más rápida de volverse a ir.
+  planDesde: null, // '2026-08-19'
   ultimoDiaCompletado: null, // '2026-08-13'
   diasCompletados: [], // ['2026-08-13', ...] para la semana y el progreso
   rachaActual: 0,
@@ -54,6 +60,15 @@ export const estadoInicial = {
   // El último nivel de acompañamiento que se le explicó. Sirve para decirle
   // UNA vez que Brío va a hablar menos, y no cada vez que abre la app.
   distanciaAvisada: null,
+  // El día en que se pidió la versión corta del reto.
+  //
+  // Vivía dentro de la pantalla Hoy, y por eso el chip "Cambia mi reto" del
+  // chat contestaba "listo, lo cambio" sin cambiar nada. Prometer y no
+  // cumplir es peor que no ofrecerlo.
+  //
+  // Se guarda por día y no como un interruptor: mañana se arranca de cero,
+  // sin dejar prendido un "modo fácil" que nadie recuerda haber puesto.
+  retoAliviado: null, // '2026-08-19'
 };
 
 // Lo que se guarda en disco. Lo demás se resuelve en cada arranque.
@@ -89,10 +104,15 @@ export function reducer(estado, accion) {
         onboardingListo: true,
         perfil: { ...estado.perfil, ...accion.perfil },
         plan: accion.plan ?? estado.plan,
+        planDesde: accion.plan ? claveDia(accion.hoy ?? new Date()) : estado.planDesde,
       };
 
     case 'GUARDAR_PLAN':
-      return { ...estado, plan: accion.plan };
+      return {
+        ...estado,
+        plan: accion.plan,
+        planDesde: claveDia(accion.hoy ?? new Date()),
+      };
 
     case 'ACTUALIZAR_PERFIL':
       return { ...estado, perfil: { ...estado.perfil, ...accion.cambios } };
@@ -117,6 +137,9 @@ export function reducer(estado, accion) {
 
     case 'DISTANCIA_AVISADA':
       return { ...estado, distanciaAvisada: accion.nivel };
+
+    case 'ALIVIAR_RETO':
+      return { ...estado, retoAliviado: accion.valor ? claveDia(accion.hoy) : null };
 
     case 'NUTRICION_DETALLADA':
       return { ...estado, nutricionDetallada: !!accion.valor };
