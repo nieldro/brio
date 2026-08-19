@@ -22,6 +22,7 @@ import { fechaLarga, franjaDelDia, claveDia } from '../services/fecha';
 import { diaDelPlan, esDescanso, versionMinima, asomoDeEjercicios } from '../services/plan';
 import { fraseDelDia } from '../services/racha';
 import { textoDelAlbum } from '../services/album';
+import { avanceDeHoy, frasePorAvance } from '../services/habitos';
 
 const SALUDOS = {
   manana: 'Buenos días',
@@ -224,6 +225,8 @@ export default function Hoy({ navigation }) {
     completadoHoy,
     diario,
     guardarLogro,
+    habitos,
+    habitosHechos,
   } = useUsuario();
 
   // Mientras la IA no haya entregado un plan, se muestra el de arranque.
@@ -239,6 +242,11 @@ export default function Hoy({ navigation }) {
   const { marcar, texto: textoBoton } = useMarcarDia();
 
   const { estado: album } = useAlbum();
+
+  const avanceHabitos = useMemo(
+    () => avanceDeHoy(habitos, habitosHechos, hoy),
+    [habitos, habitosHechos, hoy],
+  );
 
   // En Hoy caben tres. El resto vive en la rutina, a un toque.
   const asomo = useMemo(() => asomoDeEjercicios(dia), [dia]);
@@ -433,6 +441,29 @@ export default function Hoy({ navigation }) {
           <Text style={[T.cuerpo, est.tip]}>{dia.comida_tip}</Text>
         </View>
       </Tarjeta>
+      </Aparece>
+
+      {/* Los hábitos son el otro medio nombre de la app y hasta hoy no
+          estaban en ningún lado. Van después del reto: primero lo del día,
+          después lo pequeño que lo sostiene. */}
+      <Aparece orden={3}>
+        <Pressable
+          onPress={() => navigation.navigate('Habitos')}
+          accessibilityRole="button"
+          accessibilityLabel="Tus hábitos"
+        >
+          <Tarjeta>
+            <View style={est.filaDiario}>
+              <Etiqueta>tus hábitos</Etiqueta>
+              <Text style={est.verTodo}>
+                {avanceHabitos.total > 0
+                  ? `${avanceHabitos.hechos} de ${avanceHabitos.total}`
+                  : 'elegir'}
+              </Text>
+            </View>
+            <Text style={est.preguntaFoto}>{frasePorAvance(avanceHabitos)}</Text>
+          </Tarjeta>
+        </Pressable>
       </Aparece>
 
       {/* La foto del día. Va abajo, en voz baja y sin contador: el día que

@@ -24,6 +24,7 @@ function aFila(perfil) {
     push_token: perfil.push_token || null,
     zona_horaria: perfil.zona_horaria || null,
     zonas: perfil.zonas?.length ? perfil.zonas : [],
+    habitos: perfil.habitos?.length ? perfil.habitos : [],
   };
 }
 
@@ -41,6 +42,7 @@ function aPerfil(fila) {
     push_token: fila.push_token ?? null,
     zona_horaria: fila.zona_horaria ?? null,
     zonas: fila.zonas ?? [],
+    habitos: fila.habitos ?? [],
   };
 }
 
@@ -179,7 +181,7 @@ export async function guardarPerfil(userId, perfil) {
     // 003. Sin este reintento, olvidar una migración haría perder el perfil
     // entero en silencio, que es mucho peor que quedarse sin recordatorios o
     // sin poder elegir qué parte del cuerpo trabajar.
-    const { zona_horaria, zonas, ...base } = fila;
+    const { zona_horaria, zonas, habitos, ...base } = fila;
     const segundo = await supabase.from('profiles').upsert({ id: userId, ...base });
     return !segundo.error;
   } catch {
@@ -222,6 +224,30 @@ export async function guardarLogro(userId, { fecha, texto }) {
 
     const insertado = await supabase.from('diario').insert({ user_id: userId, fecha, texto });
     return !insertado.error;
+  } catch {
+    return false;
+  }
+}
+
+// Un hábito marcado o desmarcado. La fila existe o no existe: no hay estado
+// intermedio, así que desmarcar es borrar.
+export async function guardarHabito(userId, { habito, fecha, hecho }) {
+  if (!supabase || !userId) return false;
+  try {
+    if (!hecho) {
+      const { error } = await supabase
+        .from('habitos_hechos')
+        .delete()
+        .eq('user_id', userId)
+        .eq('habito', habito)
+        .eq('fecha', fecha);
+      return !error;
+    }
+
+    const { error } = await supabase
+      .from('habitos_hechos')
+      .upsert({ user_id: userId, habito, fecha }, { onConflict: 'user_id,habito,fecha' });
+    return !error;
   } catch {
     return false;
   }

@@ -31,6 +31,8 @@ export const EJERCICIOS = [
   E('Movilidad articular', 'ambos', 'calentamiento'),
   E('Marcha en el sitio', 'casa', 'calentamiento', ['piernas']),
   E('Pasos laterales', 'casa', 'calentamiento', ['piernas', 'gluteos']),
+  E('Círculos de brazos', 'ambos', 'calentamiento', ['hombros']),
+  E('Gato y vaca', 'casa', 'calentamiento', ['espalda'], true),
   E('Estiramiento', 'ambos', 'cierre'),
   E('Respiración', 'ambos', 'cierre'),
 
@@ -39,6 +41,7 @@ export const EJERCICIOS = [
   E('Subir escaleras', 'casa', 'cardio', ['piernas', 'gluteos']),
   E('Bailar', 'casa', 'cardio', ['piernas']),
   E('Máquina de cardio', 'gym', 'cardio', ['piernas']),
+  E('Rodillas al pecho', 'casa', 'cardio', ['piernas', 'centro']),
 
   // --- Fuerza en casa ------------------------------------------------------
   E('Sentadilla a la silla', 'casa', 'fuerza', ['piernas', 'gluteos']),
@@ -56,6 +59,11 @@ export const EJERCICIOS = [
   E('Plancha apoyada', 'ambos', 'fuerza', ['centro'], true),
   E('Abdominal corto', 'ambos', 'fuerza', ['centro'], true),
   E('Superman', 'casa', 'fuerza', ['espalda', 'gluteos'], true),
+  E('Silla contra la pared', 'casa', 'fuerza', ['piernas', 'gluteos']),
+  E('Sentadilla sumo', 'casa', 'fuerza', ['piernas', 'gluteos']),
+  E('Plancha lateral', 'casa', 'fuerza', ['centro'], true),
+  E('Patada de glúteo', 'casa', 'fuerza', ['gluteos'], true),
+  E('Remo con banda', 'casa', 'fuerza', ['espalda', 'brazos']),
 
   // --- Fuerza en gimnasio --------------------------------------------------
   E('Prensa de piernas', 'gym', 'fuerza', ['piernas', 'gluteos']),
@@ -66,6 +74,10 @@ export const EJERCICIOS = [
   E('Remo en máquina', 'gym', 'fuerza', ['espalda', 'brazos']),
   E('Jalón al pecho', 'gym', 'fuerza', ['espalda', 'brazos']),
   E('Polea de tríceps', 'gym', 'fuerza', ['brazos']),
+  E('Sentadilla en máquina', 'gym', 'fuerza', ['piernas', 'gluteos']),
+  E('Máquina de abductores', 'gym', 'fuerza', ['gluteos', 'piernas']),
+  E('Elevación de talones en máquina', 'gym', 'fuerza', ['piernas']),
+  E('Remo en polea baja', 'gym', 'fuerza', ['espalda', 'brazos']),
 ];
 
 const sinTildes = (t) =>

@@ -24,15 +24,17 @@
 //    hasta un techo, pero la operación se queda. Perder el dato de alguien
 //    es peor que reintentar mil veces.
 
-export const OPERACIONES = ['perfil', 'registro', 'logro'];
+export const OPERACIONES = ['perfil', 'registro', 'logro', 'habito'];
 
 const ESPERA_BASE_MS = 2_000;
 const ESPERA_MAXIMA_MS = 5 * 60_000;
 
 // Dos operaciones con la misma clave se pisan entre sí. El perfil es uno solo;
-// el registro y el logro son uno por día.
+// el registro y el logro son uno por día; el hábito, uno por hábito y día,
+// porque marcar y desmarcar el mismo hábito debe quedarse con lo último.
 export function claveDe(op) {
   if (op.tipo === 'perfil') return 'perfil';
+  if (op.tipo === 'habito') return `habito:${op.clave}:${op.fecha}`;
   return `${op.tipo}:${op.fecha}`;
 }
 

@@ -290,6 +290,105 @@ export const GUIAS = [
     masFacil: 'Levanta menos las rodillas y ve más lento.',
   },
 
+  {
+    claves: ['silla contra la pared', 'sentadilla isometrica', 'wall sit', 'isometrica en pared'],
+    nombre: 'Silla contra la pared',
+    figura: 'sillaPared',
+    como: [
+      'Espalda pegada a la pared, pies separados y adelantados.',
+      'Baja deslizándote hasta que las rodillas queden en ángulo recto.',
+      'Sostén ahí, respirando normal.',
+    ],
+    cuidado: 'Las rodillas quedan encima de los tobillos, no más adelante.',
+    masFacil: 'Baja menos y sostén menos tiempo. Diez segundos cuentan.',
+    respira: 'No aguantes el aire: respira suave todo el rato.',
+  },
+  {
+    claves: ['plancha lateral', 'lateral de costado'],
+    nombre: 'Plancha lateral',
+    figura: 'planchaLateral',
+    como: [
+      'De costado, apoyado en el antebrazo y en el lado del pie.',
+      'Sube la cadera hasta que el cuerpo quede en línea.',
+      'Sostén, baja despacio y cambia de lado.',
+    ],
+    cuidado: 'El codo va justo debajo del hombro.',
+    masFacil: 'Apoya la rodilla de abajo en el piso.',
+  },
+  {
+    claves: ['gato y vaca', 'gato vaca', 'movilidad de espalda'],
+    nombre: 'Gato y vaca',
+    figura: 'cuadrupedia',
+    como: [
+      'A cuatro apoyos, manos bajo los hombros y rodillas bajo la cadera.',
+      'Redondea la espalda mirando al ombligo.',
+      'Luego húndela suave, mirando al frente.',
+    ],
+    cuidado: 'Es movilidad, no fuerza. Que no duela en ningún punto.',
+    masFacil: 'Haz el mismo movimiento sentado en una silla.',
+    respira: 'Suelta el aire al redondear, tómalo al hundir.',
+  },
+  {
+    claves: ['patada de gluteo', 'patada atras', 'kickback'],
+    nombre: 'Patada de glúteo',
+    figura: 'patada',
+    como: [
+      'A cuatro apoyos, con el abdomen firme.',
+      'Lleva un talón hacia atrás y arriba, sin arquear la espalda.',
+      'Baja controlado y cambia de pierna.',
+    ],
+    cuidado: 'La cadera se queda mirando al piso: si se abre, es la espalda la que trabaja.',
+    masFacil: 'Sube menos la pierna y haz menos repeticiones.',
+  },
+  {
+    claves: ['rodillas al pecho', 'elevacion de rodillas', 'rodillas arriba'],
+    nombre: 'Rodillas al pecho',
+    figura: 'rodillas',
+    como: [
+      'De pie, sube una rodilla hasta la altura de la cadera.',
+      'Bájala y sube la otra.',
+      'Alterna a un ritmo que puedas sostener.',
+    ],
+    cuidado: 'Pisa con toda la planta al bajar.',
+    masFacil: 'Sube menos la rodilla y apóyate en una pared.',
+  },
+  {
+    claves: ['sentadilla sumo', 'sumo'],
+    nombre: 'Sentadilla sumo',
+    figura: 'sentadilla',
+    como: [
+      'Pies más anchos que los hombros, puntas hacia afuera.',
+      'Baja manteniendo el pecho arriba.',
+      'Sube apretando los glúteos.',
+    ],
+    cuidado: 'Las rodillas siguen la dirección de las puntas de los pies.',
+    masFacil: 'Baja hasta la mitad, o hasta tocar una silla.',
+  },
+  {
+    claves: ['remo con banda', 'remo con toalla', 'remo de pie'],
+    nombre: 'Remo con banda',
+    figura: 'remoDePie',
+    como: [
+      'De pie, con la banda enganchada al frente a la altura del pecho.',
+      'Tira llevando los codos atrás y juntando los omóplatos.',
+      'Vuelve despacio sin soltar la tensión.',
+    ],
+    cuidado: 'Tira con la espalda, no con los brazos.',
+    masFacil: 'Menos tensión: acércate al punto de anclaje.',
+  },
+  {
+    claves: ['circulos de brazos', 'circulos con los brazos'],
+    nombre: 'Círculos de brazos',
+    figura: 'brazos',
+    como: [
+      'De pie, brazos estirados a los lados.',
+      'Haz círculos pequeños hacia adelante.',
+      'Cambia el sentido a la mitad del tiempo.',
+    ],
+    cuidado: 'Círculos pequeños. Grandes y rápidos cansan el hombro sin calentarlo.',
+    masFacil: 'Un solo brazo a la vez.',
+  },
+
   // --- Gimnasio -----------------------------------------------------------
   {
     claves: ['prensa', 'leg press'],
@@ -414,6 +513,55 @@ export const GUIAS = [
     ],
     cuidado: 'Los codos no se despegan del costado.',
     masFacil: 'Menos peso y para cuando los hombros quieran ayudar.',
+  },
+  {
+    claves: ['sentadilla en maquina', 'sentadilla guiada', 'smith'],
+    nombre: 'Sentadilla en máquina',
+    figura: 'sentadilla',
+    como: [
+      'Barra apoyada en la espalda alta, no en el cuello.',
+      'Pies un poco adelantados, baja como si te sentaras.',
+      'Sube empujando con los talones.',
+    ],
+    cuidado: 'Con barra guiada empieza con la barra sola, sin discos.',
+    masFacil: 'Usa la prensa de piernas: el recorrido va guiado y la espalda descansa.',
+    respira: 'Toma aire al bajar, suéltalo al subir.',
+  },
+  {
+    claves: ['abductor', 'abductores', 'maquina de abductores'],
+    nombre: 'Máquina de abductores',
+    figura: 'empuje',
+    como: [
+      'Sentado, con las piernas dentro de los apoyos.',
+      'Abre las piernas empujando hacia afuera.',
+      'Vuelve despacio, sin dejar que el peso te cierre de golpe.',
+    ],
+    cuidado: 'La espalda pegada al respaldo todo el recorrido.',
+    masFacil: 'Menos peso y recorrido más corto.',
+  },
+  {
+    claves: ['talones en maquina', 'gemelos en maquina', 'pantorrilla en maquina'],
+    nombre: 'Elevación de talones en máquina',
+    figura: 'talones',
+    como: [
+      'Hombros bajo los apoyos, punta de los pies en la plataforma.',
+      'Sube los talones todo lo que puedas.',
+      'Baja despacio hasta sentir el estiramiento.',
+    ],
+    cuidado: 'La bajada lenta es la que trabaja.',
+    masFacil: 'Hazlo de pie sin máquina, apoyándote en una pared.',
+  },
+  {
+    claves: ['polea baja', 'remo en polea', 'remo bajo'],
+    nombre: 'Remo en polea baja',
+    figura: 'remoDePie',
+    como: [
+      'Sentado o de pie, espalda firme y pecho arriba.',
+      'Tira llevando los codos atrás, pegados al cuerpo.',
+      'Vuelve despacio sin dejar que el peso te estire de golpe.',
+    ],
+    cuidado: 'La espalda no se redondea al volver.',
+    masFacil: 'Menos peso y para en cuanto pierdas la postura.',
   },
 ];
 

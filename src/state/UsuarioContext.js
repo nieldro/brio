@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useReducer 
 import { AppState } from 'react-native';
 import { completarDia, estaCompletado, rachaVigente, rachaRota } from '../services/racha';
 import { claveDia } from '../services/fecha';
+import { alternarHecho, estaHecho } from '../services/habitos';
 import { reducer, estadoInicial, persistible } from './usuarioReducer';
 import { useHoy } from './useHoy';
 import { cargar, guardarLocal, guardarPerfil } from '../lib/repositorio';
@@ -118,6 +119,25 @@ export function UsuarioProvider({ children }) {
           reto: reto ?? null,
           rachaActual: siguiente.rachaActual,
           mejorRacha: siguiente.mejorRacha,
+        });
+      },
+
+      // Los hábitos viven en el perfil (hasta tres claves) y sus días en el
+      // estado local. Van por la cola como todo lo demás: se ven marcados al
+      // instante y la nube se entera cuando pueda.
+      elegirHabitos: (habitos) => {
+        dispatch({ tipo: 'ELEGIR_HABITOS', habitos });
+        anotar({ tipo: 'perfil', datos: { ...estado.perfil, habitos } });
+      },
+
+      marcarHabito: (clave) => {
+        const hechos = alternarHecho(estado.habitosHechos, clave, hoy);
+        dispatch({ tipo: 'MARCAR_HABITO', hechos });
+        anotar({
+          tipo: 'habito',
+          clave,
+          fecha: claveDia(hoy),
+          hecho: estaHecho(hechos, clave, hoy),
         });
       },
 

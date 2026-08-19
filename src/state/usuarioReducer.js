@@ -36,6 +36,11 @@ export const estadoInicial = {
   rachaActual: 0,
   mejorRacha: 0,
   diario: {}, // { '2026-08-13': 'texto' }
+  // Los hábitos que la persona lleva, máximo tres, y los días que los hizo.
+  // Sin racha a propósito: tres contadores más que se pueden poner en cero
+  // es exactamente lo que hace irse a quien ya abandonó otras apps.
+  habitos: [], // ['agua', 'estirar']
+  habitosHechos: {}, // { agua: ['2026-08-19', ...] }
 };
 
 // Lo que se guarda en disco. Lo demás se resuelve en cada arranque.
@@ -93,6 +98,12 @@ export function reducer(estado, accion) {
           : [clave, ...estado.diasCompletados],
       };
     }
+
+    case 'ELEGIR_HABITOS':
+      return { ...estado, habitos: accion.habitos };
+
+    case 'MARCAR_HABITO':
+      return { ...estado, habitosHechos: accion.hechos };
 
     case 'GUARDAR_LOGRO':
       return {
