@@ -55,6 +55,31 @@ export const PALETAS = {
   },
 };
 
+// Los degradados de la identidad.
+//
+// Salen del logo y son los mismos en los dos modos: la marca no cambia de
+// color porque el usuario prefiera oscuro.
+//
+// Dónde se pueden usar y dónde no, y esto no es negociable:
+//   SÍ   formas, botones de acción, la píldora de racha, la celebración.
+//   NO   detrás de un párrafo, de una tarjeta con datos o de un formulario.
+//
+// La regla de cero neón del documento es sobre las pantallas de LECTURA. Un
+// degradado bajo un texto largo lo vuelve ilegible en la mitad de su
+// recorrido, y ese texto es lo que la persona vino a leer. Cuando un
+// degradado lleva letras encima, van en blanco y sobre los tonos oscuros del
+// tramo, nunca sobre el ámbar.
+export const DEGRADADOS = {
+  // El barrido completo de la marca. Para la celebración y la bienvenida.
+  marca: ['#43CBA3', '#3FA8D8', '#3D5BE0'],
+  // La llama: es el degradado de acción, el del botón principal.
+  llama: ['#FBB03B', '#F7802F', '#F2604C'],
+  // El abrazo: para superficies tranquilas.
+  abrazo: ['#43CBA3', '#3FA8D8'],
+  // Lo logrado. Va en el botón cuando el día ya está marcado.
+  logrado: ['#2A9D82', '#3FA8D8'],
+};
+
 // Relleno de botones cuando llevan texto blanco encima.
 // Separado del semáforo a propósito: un punto de color no necesita el mismo
 // contraste que un botón con texto dentro.
@@ -133,4 +158,4 @@ export function sombraDe(modo) {
 // activo. Si alguien vuelve a escribir `import { C } from '../theme'`, revienta
 // de una vez en lugar de fallar en silencio solo de noche.
 
-export default { PALETAS, RELLENOS, S, R, F, semaforoDe, tipografiaDe, sombraDe };
+export default { PALETAS, RELLENOS, DEGRADADOS, S, R, F, semaforoDe, tipografiaDe, sombraDe };

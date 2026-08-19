@@ -9,6 +9,7 @@ import Etiqueta from '../components/Etiqueta';
 import PildoraRacha from '../components/PildoraRacha';
 import PuntoSemaforo from '../components/PuntoSemaforo';
 import Chispa from '../components/Chispa';
+import Aparece from '../components/Aparece';
 import { useCelebracion } from '../state/CelebracionContext';
 import { useUsuario } from '../state/UsuarioContext';
 import { useAlbum } from '../state/useAlbum';
@@ -281,11 +282,14 @@ export default function Hoy({ navigation }) {
         </View>
       </View>
 
-      <View style={est.bloqueSaludo}>
-        <Text style={T.saludo}>{saludo}</Text>
-        <Text style={est.frase}>{fraseDelDia({ completadoHoy, racha, rota })}</Text>
-      </View>
+      <Aparece orden={0}>
+        <View style={est.bloqueSaludo}>
+          <Text style={T.saludo}>{saludo}</Text>
+          <Text style={est.frase}>{fraseDelDia({ completadoHoy, racha, rota })}</Text>
+        </View>
+      </Aparece>
 
+      <Aparece orden={1}>
       <Tarjeta>
         <View style={est.filaDiario}>
           <Etiqueta>
@@ -373,7 +377,9 @@ export default function Hoy({ navigation }) {
           </Pressable>
         )}
       </Tarjeta>
+      </Aparece>
 
+      <Aparece orden={2}>
       <Tarjeta>
         <View style={est.filaDiario}>
           <Etiqueta>hoy en la mesa</Etiqueta>
@@ -390,9 +396,11 @@ export default function Hoy({ navigation }) {
           <Text style={[T.cuerpo, est.tip]}>{dia.comida_tip}</Text>
         </View>
       </Tarjeta>
+      </Aparece>
 
       {/* La foto del día. Va abajo, en voz baja y sin contador: el día que
           saltarse una foto cueste algo, esto se vuelve otra báscula. */}
+      <Aparece orden={3}>
       <Tarjeta>
         <View style={est.filaDiario}>
           <Etiqueta>tu álbum</Etiqueta>
@@ -433,7 +441,9 @@ export default function Hoy({ navigation }) {
           </Boton>
         )}
       </Tarjeta>
+      </Aparece>
 
+      <Aparece orden={4}>
       <Tarjeta>
         <View style={est.filaDiario}>
           <Etiqueta>tu diario</Etiqueta>
@@ -457,6 +467,7 @@ export default function Hoy({ navigation }) {
           multiline
         />
       </Tarjeta>
+      </Aparece>
     </Pantalla>
   );
 }

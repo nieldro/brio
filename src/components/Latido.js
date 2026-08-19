@@ -2,10 +2,14 @@ import { useEffect, useRef } from 'react';
 import { View, Animated, Easing } from 'react-native';
 import { S } from '../theme';
 import Chispa from './Chispa';
+import Logo from './Logo';
 
-// Chispa que respira. Se usa mientras Brío prepara algo.
-// El color lo resuelve Chispa desde el tema activo.
-export default function Latido({ size = 56 }) {
+// Respira mientras Brío prepara algo.
+//
+// Con `marca` late el isotipo entero, para la pantalla de arranque. Sin ella
+// late solo la chispa, que es lo que va dentro de una pantalla que ya tiene
+// contenido: el logo completo ahí sería la marca gritando.
+export default function Latido({ size = 56, marca = false }) {
   const escala = useRef(new Animated.Value(0.85)).current;
 
   useEffect(() => {
@@ -32,7 +36,7 @@ export default function Latido({ size = 56 }) {
   return (
     <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: S.xxxl }}>
       <Animated.View style={{ transform: [{ scale: escala }] }}>
-        <Chispa size={size} />
+        {marca ? <Logo size={size} /> : <Chispa size={size} />}
       </Animated.View>
     </View>
   );

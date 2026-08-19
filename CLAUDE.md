@@ -57,9 +57,21 @@ Los que llevan sufijo `Texto` existen porque el color de marca no llegaba al
 mínimo de contraste: un color puede servir para una forma y no para una letra.
 Todos están medidos contra su superficie en `tests/tema.test.mjs`.
 
-Del logo se hereda la familia de color, NO los degradados ni los azules
-eléctricos: sobre pantallas de texto son ilegibles, y sigue mandando la regla
-de cero neón.
+Los degradados de la identidad viven en `DEGRADADOS` dentro de `src/theme.js`
+y tienen un territorio claro:
+
+- **Sí**: el isotipo, el botón de acción, la píldora de racha, la celebración.
+- **No**: detrás de un párrafo, de una tarjeta con datos o de un formulario.
+
+La regla de cero neón es sobre las pantallas de LECTURA. Un degradado bajo un
+texto largo lo vuelve ilegible a la mitad de su recorrido, y ese texto es lo
+que la persona vino a leer. Cuando un degradado lleva letras encima van en
+blanco, y el barrido se orienta para que caigan sobre el tramo oscuro.
+
+El isotipo es vector (`src/components/Logo.js`), no imagen: se ve nítido a
+24 px en una píldora y a 200 px en la bienvenida, con el mismo archivo. De ahí
+salen también los íconos de `assets/`, así que el logo tiene una sola fuente
+de verdad.
 
 Tipografía: Nunito para títulos, Inter para textos (Google Fonts vía expo-font, fase 2). Mientras tanto, fuente del sistema.
 

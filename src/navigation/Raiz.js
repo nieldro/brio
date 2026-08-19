@@ -30,8 +30,8 @@ export default function Raiz() {
       <View style={est.espera}>
         {/* La chispa late arriba y la marca queda debajo: es lo primero que
             se ve al abrir la app, y hasta ahora ahí no había marca ninguna. */}
-        <Latido size={48} />
-        <Marca size={34} conLema chispa={false} style={est.marca} />
+        <Latido size={128} marca />
+        <Marca size={30} conLema conLogo={false} style={est.marca} />
       </View>
     );
   }

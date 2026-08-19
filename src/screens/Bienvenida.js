@@ -6,6 +6,7 @@ import { useEstilos } from '../state/TemaContext';
 import { useUsuario } from '../state/UsuarioContext';
 import Marca from '../components/Marca';
 import Boton from '../components/Boton';
+import Aparece from '../components/Aparece';
 import { entrarConGoogle, hayCuentas } from '../lib/auth';
 
 const crear = ({ C, T, S }) => ({
@@ -89,12 +90,12 @@ export default function Bienvenida({ navigation }) {
 
   return (
     <View style={[est.pantalla, { paddingTop: insets.top + 32, paddingBottom: insets.bottom + 16 }]}>
-      <View style={est.arriba}>
+      <Aparece orden={0} style={est.arriba}>
         <Marca size={46} conLema />
         <Text style={est.frase}>No vengo a exigirte. Vengo a acompañarte.</Text>
-      </View>
+      </Aparece>
 
-      <View style={est.acciones}>
+      <Aparece orden={2} style={est.acciones}>
         {!!error && <Text style={est.aviso}>{error}</Text>}
 
         <Boton onPress={() => navigation.navigate('Onboarding')} disabled={ocupado}>
@@ -120,7 +121,7 @@ export default function Bienvenida({ navigation }) {
         <Text style={est.nota}>
           Puedes empezar sin cuenta. Sirve para que tu racha te siga si cambias de teléfono.
         </Text>
-      </View>
+      </Aparece>
     </View>
   );
 }
