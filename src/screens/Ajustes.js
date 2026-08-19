@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { View, Text, Pressable, Alert } from 'react-native';
 
 import { useEstilos, useTema, PREFERENCIAS, NOMBRES_PREFERENCIA } from '../state/TemaContext';
@@ -13,6 +13,12 @@ import Aparece from '../components/Aparece';
 import SelectorHora from '../components/SelectorHora';
 import { borrarAlbum } from '../lib/album';
 import { hayModuloPush, pedirPermisoYToken } from '../lib/notificaciones';
+import { planDemo } from '../data/planDemo';
+import { diaDelPlan } from '../services/plan';
+// El MISMO módulo que usa el Timer del servidor para escribir el aviso. Se
+// importa en vez de copiarse: dos versiones del mismo texto se separan, y
+// entonces la vista previa miente sobre lo que de verdad va a llegar.
+import { textoRecordatorio } from '../../azure-functions/src/lib/recordatorio';
 
 const crear = ({ C, T, R, S }) => ({
   contenido: {
@@ -58,6 +64,22 @@ const crear = ({ C, T, R, S }) => ({
   },
   accion: {
     marginTop: S.lg,
+  },
+  previa: {
+    backgroundColor: C.crema,
+    borderRadius: R.chico,
+    borderLeftWidth: 4,
+    borderLeftColor: C.coral,
+    padding: S.md,
+    marginTop: S.sm,
+    gap: 2,
+  },
+  previaTitulo: {
+    ...T.subtitulo,
+    fontSize: 15,
+  },
+  previaCuerpo: {
+    ...T.secundario,
   },
   peligro: {
     alignItems: 'center',
@@ -114,10 +136,22 @@ function Opciones({ valores, valor, onElegir, etiquetaDe, est }) {
 export default function Ajustes({ navigation }) {
   const est = useEstilos(crear);
   const { preferencia, cambiarPreferencia } = useTema();
-  const { perfil, actualizarPerfil, sesion, correo, userId, reiniciar } = useUsuario();
+  const { perfil, actualizarPerfil, sesion, correo, userId, reiniciar, plan, hoy, completadoHoy } =
+    useUsuario();
   const { estado: album, setFotos } = useAlbum();
 
   const [aviso, setAviso] = useState(null);
+
+  // El aviso que el servidor mandaría ahora mismo, con los datos de hoy.
+  const aviso_previa = useMemo(
+    () =>
+      textoRecordatorio({
+        nombre: perfil.nombre,
+        dia: diaDelPlan(plan ?? planDemo, hoy),
+        completadoHoy,
+      }),
+    [perfil.nombre, plan, hoy, completadoHoy],
+  );
 
   const decir = (texto, ms = 3000) => {
     setAviso(texto);
@@ -202,6 +236,30 @@ export default function Ajustes({ navigation }) {
             <Boton variante="suave" onPress={activarRecordatorios} style={est.accion}>
               Activar recordatorios
             </Boton>
+          )}
+
+          {/* Lo que de verdad va a llegar, escrito por el mismo código del
+              servidor. Sin esto no había forma de comprobar el recordatorio
+              hasta tener la app instalada, y quedaba como un entregable a
+              ciegas. */}
+          <Text style={est.campo}>Así se va a ver</Text>
+          {aviso_previa ? (
+            <View style={est.previa}>
+              <Text style={est.previaTitulo}>{aviso_previa.titulo}</Text>
+              <Text style={est.previaCuerpo}>{aviso_previa.cuerpo}</Text>
+            </View>
+          ) : (
+            <Text style={est.pie}>
+              Hoy no te voy a escribir: ya marcaste tu día. Un recordatorio de más molesta más de
+              lo que ayuda.
+            </Text>
+          )}
+
+          {!hayModuloPush() && (
+            <Text style={est.pie}>
+              En Expo Go no llegan notificaciones. Llegan en la app instalada, a la hora que
+              elegiste.
+            </Text>
           )}
         </Tarjeta>
       </Aparece>
