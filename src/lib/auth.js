@@ -128,7 +128,7 @@ export async function salir() {
 const GOOGLE_APAGADO = 'Entrar con Google todavía no está disponible.';
 
 const NO_SE_PUEDE_ENLAZAR =
-  'Para guardar lo que ya llevas, crea la cuenta con correo y clave. Con Google empezarías de cero.';
+  'Con Google empezarías de cero y perderías tu racha. Guarda tu cuenta con correo y clave, que sí se queda con todo lo que llevas.';
 
 // La URL de vuelta cambia según dónde corra la app, y las dos tienen que
 // estar en la lista de Supabase:
@@ -137,7 +137,17 @@ const NO_SE_PUEDE_ENLAZAR =
 const uriDeVuelta = () => crearUri({ scheme: 'brio', path: 'auth' });
 
 const proveedorApagado = (e) => /provider is not enabled|unsupported provider/i.test(e?.message ?? '');
-const enlaceApagado = (e) => /manual linking/i.test(e?.message ?? '');
+
+// `linkIdentity` a veces devuelve el error y a veces lo lanza, según por dónde
+// falle dentro de la librería. Las dos formas significan lo mismo aquí, así
+// que se igualan: un throw suelto dejaba el botón sin respuesta.
+async function enlazarConGoogle(opciones) {
+  try {
+    return await supabase.auth.linkIdentity({ provider: 'google', options: opciones });
+  } catch (e) {
+    return { data: null, error: e };
+  }
+}
 
 // Entrar con Google.
 //
@@ -165,19 +175,21 @@ export async function entrarConGoogle({ hayDatosQuePerder = false } = {}) {
     let data = null;
     let error = null;
 
-    if (esAnonimo) {
-      ({ data, error } = await supabase.auth.linkIdentity({ provider: 'google', options: opciones }));
+    // Enlazar solo tiene sentido cuando hay algo que perder. Quien acaba de
+    // abrir la app no ha construido nada: pedirle a Supabase que enlace ahí
+    // solo añade una llamada que puede fallar por un ajuste del panel.
+    if (esAnonimo && hayDatosQuePerder) {
+      ({ data, error } = await enlazarConGoogle(opciones));
 
       // El orden importa: "Google apagado" también contiene "not enabled", y
-      // mirarlo después hacía que un proveedor apagado se anunciara como un
+      // mirarlo después haría que un proveedor apagado se anunciara como un
       // problema de enlace. Primero lo específico.
       if (proveedorApagado(error)) return { ok: false, error: GOOGLE_APAGADO };
 
-      // Enlazar exige "Manual linking" encendido en Supabase.
-      if (enlaceApagado(error)) {
-        if (hayDatosQuePerder) return { ok: false, error: NO_SE_PUEDE_ENLAZAR };
-        ({ data, error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: opciones }));
-      }
+      // Sin enlace manual, entrar con Google crearía un usuario nuevo y esta
+      // persona perdería su racha. Se dice y se ofrece el camino que sí la
+      // conserva, en vez de borrársela en silencio.
+      if (error) return { ok: false, error: NO_SE_PUEDE_ENLAZAR };
     } else {
       ({ data, error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: opciones }));
     }
