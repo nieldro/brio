@@ -10,6 +10,7 @@ import Etiqueta from '../components/Etiqueta';
 import Boton from '../components/Boton';
 import Marca from '../components/Marca';
 import Aparece from '../components/Aparece';
+import Interruptor from '../components/Interruptor';
 import SelectorHora from '../components/SelectorHora';
 import { borrarAlbum } from '../lib/album';
 import { hayModuloPush, pedirPermisoYToken } from '../lib/notificaciones';
@@ -281,13 +282,11 @@ export default function Ajustes({ navigation }) {
       <Aparece orden={3}>
         <Tarjeta>
           <Etiqueta>al mirar un plato</Etiqueta>
-          <Text style={est.campo}>Estimación de energía y niveles</Text>
-          <Opciones
-            valores={[false, true]}
+          <Interruptor
+            titulo="Estimación de energía"
+            sub="Con niveles de proteína, grasas y fibra"
             valor={nutricionDetallada}
-            onElegir={verNutricionDetallada}
-            etiquetaDe={(v) => (v ? 'Mostrarla' : 'No mostrarla')}
-            est={est}
+            onCambiar={verNutricionDetallada}
           />
           <Text style={est.pie}>
             {nutricionDetallada
