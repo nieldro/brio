@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, Pressable, Linking } from 'react-native';
 import { openBrowserAsync } from 'expo-web-browser';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -10,9 +10,11 @@ import Tarjeta from '../components/Tarjeta';
 import Etiqueta from '../components/Etiqueta';
 import Boton from '../components/Boton';
 import Casilla from '../components/Casilla';
+import SelloHecho from '../components/SelloHecho';
 import FiguraEjercicio, { useRelojDeFiguras } from '../components/FiguraEjercicio';
 import Aparece from '../components/Aparece';
 import { useMarcarDia } from '../state/useMarcarDia';
+import { useCelebracion } from '../state/CelebracionContext';
 import { guiaDe, busquedaDeVideo } from '../services/guias';
 import { resumenReto, porBloques, avanceDeRutina, claveEjercicio } from '../services/plan';
 
@@ -168,6 +170,7 @@ export default function Rutina({ route, navigation }) {
   // martes no puede marcar el martes.
   const esDeHoy = route?.params?.esDeHoy !== false;
   const { marcar, completadoHoy, texto } = useMarcarDia();
+  const { celebrar } = useCelebracion();
 
   const cerrarDia = () => {
     if (marcar(dia.reto)) navigation.goBack();
@@ -194,6 +197,24 @@ export default function Rutina({ route, navigation }) {
   const avance = useMemo(() => avanceDeRutina(dia, hechos), [dia, hechos]);
 
   const alternar = (clave) => setHechos((h) => ({ ...h, [clave]: !h[clave] }));
+
+  // Tachar el último ejercicio SIEMPRE produce algo. Este era el hueco que se
+  // sentía roto: la persona terminaba su rutina entera y la app no decía nada,
+  // porque el botón de abajo ya estaba en "hecho" desde antes.
+  //
+  // Si el día todavía no estaba cerrado, se cierra. Si ya lo estaba, se
+  // celebra la rutina igual: terminarla completa es un logro por su cuenta, y
+  // Brío celebra lo pequeño de inmediato.
+  const yaCelebrado = useRef(false);
+
+  useEffect(() => {
+    if (!esDeHoy || !avance.completa || yaCelebrado.current) return;
+    yaCelebrado.current = true;
+
+    if (!marcar(dia.reto)) {
+      celebrar({ titulo: 'Rutina completa.', sub: 'Los hiciste todos. Eso ya es tuyo.' });
+    }
+  }, [esDeHoy, avance.completa, marcar, celebrar, dia.reto]);
 
   return (
     <Pantalla contentStyle={est.contenido}>
@@ -334,15 +355,17 @@ export default function Rutina({ route, navigation }) {
           acababa de entrenar se quedaba sin dónde decir que ya. */}
       {esDeHoy && (
         <Aparece orden={9}>
-          <Boton variante={completadoHoy ? 'salvia' : 'coral'} onPress={cerrarDia}>
-            {texto}
-          </Boton>
-          {!completadoHoy && avance.total > 0 && (
-            <Text style={est.pieBoton}>
-              {avance.completa
-                ? 'Terminaste la rutina completa.'
-                : 'Puedes marcarlo aunque no hayas hecho todo.'}
-            </Text>
+          {completadoHoy ? (
+            <SelloHecho texto={texto} />
+          ) : (
+            <>
+              <Boton onPress={cerrarDia}>{texto}</Boton>
+              {avance.total > 0 && (
+                <Text style={est.pieBoton}>
+                  Puedes marcarlo aunque no hayas hecho todo.
+                </Text>
+              )}
+            </>
           )}
         </Aparece>
       )}

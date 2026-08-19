@@ -10,6 +10,7 @@ import PildoraRacha from '../components/PildoraRacha';
 import PuntoSemaforo from '../components/PuntoSemaforo';
 import Chispa from '../components/Chispa';
 import Logo from '../components/Logo';
+import SelloHecho from '../components/SelloHecho';
 import Aparece from '../components/Aparece';
 import { useUsuario } from '../state/UsuarioContext';
 import { useAlbum } from '../state/useAlbum';
@@ -372,13 +373,13 @@ export default function Hoy({ navigation }) {
 
         <Text style={est.mensaje}>{dia.mensaje}</Text>
 
-        <Boton
-          variante={completadoHoy ? 'salvia' : 'coral'}
-          onPress={marcarListo}
-          style={est.botonListo}
-        >
-          {textoBoton}
-        </Boton>
+        <View style={est.botonListo}>
+          {completadoHoy ? (
+            <SelloHecho texto={textoBoton} />
+          ) : (
+            <Boton onPress={marcarListo}>{textoBoton}</Boton>
+          )}
+        </View>
 
         {/* Lo que hace abandonar no es la falta de ganas: es el todo o nada.
             Este botón le quita a la app el poder de romperle la semana. */}
