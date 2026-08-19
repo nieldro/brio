@@ -48,6 +48,23 @@ export function semanasConMovimiento(diasCompletados = []) {
   return semanas.size;
 }
 
+// Semanas de siete de siete. Es el logro de disciplina, no la vara diaria:
+// aparece cuando pasa y no se echa en cara cuando no.
+export function semanasEnteras(diasCompletados = []) {
+  const porSemana = {};
+
+  for (const clave of new Set(diasCompletados)) {
+    const [a, m, d] = clave.split('-').map(Number);
+    const fecha = new Date(Date.UTC(a, m - 1, d));
+    const dia = fecha.getUTCDay();
+    const alLunes = dia === 0 ? -6 : 1 - dia;
+    const lunes = new Date(fecha.getTime() + alLunes * DIA_MS).toISOString().slice(0, 10);
+    porSemana[lunes] = (porSemana[lunes] ?? 0) + 1;
+  }
+
+  return Object.values(porSemana).filter((n) => n >= 7).length;
+}
+
 // --- El mapa de los días ---------------------------------------------------
 
 // Una cuadrícula de las últimas semanas, para ver el recorrido de un vistazo.

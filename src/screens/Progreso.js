@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { View, Text, Animated, Easing } from 'react-native';
+import { View, Text, Pressable, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { useEstilos, useTema } from '../state/TemaContext';
@@ -45,6 +45,14 @@ const crear = ({ C, T, R, S }) => ({
   bajoCifra: {
     ...T.cuerpo,
     color: C.gris,
+  },
+  enlaceLogros: {
+    paddingVertical: S.sm,
+  },
+  enlaceLogrosTexto: {
+    ...T.cuerpo,
+    color: C.coralTexto,
+    fontWeight: '700',
   },
   cifra: {
     fontSize: 40,
@@ -167,7 +175,7 @@ const crear = ({ C, T, R, S }) => ({
   },
 });
 
-export default function Progreso() {
+export default function Progreso({ navigation }) {
   const est = useEstilos(crear);
   const { C, T } = useTema();
   const { perfil, mejorRacha, diasCompletados, habitosHechos, diario, hoy } = useUsuario();
@@ -224,6 +232,14 @@ export default function Progreso() {
           <Etiqueta>tu recorrido</Etiqueta>
           <Text style={est.cifraGrande}>{suma.dias}</Text>
           <Text style={est.bajoCifra}>{textoDeTotales(suma)}</Text>
+
+          <Pressable
+            onPress={() => navigation.navigate('Logros')}
+            accessibilityRole="button"
+            style={est.enlaceLogros}
+          >
+            <Text style={est.enlaceLogrosTexto}>Ver lo que construiste →</Text>
+          </Pressable>
         </View>
       </Aparece>
 

@@ -20,7 +20,8 @@ import { useMarcarDia } from '../state/useMarcarDia';
 import { planDemo } from '../data/planDemo';
 import { fechaLarga, franjaDelDia, claveDia } from '../services/fecha';
 import { diaDelPlan, esDescanso, versionMinima, asomoDeEjercicios } from '../services/plan';
-import { fraseDelDia } from '../services/racha';
+import { semanasConMovimiento } from '../services/recorrido';
+import { nivelDeAcompanamiento, saludoSegunDistancia, porQueHabloMenos } from '../services/acompanamiento';
 import { textoDelAlbum } from '../services/album';
 import { avanceDeHoy, frasePorAvance } from '../services/habitos';
 
@@ -82,6 +83,15 @@ const crear = ({ C, T, R, S }) => ({
   frase: {
     ...T.cuerpo,
     color: C.gris,
+  },
+  explicacion: {
+    ...T.secundario,
+    fontSize: 13,
+    color: C.salviaTexto,
+    borderLeftWidth: 3,
+    borderLeftColor: C.salvia,
+    paddingLeft: S.md,
+    marginTop: S.xs,
   },
   reto: {
     ...T.titulo,
@@ -227,6 +237,9 @@ export default function Hoy({ navigation }) {
     guardarLogro,
     habitos,
     habitosHechos,
+    diasCompletados,
+    distanciaAvisada,
+    avisarDistancia,
   } = useUsuario();
 
   // Mientras la IA no haya entregado un plan, se muestra el de arranque.
@@ -247,6 +260,26 @@ export default function Hoy({ navigation }) {
     () => avanceDeHoy(habitos, habitosHechos, hoy),
     [habitos, habitosHechos, hoy],
   );
+
+  // Brío habla menos a medida que la persona lo necesita menos. El objetivo
+  // de una app de hábitos es volverse innecesaria: una que necesita
+  // celebrarte cada día no te construye un hábito, te construye dependencia.
+  const distancia = useMemo(
+    () =>
+      nivelDeAcompanamiento(
+        { semanas: semanasConMovimiento(diasCompletados), diasCompletados },
+        hoy,
+      ),
+    [diasCompletados, hoy],
+  );
+
+  // El cambio se explica UNA vez. Sin explicarlo, la persona sentiría que la
+  // app se enfrió con ella, que es justo lo contrario de lo que pasa.
+  const explicacion = distancia !== distanciaAvisada ? porQueHabloMenos(distancia) : null;
+
+  useEffect(() => {
+    if (explicacion) avisarDistancia(distancia);
+  }, [explicacion, distancia, avisarDistancia]);
 
   // En Hoy caben tres. El resto vive en la rutina, a un toque.
   const asomo = useMemo(() => asomoDeEjercicios(dia), [dia]);
@@ -308,7 +341,10 @@ export default function Hoy({ navigation }) {
       <Aparece orden={0}>
         <View style={est.bloqueSaludo}>
           <Text style={T.saludo}>{saludo}</Text>
-          <Text style={est.frase}>{fraseDelDia({ completadoHoy, racha, rota })}</Text>
+          <Text style={est.frase}>
+            {saludoSegunDistancia(distancia, { completadoHoy, racha, rota })}
+          </Text>
+          {!!explicacion && <Text style={est.explicacion}>{explicacion}</Text>}
         </View>
       </Aparece>
 

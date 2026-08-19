@@ -22,8 +22,14 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "permissions": [
-        "android.permission.CAMERA"
-      ]
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -56,6 +62,9 @@
       "eas": {
         "projectId": "9d23c3c3-5336-4885-a8dc-b8a6df4d08e1"
       }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/9d23c3c3-5336-4885-a8dc-b8a6df4d08e1"
     }
   }
 }

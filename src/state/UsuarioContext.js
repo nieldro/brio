@@ -145,6 +145,13 @@ export function UsuarioProvider({ children }) {
       // dato de la persona, y no tiene por qué viajar a la nube.
       verNutricionDetallada: (valor) => dispatch({ tipo: 'NUTRICION_DETALLADA', valor }),
 
+      // Terminar la rutina entera es un logro por su cuenta, distinto de
+      // marcar el día. Vive solo en el teléfono: es una cuenta de trabajo,
+      // no un dato que haga falta en la nube.
+      contarRutinaCompleta: () => dispatch({ tipo: 'RUTINA_COMPLETA' }),
+
+      avisarDistancia: (nivel) => dispatch({ tipo: 'DISTANCIA_AVISADA', nivel }),
+
       guardarLogro: (texto) => {
         dispatch({ tipo: 'GUARDAR_LOGRO', texto, hoy });
         anotar({ tipo: 'logro', fecha: claveDia(hoy), texto });

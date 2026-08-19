@@ -33,6 +33,21 @@ export function contarRegresos(diasCompletados = []) {
   return regresos;
 }
 
+// Regresos después de una parada larga. Volver a los dos días es una cosa;
+// volver después de tres semanas es otra, y es la que casi nadie hace.
+export const PARADA_LARGA = 14;
+
+export function contarRegresosLargos(diasCompletados = []) {
+  const dias = [...new Set(diasCompletados)].sort();
+  let largos = 0;
+
+  for (let i = 1; i < dias.length; i += 1) {
+    if (diasEntre(dias[i - 1], dias[i]) > PARADA_LARGA) largos += 1;
+  }
+
+  return largos;
+}
+
 // ¿Cuántos días lleva sin marcar? null si nunca ha marcado.
 export function diasSinVolver(diasCompletados = [], hoy = new Date()) {
   const dias = [...new Set(diasCompletados)].sort();

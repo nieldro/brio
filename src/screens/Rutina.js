@@ -17,6 +17,7 @@ import FiguraEjercicio, { useRelojDeFiguras } from '../components/FiguraEjercici
 import Aparece from '../components/Aparece';
 import { useMarcarDia } from '../state/useMarcarDia';
 import { useCelebracion } from '../state/CelebracionContext';
+import { useUsuario } from '../state/UsuarioContext';
 import { guiaDe, busquedaDeVideo } from '../services/guias';
 import { resumenReto, porBloques, avanceDeRutina, claveEjercicio } from '../services/plan';
 
@@ -172,6 +173,7 @@ export default function Rutina({ route, navigation }) {
   const esDeHoy = route?.params?.esDeHoy !== false;
   const { marcar, completadoHoy, texto } = useMarcarDia();
   const { celebrar } = useCelebracion();
+  const { contarRutinaCompleta } = useUsuario();
 
   const cerrarDia = () => {
     if (marcar(dia.reto)) navigation.goBack();
@@ -212,10 +214,12 @@ export default function Rutina({ route, navigation }) {
     if (!esDeHoy || !avance.completa || yaCelebrado.current) return;
     yaCelebrado.current = true;
 
+    contarRutinaCompleta();
+
     if (!marcar(dia.reto)) {
       celebrar({ titulo: 'Rutina completa.', sub: 'Los hiciste todos. Eso ya es tuyo.' });
     }
-  }, [esDeHoy, avance.completa, marcar, celebrar, dia.reto]);
+  }, [esDeHoy, avance.completa, marcar, celebrar, dia.reto, contarRutinaCompleta]);
 
   return (
     <Pantalla contentStyle={est.contenido}>

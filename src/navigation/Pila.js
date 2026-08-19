@@ -11,6 +11,7 @@ import Rutina from '../screens/Rutina';
 import Plato from '../screens/Plato';
 import Mesa from '../screens/Mesa';
 import Habitos from '../screens/Habitos';
+import Logros from '../screens/Logros';
 import Album from '../screens/Album';
 import Camara from '../screens/Camara';
 import Pelicula from '../screens/Pelicula';
@@ -45,6 +46,7 @@ export default function PilaPrincipal() {
       <Pila.Screen name="Rutina" component={Rutina} options={{ title: 'Rutina de hoy' }} />
       <Pila.Screen name="Mesa" component={Mesa} options={{ title: 'Tu mesa' }} />
       <Pila.Screen name="Habitos" component={Habitos} options={{ title: 'Tus hábitos' }} />
+      <Pila.Screen name="Logros" component={Logros} options={{ title: 'Lo que construiste' }} />
       <Pila.Screen name="Plato" component={Plato} options={{ title: 'Tu plato' }} />
       <Pila.Screen name="Album" component={Album} options={{ title: 'Tu álbum' }} />
       <Pila.Screen name="Pelicula" component={Pelicula} options={{ title: 'Tu película' }} />

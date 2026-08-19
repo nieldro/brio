@@ -47,6 +47,13 @@ export const estadoInicial = {
   // suma, no aparece en el progreso. Es información para el momento en que
   // alguien la pide, y por eso hay que encenderla a mano.
   nutricionDetallada: false,
+  // Rutinas terminadas enteras, ejercicio por ejercicio. Se cuenta aparte de
+  // los días marcados porque son cosas distintas: un día se puede marcar sin
+  // haber tachado todo, y está bien que así sea.
+  rutinasCompletas: 0,
+  // El último nivel de acompañamiento que se le explicó. Sirve para decirle
+  // UNA vez que Brío va a hablar menos, y no cada vez que abre la app.
+  distanciaAvisada: null,
 };
 
 // Lo que se guarda en disco. Lo demás se resuelve en cada arranque.
@@ -104,6 +111,12 @@ export function reducer(estado, accion) {
           : [clave, ...estado.diasCompletados],
       };
     }
+
+    case 'RUTINA_COMPLETA':
+      return { ...estado, rutinasCompletas: (estado.rutinasCompletas ?? 0) + 1 };
+
+    case 'DISTANCIA_AVISADA':
+      return { ...estado, distanciaAvisada: accion.nivel };
 
     case 'NUTRICION_DETALLADA':
       return { ...estado, nutricionDetallada: !!accion.valor };
