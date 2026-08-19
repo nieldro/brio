@@ -203,6 +203,78 @@ export function loQueNote(analisis, nombre) {
   return null;
 }
 
+// Todo lo que Brío ha notado, no solo lo primero.
+//
+// `loQueNote` devuelve UNA frase porque va en una tarjeta pequeña. Esto
+// devuelve la lista entera, para la pantalla de progreso: es la diferencia
+// entre una app que te pregunta cosas y una que te devuelve lo que ha visto.
+//
+// Cada hallazgo lleva su evidencia, y por eso se puede mostrar sin mentir.
+// Sin evidencia suficiente, el hallazgo no entra: la lista corta y verdadera
+// vale más que la larga y adivinada.
+export function hallazgos(diasCompletados = [], hoy = new Date(), extra = {}) {
+  const analisis = analizar(diasCompletados, hoy);
+  const t = tendencia(diasCompletados, hoy);
+  const salida = [];
+
+  if (analisis.fuerte) {
+    salida.push({
+      clave: 'dia-fuerte',
+      titulo: `Los ${analisis.fuerte.dia}s son tuyos`,
+      texto: `Cumpliste ${analisis.fuerte.hechos} de ${analisis.fuerte.vistos}. Ahí es donde ponemos lo bueno.`,
+      tono: 'bien',
+    });
+  }
+
+  if (analisis.dificil) {
+    salida.push({
+      clave: 'dia-dificil',
+      titulo: `Los ${analisis.dificil.dia}s se te atraviesan`,
+      texto: `${analisis.dificil.hechos} de ${analisis.dificil.vistos}. No es falta de ganas: ese día está mal puesto, y lo vamos a mover.`,
+      tono: 'aviso',
+    });
+  }
+
+  if (t.direccion === 'sube') {
+    salida.push({
+      clave: 'sube',
+      titulo: 'Vas hacia arriba',
+      texto: `Esta semana te moviste más que la pasada. ${Math.round(t.estaSemana * 7)} días contra ${Math.round(t.anterior * 7)}.`,
+      tono: 'bien',
+    });
+  }
+
+  if (t.direccion === 'baja') {
+    salida.push({
+      clave: 'baja',
+      titulo: 'Esta semana pesó más',
+      texto: 'Pasa, y no significa nada sobre ti. La próxima la armo más suave.',
+      tono: 'calma',
+    });
+  }
+
+  // Volver es la métrica de Brío y merece su sitio aquí.
+  if (extra.regresos > 0) {
+    salida.push({
+      clave: 'regresos',
+      titulo: extra.regresos === 1 ? 'Volviste una vez' : `Volviste ${extra.regresos} veces`,
+      texto: 'Parar y volver es más difícil que no parar nunca. Eso es lo que cuenta.',
+      tono: 'bien',
+    });
+  }
+
+  if (extra.semanas >= 4) {
+    salida.push({
+      clave: 'permanencia',
+      titulo: `${extra.semanas} semanas distintas`,
+      texto: 'Ya no es un arranque. Es algo que haces.',
+      tono: 'bien',
+    });
+  }
+
+  return salida;
+}
+
 // El contexto extra que se le manda a la IA para armar el plan.
 // Convierte el análisis en instrucciones concretas, no en datos crudos:
 // un modelo obedece mejor una orden que una tabla.
