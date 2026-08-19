@@ -9,9 +9,12 @@
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#131A2E",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.danielpaez.brio"
     },
     "android": {
+      "package": "com.danielpaez.brio",
+      "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "backgroundColor": "#131A2E",
         "foregroundImage": "./assets/android-icon-foreground.png",

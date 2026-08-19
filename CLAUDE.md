@@ -413,6 +413,35 @@ Crear la Function App en plan de consumo (Node.js). Function `plan` (HTTP): reci
 ### Fase 6: notificaciones, cierre y despliegue
 Expo Push: pedir permiso en el paso 8 del onboarding y guardar el token en `profiles`. Function `recordatorios` (Timer Trigger cada hora): busca los usuarios cuya hora coincide y envía el push con voz de Brío, máximo dos al día. Function `plan-semanal` (Timer Trigger semanal): recalcula el plan según el cumplimiento. Pantalla Perfil funcional. Publicar la landing en Azure Static Web Apps. Pulir celebración y estados vacíos.
 
+## Compilar el APK
+
+Expo Go sirve para desarrollar, pero no para enseñar la app: necesita el PC
+encendido y el cable. Con un APK la app queda instalada como cualquier otra.
+
+Perfiles en `eas.json`:
+
+- **vista**: APK suelto, para instalar y compartir. Es el que se usa para mostrarla.
+- **desarrollo**: APK con cliente de desarrollo. Recarga en caliente Y push real.
+- **produccion**: `.aab` para la Play Store.
+
+```
+npx eas login
+npx eas build -p android --profile vista
+```
+
+Capa gratuita: 15 compilaciones de Android al mes, sin tarjeta.
+
+**Sobre las llaves de `eas.json`**: las tres `EXPO_PUBLIC_*` van ahí porque el
+build en la nube no recibe el `.env` (está en `.gitignore`). Son públicas por
+diseño: viajan dentro de cualquier APK y la protección real es RLS en Supabase
+y el token de sesión en las Functions. La `service role` y la de Gemini NUNCA
+van aquí: viven en Application Settings de Azure y no salen de ahí.
+
+Lo que solo funciona con APK y no en Expo Go:
+- El ícono de la app. En Expo Go siempre se ve el de Expo Go.
+- Los recordatorios push (entregable 1.3.1 de la EDT).
+- Un futuro módulo nativo para exportar la película en video.
+
 ## Qué NO hacer
 
 - No usar servicios de Azure que consuman créditos para el núcleo de la app.
