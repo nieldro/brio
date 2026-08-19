@@ -4,6 +4,8 @@
 // Y a veces rompe una regla del producto. Aquí se atrapan las dos cosas antes
 // de que un plan malo llegue al usuario.
 
+import { MINIMO_EJERCICIOS, MAXIMO_EJERCICIOS, BLOQUES, IMPACTO } from './rutina.js';
+
 export const DIAS = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
 export const TIPOS = ['entrenamiento', 'descanso', 'suave'];
 
@@ -38,7 +40,7 @@ export function extraerJson(texto) {
   }
 }
 
-export function validarPlan(plan, { tiempoMax }) {
+export function validarPlan(plan, { tiempoMax, impacto = 'normal' }) {
   const errores = [];
 
   if (!plan || typeof plan !== 'object') {
@@ -78,10 +80,50 @@ export function validarPlan(plan, { tiempoMax }) {
       errores.push(`${donde}: ${duracion} min supera los ${tiempoMax} min del usuario`);
     }
 
+    // Una rutina no es un ejercicio suelto.
+    //
+    // Esta comprobación existe porque el ejemplo del prompt traía uno solo y
+    // el modelo copiaba el ejemplo: "tu rutina de hoy" salía siendo una línea.
+    // Pedirlo en el prompt no bastaba; aquí no pasa.
     if (!Array.isArray(dia?.ejercicios)) {
       errores.push(`${donde}: ejercicios debe ser una lista`);
-    } else if (dia.tipo !== 'descanso' && dia.ejercicios.length === 0) {
-      errores.push(`${donde}: un día que no es descanso necesita ejercicios`);
+    } else {
+      const minimo = MINIMO_EJERCICIOS[dia?.tipo] ?? 0;
+
+      if (dia.ejercicios.length < minimo) {
+        errores.push(
+          `${donde}: un día ${dia.tipo} necesita al menos ${minimo} ejercicios y trae ${dia.ejercicios.length}`,
+        );
+      }
+      if (dia.ejercicios.length > MAXIMO_EJERCICIOS) {
+        errores.push(`${donde}: ${dia.ejercicios.length} ejercicios no caben en un día`);
+      }
+
+      dia.ejercicios.forEach((e, n) => {
+        if (!e?.nombre?.trim?.()) errores.push(`${donde}: al ejercicio ${n + 1} le falta nombre`);
+        if (!e?.detalle?.trim?.()) errores.push(`${donde}: a "${e?.nombre}" le falta el detalle`);
+        if (e?.bloque != null && !BLOQUES.includes(e.bloque)) {
+          errores.push(`${donde}: bloque inválido en "${e?.nombre}"`);
+        }
+      });
+    }
+
+    // Impacto bajo es una regla de seguridad, no una preferencia: mandar a
+    // saltar a quien no debe saltar es una lesión, y el modelo se olvida.
+    if (impacto === 'bajo') {
+      const textos = [
+        dia?.reto,
+        ...(Array.isArray(dia?.ejercicios) ? dia.ejercicios : []).flatMap((e) => [
+          e?.nombre,
+          e?.detalle,
+        ]),
+      ].filter((t) => typeof t === 'string');
+
+      for (const t of textos) {
+        if (IMPACTO.test(t)) {
+          errores.push(`${donde}: "${t}" tiene impacto y esta persona entrena sin impacto`);
+        }
+      }
     }
 
     if (typeof dia?.comida_tip === 'string' && MEDIDAS.test(dia.comida_tip)) {
@@ -108,13 +150,33 @@ export function validarPlan(plan, { tiempoMax }) {
 
 // El formato de salida del documento no incluye el color del semáforo,
 // pero la pantalla Hoy lo pinta. Se asume verde salvo que el modelo lo mande.
+//
+// El bloque tampoco es obligatorio: si el modelo no lo manda se deduce del
+// orden, en vez de rechazar un plan que por lo demás está bien. Rechazar sale
+// caro (un reintento entero) y aquí no hay nada que adivinar mal.
 function normalizar(plan) {
   return {
     ...plan,
     dias: plan.dias.map((d) => ({
       ...d,
-      ejercicios: d.ejercicios ?? [],
+      // Un día de descanso con ejercicios se contradice con lo que dice la
+      // pantalla. Se le quitan en vez de tumbar el plan por eso.
+      ejercicios: d.tipo === 'descanso' ? [] : conBloques(d.ejercicios ?? []),
       comida_color: ['verde', 'ambar', 'rojo'].includes(d.comida_color) ? d.comida_color : 'verde',
     })),
   };
 }
+
+function conBloques(ejercicios) {
+  return ejercicios.map((e, i) => ({
+    ...e,
+    bloque: BLOQUES.includes(e?.bloque) ? e.bloque : deducirBloque(i, ejercicios.length),
+  }));
+}
+
+const deducirBloque = (i, total) => {
+  if (total < 3) return 'principal';
+  if (i === 0) return 'calentamiento';
+  if (i === total - 1) return 'cierre';
+  return 'principal';
+};

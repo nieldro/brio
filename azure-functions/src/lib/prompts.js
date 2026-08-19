@@ -1,3 +1,5 @@
+import { instruccionesDeRutina } from './rutina.js';
+
 // Los dos prompts del documento del producto, palabra por palabra.
 // Si hay que cambiar el tono de Brío, se cambia aquí y en ningún otro lado.
 
@@ -114,6 +116,15 @@ Si en la foto no hay comida, responde exactamente {"plato": null}.`;
 }
 
 export function promptPlan(d) {
+  // Cómo se arma cada día y qué puede hacer esta persona. Sale de reglas
+  // (lib/rutina.js), no del criterio del modelo, y va DESPUÉS del ejemplo:
+  // lo último que lee es lo que más pesa.
+  const rutina = instruccionesDeRutina({
+    objetivo: d.objetivo,
+    tiempo: d.tiempo,
+    impacto: d.impacto,
+  });
+
   // Las órdenes salen del motor de adaptación de la app, que analiza el
   // historial con reglas. Van al FINAL y como instrucciones directas: un
   // modelo obedece mejor una orden concreta que una tabla de datos.
@@ -177,13 +188,16 @@ No supongas el género de la persona. Usa formas neutras:
       "dia": "lunes",
       "tipo": "entrenamiento",
       "reto": "Primer paso",
-      "duracion_min": 10,
+      "duracion_min": 12,
       "ejercicios": [
-        {"nombre": "Caminata", "detalle": "10 minutos a paso cómodo"}
+        {"bloque": "calentamiento", "nombre": "Movilidad articular", "detalle": "2 minutos de cuello, hombros y cadera"},
+        {"bloque": "principal", "nombre": "Caminata", "detalle": "6 minutos a paso cómodo"},
+        {"bloque": "principal", "nombre": "Sentadilla a la silla", "detalle": "2 series de 8, sin apuro"},
+        {"bloque": "cierre", "nombre": "Estiramiento", "detalle": "2 minutos de piernas y espalda"}
       ],
       "comida_tip": "Agrega un vaso de agua al despertar",
       "mensaje": "Hoy solo arrancamos. Con eso basta."
     }
   ]
-}${ajustes}`;
+}${rutina}${ajustes}`;
 }

@@ -1,7 +1,16 @@
-// Datos quemados de la fase 1.
-// El objeto `planDemo` respeta EXACTAMENTE el formato que devolverá la Edge
-// Function `plan` en la fase 5. Cuando llegue la IA solo cambia el origen del
-// dato, no las pantallas que lo consumen.
+// El plan de arranque.
+//
+// Se usa mientras la IA no ha entregado el primero, y cuando falla. Respeta
+// EXACTAMENTE el formato que devuelve la Azure Function `plan`, bloques
+// incluidos: si cambia el origen del dato, no cambia ninguna pantalla.
+//
+// Dos reglas que este plan cumple y que el validador del servidor exige:
+//   - Un día de entrenamiento lleva de 3 a 5 ejercicios, no uno.
+//   - Semana 1 arranca fácil y sin impacto: cero saltos, cero carrera.
+//     Es el plan que ve alguien de quien todavía no sabemos nada.
+//
+// Todos los nombres tienen guía escrita a mano en data/guias.js. Si agregas
+// uno nuevo, agrégale la guía o la persona verá el consejo genérico.
 
 export const planDemo = {
   semana: 1,
@@ -12,8 +21,13 @@ export const planDemo = {
       dia: 'lunes',
       tipo: 'entrenamiento',
       reto: 'Primer paso',
-      duracion_min: 10,
-      ejercicios: [{ nombre: 'Caminata', detalle: '10 minutos a paso cómodo' }],
+      duracion_min: 12,
+      ejercicios: [
+        { bloque: 'calentamiento', nombre: 'Movilidad articular', detalle: '2 minutos de cuello, hombros y cadera' },
+        { bloque: 'principal', nombre: 'Caminata', detalle: '6 minutos a paso cómodo' },
+        { bloque: 'principal', nombre: 'Sentadilla a la silla', detalle: '2 series de 8, sin apuro' },
+        { bloque: 'cierre', nombre: 'Estiramiento', detalle: '2 minutos de piernas y espalda' },
+      ],
       comida_tip: 'Agrega un vaso de agua al despertar',
       comida_color: 'verde',
       mensaje: 'Hoy solo arrancamos. Con eso basta.',
@@ -23,7 +37,10 @@ export const planDemo = {
       tipo: 'suave',
       reto: 'Soltar el cuerpo',
       duracion_min: 8,
-      ejercicios: [{ nombre: 'Estiramiento', detalle: '8 minutos de cuello, espalda y piernas' }],
+      ejercicios: [
+        { bloque: 'principal', nombre: 'Respiración', detalle: '3 minutos, sentado y sin apuro' },
+        { bloque: 'cierre', nombre: 'Estiramiento', detalle: '5 minutos de cuello, espalda y piernas' },
+      ],
       comida_tip: 'Suma una fruta a tu desayuno',
       comida_color: 'verde',
       mensaje: 'Poco y suave también cuenta.',
@@ -32,14 +49,17 @@ export const planDemo = {
       dia: 'miércoles',
       tipo: 'entrenamiento',
       reto: 'Fuerza tranquila',
-      duracion_min: 12,
+      duracion_min: 14,
       ejercicios: [
-        { nombre: 'Sentadilla a la silla', detalle: '2 series de 8, sin apuro' },
-        { nombre: 'Plancha apoyada', detalle: '2 series de 15 segundos' },
+        { bloque: 'calentamiento', nombre: 'Movilidad articular', detalle: '2 minutos, empezando por los hombros' },
+        { bloque: 'principal', nombre: 'Sentadilla a la silla', detalle: '2 series de 8' },
+        { bloque: 'principal', nombre: 'Flexiones en la pared', detalle: '2 series de 8' },
+        { bloque: 'principal', nombre: 'Puente de glúteos', detalle: '2 series de 10' },
+        { bloque: 'cierre', nombre: 'Estiramiento', detalle: '3 minutos, sin prisa' },
       ],
       comida_tip: 'Que la mitad del plato del almuerzo sea verdura',
       comida_color: 'verde',
-      mensaje: 'Doce minutos y listo. Tú puedes con eso.',
+      mensaje: 'Catorce minutos y listo. Tú puedes con eso.',
     },
     {
       dia: 'jueves',
@@ -57,10 +77,13 @@ export const planDemo = {
       reto: 'Cierre de semana',
       duracion_min: 15,
       ejercicios: [
-        { nombre: 'Caminata rápida', detalle: '10 minutos' },
-        { nombre: 'Subir escaleras', detalle: '5 minutos a tu ritmo' },
+        { bloque: 'calentamiento', nombre: 'Pasos laterales', detalle: '2 minutos, de lado a lado' },
+        { bloque: 'principal', nombre: 'Caminata', detalle: '6 minutos a paso vivo' },
+        { bloque: 'principal', nombre: 'Subir escaleras', detalle: '4 minutos a tu ritmo' },
+        { bloque: 'principal', nombre: 'Elevación de talones', detalle: '2 series de 12' },
+        { bloque: 'cierre', nombre: 'Estiramiento', detalle: '2 minutos de pantorrillas' },
       ],
-      comida_tip: 'Agrega proteína al desayuno: huevo, yogur o queso',
+      comida_tip: 'Agrega huevo o yogur a tu desayuno',
       comida_color: 'verde',
       mensaje: 'Último empujón de la semana. Corto y bueno.',
     },
@@ -69,7 +92,11 @@ export const planDemo = {
       tipo: 'suave',
       reto: 'Movimiento que te guste',
       duracion_min: 20,
-      ejercicios: [{ nombre: 'Lo que disfrutes', detalle: 'Bailar, caminar o pasear. 20 minutos' }],
+      ejercicios: [
+        { bloque: 'principal', nombre: 'Bailar', detalle: '10 minutos con la música que quieras' },
+        { bloque: 'principal', nombre: 'Caminata', detalle: '8 minutos, donde te guste caminar' },
+        { bloque: 'cierre', nombre: 'Estiramiento', detalle: '2 minutos de lo que sientas cargado' },
+      ],
       comida_tip: 'Come sentado y sin afán una vez hoy',
       comida_color: 'ambar',
       mensaje: 'Hoy el ejercicio lo eliges tú.',

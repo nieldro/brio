@@ -15,7 +15,7 @@ import { useAlbum } from '../state/useAlbum';
 
 import { planDemo } from '../data/planDemo';
 import { fechaLarga, franjaDelDia, claveDia } from '../services/fecha';
-import { diaDelPlan, resumenReto, esDescanso, versionMinima } from '../services/plan';
+import { diaDelPlan, resumenReto, esDescanso, versionMinima, asomoDeEjercicios } from '../services/plan';
 import { textoHecho, fraseDelDia, subCelebracion } from '../services/racha';
 import { hoySeriaRegreso, celebrarRegreso, contarRegresos, diasSinVolver } from '../services/regresos';
 import { textoDelAlbum } from '../services/album';
@@ -109,6 +109,15 @@ const crear = ({ C, T, R, S }) => ({
   comoSeHace: {
     ...T.secundario,
     fontSize: 13,
+    color: C.coralTexto,
+    fontWeight: '700',
+  },
+  masEjercicios: {
+    paddingVertical: S.sm,
+    alignItems: 'center',
+  },
+  masEjerciciosTexto: {
+    ...T.secundario,
     color: C.coralTexto,
     fontWeight: '700',
   },
@@ -217,6 +226,9 @@ export default function Hoy({ navigation }) {
 
   const { estado: album } = useAlbum();
 
+  // En Hoy caben tres. El resto vive en la rutina, a un toque.
+  const asomo = useMemo(() => asomoDeEjercicios(dia), [dia]);
+
   // Diario se abre ENCIMA de Hoy sin desmontarla. Si el usuario escribe allá,
   // este campo tiene que enterarse: antes seguía vacío y, al perder el foco,
   // guardaba ese vacío y borraba el logro del teléfono y de la nube.
@@ -292,9 +304,9 @@ export default function Hoy({ navigation }) {
         <Text style={est.reto}>{dia.reto}</Text>
         <Text style={est.resumen}>{resumenReto(dia, perfil.lugar)}</Text>
 
-        {dia.ejercicios.length > 0 && (
+        {asomo.visibles.length > 0 && (
           <View style={est.ejercicios}>
-            {dia.ejercicios.map((e) => (
+            {asomo.visibles.map((e) => (
               // Tocable: quien nunca entrenó no sabe qué es "flexiones en la
               // pared". Saber cómo se hace es la diferencia entre intentarlo
               // y cerrar la app.
@@ -312,6 +324,20 @@ export default function Hoy({ navigation }) {
                 <Text style={T.secundario}>{e.detalle}</Text>
               </Pressable>
             ))}
+
+            {asomo.restantes > 0 && (
+              <Pressable
+                onPress={() => navigation.navigate('Rutina', { dia, lugar: perfil.lugar })}
+                accessibilityRole="button"
+                style={est.masEjercicios}
+              >
+                <Text style={est.masEjerciciosTexto}>
+                  {asomo.restantes === 1
+                    ? 'y uno más en tu rutina'
+                    : `y ${asomo.restantes} más en tu rutina`}
+                </Text>
+              </Pressable>
+            )}
           </View>
         )}
 

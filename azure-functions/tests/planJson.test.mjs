@@ -5,6 +5,16 @@ import { extraerJson, validarPlan } from '../src/lib/planJson.js';
 
 const DIAS = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
 
+// Una rutina de verdad, con sus tres bloques. Este ejemplo tenía UN ejercicio
+// por día y por eso las pruebas dejaban pasar planes de una sola línea, que
+// era justo el problema real que se veía en la app.
+const RUTINA = [
+  { bloque: 'calentamiento', nombre: 'Movilidad articular', detalle: '2 minutos' },
+  { bloque: 'principal', nombre: 'Caminata', detalle: '6 minutos a paso cómodo' },
+  { bloque: 'principal', nombre: 'Sentadilla a la silla', detalle: '2 series de 8' },
+  { bloque: 'cierre', nombre: 'Estiramiento', detalle: '2 minutos' },
+];
+
 // Plan mínimo válido: 5 de entrenamiento y 2 de descanso.
 function planBueno(cambios = {}) {
   return {
@@ -16,7 +26,7 @@ function planBueno(cambios = {}) {
       tipo: i >= 5 ? 'descanso' : 'entrenamiento',
       reto: `Reto de ${dia}`,
       duracion_min: i >= 5 ? 0 : 10,
-      ejercicios: i >= 5 ? [] : [{ nombre: 'Caminata', detalle: '10 minutos a paso cómodo' }],
+      ejercicios: i >= 5 ? [] : RUTINA.map((e) => ({ ...e })),
       comida_tip: 'Agrega un vaso de agua al despertar',
       mensaje: 'Hoy solo arrancamos. Con eso basta.',
     })),
@@ -66,7 +76,7 @@ test('rechaza menos de dos días de descanso o suaves', () => {
   duro.dias.forEach((d) => {
     d.tipo = 'entrenamiento';
     d.duracion_min = 10;
-    d.ejercicios = [{ nombre: 'x', detalle: 'y' }];
+    d.ejercicios = RUTINA.map((e) => ({ ...e }));
   });
   const r = validarPlan(duro, { tiempoMax: 20 });
   assert.equal(r.ok, false);
@@ -113,12 +123,117 @@ test('rechaza tipos y días inválidos o repetidos', () => {
   assert.ok(r.errores.some((e) => /repetido/.test(e)));
 });
 
+// --- La rutina no es un ejercicio suelto ----------------------------------
+
 test('exige ejercicios en los días que no son descanso', () => {
   const vacio = planBueno();
   vacio.dias[0].ejercicios = [];
   const r = validarPlan(vacio, { tiempoMax: 20 });
   assert.equal(r.ok, false);
-  assert.ok(r.errores.some((e) => /necesita ejercicios/.test(e)));
+  assert.ok(r.errores.some((e) => /al menos 3 ejercicios/.test(e)), r.errores.join('; '));
+});
+
+test('un día de entrenamiento con un solo ejercicio no es una rutina', () => {
+  // Este es el fallo que se veía en la app: el ejemplo del prompt traía un
+  // ejercicio, el modelo copiaba el ejemplo, y "tu rutina de hoy" era una línea.
+  const flaco = planBueno();
+  flaco.dias[0].ejercicios = [{ nombre: 'Caminata', detalle: '10 minutos' }];
+  const r = validarPlan(flaco, { tiempoMax: 20 });
+
+  assert.equal(r.ok, false);
+  assert.ok(r.errores.some((e) => /necesita al menos 3 ejercicios y trae 1/.test(e)));
+});
+
+test('un día suave se conforma con dos, pero no con uno', () => {
+  const uno = planBueno();
+  uno.dias[0].tipo = 'suave';
+  uno.dias[0].ejercicios = [{ nombre: 'Estiramiento', detalle: '5 minutos' }];
+  assert.equal(validarPlan(uno, { tiempoMax: 20 }).ok, false);
+
+  const dos = planBueno();
+  dos.dias[0].tipo = 'suave';
+  dos.dias[0].ejercicios = [
+    { nombre: 'Respiración', detalle: '3 minutos' },
+    { nombre: 'Estiramiento', detalle: '5 minutos' },
+  ];
+  assert.equal(validarPlan(dos, { tiempoMax: 20 }).ok, true);
+});
+
+test('rechaza un día con más ejercicios de los que caben', () => {
+  const lleno = planBueno();
+  lleno.dias[0].ejercicios = Array.from({ length: 9 }, (_, i) => ({
+    nombre: `Ejercicio ${i}`,
+    detalle: '1 minuto',
+  }));
+  const r = validarPlan(lleno, { tiempoMax: 20 });
+  assert.equal(r.ok, false);
+  assert.ok(r.errores.some((e) => /no caben en un día/.test(e)));
+});
+
+test('cada ejercicio necesita nombre y detalle', () => {
+  const sinDetalle = planBueno();
+  sinDetalle.dias[0].ejercicios[1] = { nombre: 'Caminata' };
+  assert.equal(validarPlan(sinDetalle, { tiempoMax: 20 }).ok, false);
+
+  const sinNombre = planBueno();
+  sinNombre.dias[0].ejercicios[1] = { detalle: '6 minutos' };
+  assert.equal(validarPlan(sinNombre, { tiempoMax: 20 }).ok, false);
+});
+
+test('rechaza un bloque inventado', () => {
+  const raro = planBueno();
+  raro.dias[0].ejercicios[0].bloque = 'explosivo';
+  const r = validarPlan(raro, { tiempoMax: 20 });
+  assert.equal(r.ok, false);
+  assert.ok(r.errores.some((e) => /bloque inválido/.test(e)));
+});
+
+// --- Impacto bajo: es seguridad, no preferencia ---------------------------
+
+test('con impacto bajo no pasa ningún salto ni carrera', () => {
+  for (const nombre of [
+    'Saltos de tijera',
+    'Burpees',
+    'Correr en el sitio',
+    'Trote suave',
+    'Sprints cortos',
+    'Salto a la cuerda',
+  ]) {
+    const malo = planBueno();
+    malo.dias[0].ejercicios[1] = { bloque: 'principal', nombre, detalle: '3 series de 10' };
+    const r = validarPlan(malo, { tiempoMax: 20, impacto: 'bajo' });
+
+    assert.equal(r.ok, false, `debió rechazar: ${nombre}`);
+    assert.ok(r.errores.some((e) => /sin impacto/.test(e)), r.errores.join('; '));
+  }
+});
+
+test('el impacto también se busca en el detalle y en el reto', () => {
+  const enDetalle = planBueno();
+  enDetalle.dias[0].ejercicios[1].detalle = 'Camina y cada minuto haz 10 saltos';
+  assert.equal(validarPlan(enDetalle, { tiempoMax: 20, impacto: 'bajo' }).ok, false);
+
+  const enReto = planBueno();
+  enReto.dias[0].reto = 'Día de saltos';
+  assert.equal(validarPlan(enReto, { tiempoMax: 20, impacto: 'bajo' }).ok, false);
+});
+
+test('sin restricción de impacto, saltar está permitido', () => {
+  const conSaltos = planBueno();
+  conSaltos.dias[0].ejercicios[1] = {
+    bloque: 'principal',
+    nombre: 'Saltos de tijera',
+    detalle: '2 series de 15',
+  };
+  assert.equal(validarPlan(conSaltos, { tiempoMax: 20 }).ok, true);
+});
+
+test('una palabra que solo se parece a un salto no se confunde', () => {
+  // "resalta" y "sobresalto" llevan las mismas letras; el límite de palabra
+  // es lo que evita rechazar un plan bueno por parecido.
+  const bueno = planBueno();
+  bueno.dias[0].ejercicios[1].detalle = 'Camina donde resalta el desnivel';
+  assert.equal(validarPlan(bueno, { tiempoMax: 20, impacto: 'bajo' }).ok, true);
 });
 
 test('normaliza el color del semáforo que el formato no incluye', () => {
@@ -131,6 +246,33 @@ test('normaliza el color del semáforo que el formato no incluye', () => {
   const r2 = validarPlan(conColor, { tiempoMax: 20 });
   assert.equal(r2.plan.dias[0].comida_color, 'ambar');
   assert.equal(r2.plan.dias[1].comida_color, 'verde', 'un color inventado cae a verde');
+});
+
+test('deduce el bloque cuando el modelo no lo manda', () => {
+  // Un plan guardado antes de que existieran los bloques se tiene que seguir
+  // viendo bien. Rechazarlo costaría un reintento entero por nada.
+  const sinBloques = planBueno();
+  sinBloques.dias[0].ejercicios = [
+    { nombre: 'Movilidad', detalle: '2 minutos' },
+    { nombre: 'Caminata', detalle: '6 minutos' },
+    { nombre: 'Estiramiento', detalle: '2 minutos' },
+  ];
+
+  const r = validarPlan(sinBloques, { tiempoMax: 20 });
+  assert.equal(r.ok, true, r.errores.join('; '));
+  assert.deepEqual(
+    r.plan.dias[0].ejercicios.map((e) => e.bloque),
+    ['calentamiento', 'principal', 'cierre'],
+  );
+});
+
+test('un día de descanso sale sin ejercicios aunque el modelo le ponga', () => {
+  const contradictorio = planBueno();
+  contradictorio.dias[5].ejercicios = [{ nombre: 'Caminata', detalle: '10 minutos' }];
+
+  const r = validarPlan(contradictorio, { tiempoMax: 20 });
+  assert.equal(r.ok, true, r.errores.join('; '));
+  assert.deepEqual(r.plan.dias[5].ejercicios, []);
 });
 
 test('no revienta con basura', () => {

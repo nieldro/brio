@@ -289,6 +289,9 @@ Sin comillas de markdown.
 
 ## Reglas del plan
 - 7 días. Mínimo 2 de descanso o suaves.
+- Un día de entrenamiento lleva de 3 a 5 ejercicios, NUNCA uno solo.
+  Van en tres bloques y en este orden: calentamiento (1), principal (2 o 3),
+  cierre (1). Un día suave lleva 2 o 3. Un descanso lleva la lista vacía.
 - Duración diaria nunca mayor a {tiempo} minutos.
 - Semana 1 arranca fácil. Casi imposible fallar.
 - Casa: sin equipos. Gym: máquinas y pesas.
@@ -309,6 +312,10 @@ Sin comillas de markdown.
 ## Reglas de seguridad
 - Nada de ejercicios de riesgo sin supervisión.
 - Mayor de 55 años o peso muy alto: solo bajo impacto.
+  "Peso muy alto" lo decide `azure-functions/src/lib/rutina.js` con el IMC.
+  Ese número se calcula en el servidor, decide si el plan puede llevar saltos
+  y NO sale de ahí: no se guarda, no se muestra y no entra en ningún mensaje.
+  Es seguridad para las rodillas, no una opinión sobre el cuerpo de nadie.
 - Nunca prometas kilos ni fechas de resultado.
 
 ## Voz de los mensajes
@@ -327,9 +334,12 @@ No supongas el género de la persona. Usa formas neutras:
       "dia": "lunes",
       "tipo": "entrenamiento",
       "reto": "Primer paso",
-      "duracion_min": 10,
+      "duracion_min": 12,
       "ejercicios": [
-        {"nombre": "Caminata", "detalle": "10 minutos a paso cómodo"}
+        {"bloque": "calentamiento", "nombre": "Movilidad articular", "detalle": "2 minutos de cuello, hombros y cadera"},
+        {"bloque": "principal", "nombre": "Caminata", "detalle": "6 minutos a paso cómodo"},
+        {"bloque": "principal", "nombre": "Sentadilla a la silla", "detalle": "2 series de 8, sin apuro"},
+        {"bloque": "cierre", "nombre": "Estiramiento", "detalle": "2 minutos de piernas y espalda"}
       ],
       "comida_tip": "Agrega un vaso de agua al despertar",
       "mensaje": "Hoy solo arrancamos. Con eso basta."
@@ -338,7 +348,9 @@ No supongas el género de la persona. Usa formas neutras:
 }
 ```
 
-Valores de `tipo`: entrenamiento, descanso, suave. Temperatura 0.3. Validar el JSON con try catch y reintentar una vez si falla.
+Valores de `tipo`: entrenamiento, descanso, suave. Valores de `bloque`: calentamiento, principal, cierre. Temperatura 0.3. Validar el JSON con try catch y reintentar una vez si falla.
+
+Al prompt se le pega, después del ejemplo, un bloque con el enfoque según el objetivo de la persona y con la prohibición de impacto si le toca. Sale de `rutina.js`, no del criterio del modelo. Y `planJson.js` lo comprueba después: **el prompt pide, el validador obliga.**
 
 ## Pantallas
 

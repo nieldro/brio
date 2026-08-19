@@ -6,7 +6,7 @@ import Pantalla from '../components/Pantalla';
 import Tarjeta from '../components/Tarjeta';
 import Etiqueta from '../components/Etiqueta';
 import { guiaDe } from '../services/guias';
-import { resumenReto } from '../services/plan';
+import { resumenReto, porBloques } from '../services/plan';
 
 const crear = ({ C, T, R, S }) => ({
   contenido: {
@@ -99,6 +99,12 @@ const crear = ({ C, T, R, S }) => ({
     textAlign: 'center',
     marginTop: S.md,
   },
+  tituloBloque: {
+    ...T.etiqueta,
+    color: C.gris,
+    marginTop: S.sm,
+    marginBottom: -S.sm,
+  },
 });
 
 // La rutina completa del día, en orden, con la guía de cada movimiento a un
@@ -109,9 +115,11 @@ export default function Rutina({ route }) {
   const est = useEstilos(crear);
   const dia = route?.params?.dia ?? {};
   const lugar = route?.params?.lugar;
-  const [abierto, setAbierto] = useState(0);
+  // Se abre el primero: quien entra aquí casi siempre va a empezar por ahí,
+  // y así ve de una que cada ejercicio trae su guía dentro.
+  const [abierto, setAbierto] = useState(1);
 
-  const ejercicios = dia.ejercicios ?? [];
+  const bloques = porBloques(dia);
 
   return (
     <Pantalla contentStyle={est.contenido}>
@@ -121,54 +129,60 @@ export default function Rutina({ route }) {
         <Text style={est.resumen}>{resumenReto(dia, lugar)}</Text>
       </View>
 
-      {ejercicios.map((e, i) => {
-        const g = guiaDe(e);
-        const estaAbierto = abierto === i;
+      {bloques.map((bloque) => (
+        <View key={bloque.clave} style={est.encabezado}>
+          <Text style={est.tituloBloque}>{bloque.titulo}</Text>
 
-        return (
-          <Tarjeta key={`${e.nombre}-${i}`}>
-            <Pressable
-              onPress={() => setAbierto(estaAbierto ? -1 : i)}
-              accessibilityRole="button"
-              accessibilityState={{ expanded: estaAbierto }}
-            >
-              <View style={est.fila}>
-                <View style={est.numero}>
-                  <Text style={est.numeroTexto}>{i + 1}</Text>
-                </View>
-                <Text style={est.nombre}>{e.nombre}</Text>
-                <Text style={est.flecha}>{estaAbierto ? '−' : '+'}</Text>
-              </View>
-              <Text style={est.detalle}>{e.detalle}</Text>
-            </Pressable>
+          {bloque.ejercicios.map((e) => {
+            const g = guiaDe(e);
+            const estaAbierto = abierto === e.n;
 
-            {estaAbierto && (
-              <View style={est.guia}>
-                <View style={est.bloque}>
-                  <Text style={est.subtitulo}>cómo se hace</Text>
-                  {g.como.map((paso, n) => (
-                    <View key={paso} style={est.paso}>
-                      <Text style={est.pasoNumero}>{n + 1}</Text>
-                      <Text style={est.texto}>{paso}</Text>
+            return (
+              <Tarjeta key={`${e.nombre}-${e.n}`}>
+                <Pressable
+                  onPress={() => setAbierto(estaAbierto ? -1 : e.n)}
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: estaAbierto }}
+                >
+                  <View style={est.fila}>
+                    <View style={est.numero}>
+                      <Text style={est.numeroTexto}>{e.n}</Text>
                     </View>
-                  ))}
-                </View>
+                    <Text style={est.nombre}>{e.nombre}</Text>
+                    <Text style={est.flecha}>{estaAbierto ? '−' : '+'}</Text>
+                  </View>
+                  <Text style={est.detalle}>{e.detalle}</Text>
+                </Pressable>
 
-                <View style={est.bloque}>
-                  <Text style={est.subtitulo}>en qué fijarte</Text>
-                  <Text style={est.cuidado}>{g.cuidado}</Text>
-                  {!!g.respira && <Text style={est.cuidado}>{g.respira}</Text>}
-                </View>
+                {estaAbierto && (
+                  <View style={est.guia}>
+                    <View style={est.bloque}>
+                      <Text style={est.subtitulo}>cómo se hace</Text>
+                      {g.como.map((paso, n) => (
+                        <View key={paso} style={est.paso}>
+                          <Text style={est.pasoNumero}>{n + 1}</Text>
+                          <Text style={est.texto}>{paso}</Text>
+                        </View>
+                      ))}
+                    </View>
 
-                <View style={est.bloque}>
-                  <Text style={est.subtitulo}>si hoy no puedes</Text>
-                  <Text style={est.facil}>{g.masFacil}</Text>
-                </View>
-              </View>
-            )}
-          </Tarjeta>
-        );
-      })}
+                    <View style={est.bloque}>
+                      <Text style={est.subtitulo}>en qué fijarte</Text>
+                      <Text style={est.cuidado}>{g.cuidado}</Text>
+                      {!!g.respira && <Text style={est.cuidado}>{g.respira}</Text>}
+                    </View>
+
+                    <View style={est.bloque}>
+                      <Text style={est.subtitulo}>si hoy no puedes</Text>
+                      <Text style={est.facil}>{g.masFacil}</Text>
+                    </View>
+                  </View>
+                )}
+              </Tarjeta>
+            );
+          })}
+        </View>
+      ))}
 
       <Text style={est.cierre}>{dia.mensaje}</Text>
 

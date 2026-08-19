@@ -23,6 +23,38 @@ export function esDescanso(dia) {
   return dia?.tipo === 'descanso';
 }
 
+// Los tres bloques de una rutina, con el nombre que ve el usuario.
+// El orden de esta lista ES el orden en que se entrena.
+export const BLOQUES = [
+  { clave: 'calentamiento', titulo: 'para entrar en calor' },
+  { clave: 'principal', titulo: 'el trabajo de hoy' },
+  { clave: 'cierre', titulo: 'para cerrar' },
+];
+
+// Agrupa los ejercicios del día en bloques, conservando el número que le
+// toca a cada uno en la rutina completa: quien va en el tercero quiere ver
+// un 3, no un 1 porque cambió de bloque.
+//
+// Los planes viejos y cualquier ejercicio sin bloque caen en 'principal',
+// así que un plan guardado antes de que existieran los bloques se sigue
+// viendo bien en vez de desaparecer.
+export function porBloques(dia) {
+  const conNumero = (dia?.ejercicios ?? []).map((e, i) => ({ ...e, n: i + 1 }));
+
+  return BLOQUES.map((b) => ({
+    ...b,
+    ejercicios: conNumero.filter((e) => (e.bloque ?? 'principal') === b.clave),
+  })).filter((b) => b.ejercicios.length > 0);
+}
+
+// Lo que se muestra en Hoy. La tarjeta del reto no puede crecer sin límite:
+// con cinco ejercicios dentro, el botón "Listo por hoy" queda fuera de la
+// pantalla, y ese botón es lo único que la persona tiene que alcanzar.
+export function asomoDeEjercicios(dia, cuantos = 3) {
+  const todos = dia?.ejercicios ?? [];
+  return { visibles: todos.slice(0, cuantos), restantes: Math.max(0, todos.length - cuantos) };
+}
+
 // La versión mínima del día, para el botón "hoy no puedo".
 //
 // Lo que hace abandonar a la gente no es la falta de ganas: es el todo o nada.
