@@ -131,6 +131,10 @@ const crear = ({ C, T, R, S }) => ({
     fontWeight: '700',
     marginTop: S.md,
   },
+  enlaceMovimientos: {
+    alignSelf: 'flex-start',
+    paddingVertical: S.xs,
+  },
   presionado: {
     opacity: 0.75,
   },
@@ -202,6 +206,16 @@ export default function Semana({ navigation }) {
               ? 'La semana está abierta.'
               : `${cuantosHechos} de 7 días marcados.`}
           </Text>
+
+          {/* No hay que esperar a que el plan te ponga un movimiento para
+              poder mirarlo. */}
+          <Pressable
+            onPress={() => navigation.navigate('Movimientos')}
+            accessibilityRole="button"
+            style={est.enlaceMovimientos}
+          >
+            <Text style={est.pie}>Ver todos los movimientos →</Text>
+          </Pressable>
         </View>
       </Aparece>
 

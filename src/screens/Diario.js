@@ -9,6 +9,14 @@ import Etiqueta from '../components/Etiqueta';
 import Chispa from '../components/Chispa';
 import { useUsuario } from '../state/UsuarioContext';
 import { claveDia, fechaLarga } from '../services/fecha';
+import { semanasEnteras } from '../services/recorrido';
+import { contarRegresos, contarRegresosLargos } from '../services/regresos';
+import {
+  pruebasDeLoQueHizo,
+  insigniasGanadas,
+  mensajeDeDiaDificil,
+  cierreDeDiaDificil,
+} from '../services/animo';
 
 function aFecha(clave) {
   const [a, m, d] = clave.split('-').map(Number);
@@ -66,13 +74,71 @@ const crear = ({ C, T, R, S }) => ({
     ...T.cuerpo,
     color: C.gris,
   },
+  prueba: {
+    borderColor: C.salvia,
+    paddingVertical: S.lg,
+  },
+  pruebaCifra: {
+    fontSize: 34,
+    fontWeight: '800',
+    color: C.salviaTexto,
+    lineHeight: 40,
+  },
+  pruebaTexto: {
+    ...T.cuerpo,
+    marginTop: 2,
+  },
+  insignia: {
+    ...T.subtitulo,
+    fontSize: 16,
+    marginTop: S.sm,
+  },
+  cierre: {
+    ...T.cuerpo,
+    color: C.gris,
+    textAlign: 'center',
+    marginTop: S.sm,
+  },
 });
 
 export default function Diario() {
   const est = useEstilos(crear);
   const { C } = useTema();
-  const { hoy, perfil, diario, guardarLogro } = useUsuario();
+  const {
+    hoy,
+    perfil,
+    diario,
+    guardarLogro,
+    plan,
+    diasCompletados,
+    habitosHechos,
+    mejorRacha,
+    rutinasCompletas,
+  } = useUsuario();
   const hoyClave = claveDia(hoy);
+
+  const datos = useMemo(
+    () => ({ diasCompletados, habitosHechos, diario, mejorRacha, rutinasCompletas }),
+    [diasCompletados, habitosHechos, diario, mejorRacha, rutinasCompletas],
+  );
+
+  const pruebas = useMemo(() => pruebasDeLoQueHizo(datos), [datos]);
+
+  const ganadas = useMemo(
+    () =>
+      insigniasGanadas({
+        dias: pruebas.find((p) => p.clave === 'dias')?.cifra ?? 0,
+        semanas: pruebas.find((p) => p.clave === 'semanas')?.cifra ?? 0,
+        semanasEnteras: semanasEnteras(diasCompletados),
+        rutinas: rutinasCompletas ?? 0,
+        habitos: pruebas.find((p) => p.clave === 'habitos')?.cifra ?? 0,
+        lineas: Object.values(diario).filter((t) => t?.trim?.()).length,
+        regresos: contarRegresos(diasCompletados),
+        regresosLargos: contarRegresosLargos(diasCompletados),
+        mejorRacha,
+      }),
+    [pruebas, diasCompletados, diario, mejorRacha, rutinasCompletas],
+  );
 
   const guardado = diario[hoyClave] ?? '';
   const [texto, setTexto] = useState(guardado);
@@ -111,24 +177,51 @@ export default function Diario() {
         <Text style={est.pie}>Nada es demasiado pequeño para escribirlo.</Text>
       </Tarjeta>
 
-      {pasados.length > 0 && (
-        <Boton
-          variante={diaDificil ? 'salvia' : 'suave'}
-          onPress={() => setDiaDificil((v) => !v)}
-        >
-          {diaDificil ? 'Ya estoy mejor' : 'Hoy es un día difícil'}
-        </Boton>
-      )}
+      {/* Siempre disponible, tenga o no diario escrito. Antes solo aparecía
+          con entradas guardadas, así que quien nunca escribe —la que no se
+          felicita, la que más lo necesita— abría su peor momento y no
+          recibía nada. */}
+      <Boton
+        variante={diaDificil ? 'salvia' : 'suave'}
+        onPress={() => setDiaDificil((v) => !v)}
+      >
+        {diaDificil ? 'Ya estoy mejor' : 'Hoy es un día difícil'}
+      </Boton>
 
       {diaDificil && (
-        <Tarjeta style={est.recordatorio}>
-          <View style={est.filaChispa}>
-            <Chispa size={20} />
-            <Text style={est.mensajeDificil}>
-              {perfil.nombre ? `${perfil.nombre}, mira` : 'Mira'} todo lo que ya hiciste.
-            </Text>
-          </View>
-        </Tarjeta>
+        <>
+          <Tarjeta style={est.recordatorio}>
+            <View style={est.filaChispa}>
+              <Chispa size={20} />
+              <Text style={est.mensajeDificil}>
+                {mensajeDeDiaDificil(perfil.nombre, pruebas.length)}
+              </Text>
+            </View>
+          </Tarjeta>
+
+          {/* La evidencia, venga de donde venga. Nada de esto es un consejo
+              ni un pendiente: en un día difícil, "podrías intentar" es una
+              piedra más. Solo lo que ya está hecho, en pasado. */}
+          {pruebas.map((p) => (
+            <Tarjeta key={p.clave} style={est.prueba}>
+              <Text style={est.pruebaCifra}>{p.cifra}</Text>
+              <Text style={est.pruebaTexto}>{p.texto}</Text>
+            </Tarjeta>
+          ))}
+
+          {ganadas.length > 0 && (
+            <Tarjeta style={est.destacado}>
+              <Etiqueta>y esto ya nadie te lo quita</Etiqueta>
+              {ganadas.map((i) => (
+                <Text key={i.clave} style={est.insignia}>
+                  {i.titulo}
+                </Text>
+              ))}
+            </Tarjeta>
+          )}
+
+          <Text style={est.cierre}>{cierreDeDiaDificil(!!plan)}</Text>
+        </>
       )}
 
       {pasados.map(([clave, valor]) => (
