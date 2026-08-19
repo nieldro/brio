@@ -53,6 +53,15 @@ export function reducer(estado, accion) {
     case 'HIDRATAR':
       return { ...estado, ...(accion.datos ?? {}), hidratado: true };
 
+    // Red de seguridad. Si leer disco y nube se queda colgado (señal mala, VPN,
+    // DNS caído), la app NO puede quedarse en la pantalla de carga para
+    // siempre: el usuario ve un fondo azul vacío y cree que se rompió.
+    //
+    // Arranca con lo que haya. Si los datos llegan después, HIDRATAR los mete
+    // encima y la pantalla se acomoda sola.
+    case 'ARRANCAR_IGUAL':
+      return estado.hidratado ? estado : { ...estado, hidratado: true };
+
     case 'TERMINAR_ONBOARDING':
       return {
         ...estado,

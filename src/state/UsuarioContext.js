@@ -14,6 +14,10 @@ import { estadoDeSesion, salir as salirDeLaCuenta } from '../lib/auth';
 
 const UsuarioContext = createContext(null);
 
+// Lo que se espera por disco y nube antes de arrancar igual. Ocho segundos es
+// mucho para una red buena y poco para quedarse mirando una pantalla vacía.
+const ESPERA_MAXIMA = 8000;
+
 export function UsuarioProvider({ children }) {
   const [estado, dispatch] = useReducer(reducer, estadoInicial);
 
@@ -32,14 +36,24 @@ export function UsuarioProvider({ children }) {
   // Leer una sola vez, al abrir.
   useEffect(() => {
     let vivo = true;
+
+    // Nada de esto puede dejar la app colgada en la carga. Una promesa que no
+    // resuelve no lanza y no entra al catch: se queda esperando para siempre,
+    // y lo que la persona ve es un fondo vacío que parece un error.
+    const reloj = setTimeout(() => {
+      if (vivo) dispatch({ tipo: 'ARRANCAR_IGUAL' });
+    }, ESPERA_MAXIMA);
+
     hidratar()
       .then(() => vaciar()) // lo que quedó pendiente de la última sesión
       .catch(() => {
         // Sin datos la app arranca igual, en modo local.
         if (vivo) dispatch({ tipo: 'HIDRATAR', datos: null });
       });
+
     return () => {
       vivo = false;
+      clearTimeout(reloj);
     };
   }, [hidratar]);
 

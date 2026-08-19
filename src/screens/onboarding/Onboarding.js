@@ -10,7 +10,6 @@ import { diaDelPlan } from '../../services/plan';
 import { zonaDelTelefono } from '../../services/fecha';
 
 import Latido from '../../components/Latido';
-import Marca from '../../components/Marca';
 import SelectorHora from '../../components/SelectorHora';
 import Marco from './Marco';
 import { PASOS, interpolar } from './pasos';
@@ -50,7 +49,15 @@ export default function Onboarding({ navigation }) {
     setIndice((i) => Math.min(i + 1, PASOS.length - 1));
   };
 
-  const retroceder = indice > 0 ? () => setIndice((i) => i - 1) : undefined;
+  // Desde el primer paso, atrás vuelve a la bienvenida. Sin esto, quien
+  // entraba al onboarding por error quedaba encerrado sin forma de llegar
+  // a "ya tengo cuenta".
+  const retroceder =
+    indice > 0
+      ? () => setIndice((i) => i - 1)
+      : navigation.canGoBack()
+        ? () => navigation.goBack()
+        : undefined;
 
   const porqueFinal =
     respuestas.porque === ListaOpciones.OTRO ? otro.trim() : respuestas.porque;
@@ -128,14 +135,11 @@ export default function Onboarding({ navigation }) {
   };
 
   switch (paso.tipo) {
+    // La marca no se repite aquí: la muestra Bienvenida, en la pantalla justo
+    // anterior, y sería el mismo logo dos veces seguidas.
     case 'mensaje':
       return (
-        <Marco
-          {...comun}
-          boton={paso.boton}
-          onBoton={() => avanzar(paso.alAvanzar)}
-          encabezado={paso.id === 'intro' ? <Marca size={38} conLema style={est.marca} /> : null}
-        >
+        <Marco {...comun} boton={paso.boton} onBoton={() => avanzar(paso.alAvanzar)}>
           {/* Solo en el primer paso, y como enlace discreto: quien ya usó Brío
               en otro teléfono no debería tener que rehacer el onboarding.
               Nunca es un muro, siempre está debajo del botón principal. */}
@@ -241,11 +245,6 @@ export default function Onboarding({ navigation }) {
 }
 
 const crear = ({ C, T, S }) => ({
-  marca: {
-    alignSelf: 'flex-start',
-    alignItems: 'flex-start',
-    marginBottom: S.xl,
-  },
   enlaceCuenta: {
     marginTop: S.xxl,
     alignSelf: 'flex-start',

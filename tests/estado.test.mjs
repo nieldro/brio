@@ -10,6 +10,41 @@ const JUEVES = new Date(2026, 7, 13);
 
 const aplicar = (estado, ...acciones) => acciones.reduce(reducer, estado);
 
+// --- La app nunca se queda colgada en la carga ---------------------------
+
+test('ARRANCAR_IGUAL destraba la pantalla de carga', () => {
+  // Sin esto, una red que acepta la conexión y luego no responde deja la
+  // promesa colgada para siempre: la persona ve un fondo vacío y cree que
+  // la app se rompió. No falla, no termina, no se puede usar.
+  const trabado = reducer(estadoInicial, { tipo: 'ARRANCAR_IGUAL' });
+  assert.equal(trabado.hidratado, true);
+});
+
+test('ARRANCAR_IGUAL no pisa lo que ya se habia cargado', () => {
+  const conDatos = reducer(estadoInicial, {
+    tipo: 'HIDRATAR',
+    datos: { onboardingListo: true, rachaActual: 7 },
+  });
+  const despues = reducer(conDatos, { tipo: 'ARRANCAR_IGUAL' });
+
+  assert.equal(despues, conDatos, 'si ya se hidrató, no cambia nada');
+  assert.equal(despues.rachaActual, 7);
+});
+
+test('los datos que llegan tarde se aplican encima', () => {
+  // El reloj arranca la app en modo local; si la nube contesta después, sus
+  // datos entran igual y la pantalla se acomoda sola.
+  const tarde = aplicar(
+    estadoInicial,
+    { tipo: 'ARRANCAR_IGUAL' },
+    { tipo: 'HIDRATAR', datos: { onboardingListo: true, rachaActual: 3 } },
+  );
+
+  assert.equal(tarde.hidratado, true);
+  assert.equal(tarde.onboardingListo, true);
+  assert.equal(tarde.rachaActual, 3);
+});
+
 const PERFIL = {
   nombre: 'Daniel',
   objetivo: 'Sentirme mejor',

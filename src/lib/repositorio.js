@@ -109,13 +109,24 @@ export async function leerMensajes(userId, cuantos = 30) {
   }
 }
 
+// La nube tiene un límite de paciencia. Sin esto, una red que acepta la
+// conexión y luego no responde (pasa con VPN y con wifi de portería) deja la
+// promesa colgada y la app entera esperando: nunca falla, nunca termina.
+const LIMITE_NUBE = 6000;
+
+const conLimite = (promesa, ms = LIMITE_NUBE) =>
+  Promise.race([
+    promesa,
+    new Promise((_, rechazar) => setTimeout(() => rechazar(new Error('la nube tardó')), ms)),
+  ]);
+
 export async function cargar() {
   const guardado = (await cargarEstado()) ?? {};
 
   if (!hayNube) return { ...guardado, userId: null, enNube: false };
 
   try {
-    const sesion = await sesionAnonima();
+    const sesion = await conLimite(sesionAnonima());
     if (!sesion) return { ...guardado, userId: null, enNube: false };
 
     const userId = sesion.user.id;
@@ -126,7 +137,9 @@ export async function cargar() {
     // que dejaba a la persona sin nada si la nube no respondía.
     const local = guardado.duenoId && guardado.duenoId !== userId ? {} : guardado;
 
-    const lectura = await leerNube(userId);
+    // Si esta se pasa de tiempo, el catch devuelve lo del disco con la
+    // sesión ya resuelta. Se pierde la lectura de la nube, no la sesión.
+    const lectura = await conLimite(leerNube(userId)).catch(() => ({ estado: 'fallo' }));
 
     // La consulta falló: se sigue con lo del disco. NO se asume que el
     // usuario no tiene perfil, porque eso lo mandaría a rehacer el onboarding.
