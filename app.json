@@ -20,7 +20,10 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -48,6 +51,11 @@
           "cameraPermission": "Brío usa la cámara para la foto de tu plato."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "9d23c3c3-5336-4885-a8dc-b8a6df4d08e1"
+      }
+    }
   }
 }
