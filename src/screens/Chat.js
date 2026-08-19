@@ -1,17 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TextInput,
-  Pressable,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, Text, ScrollView, TextInput, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useEstilos, useTema } from '../state/TemaContext';
 import { useUsuario } from '../state/UsuarioContext';
+import { useTeclado } from '../state/useTeclado';
 import { preguntarCoach, hayApi } from '../lib/api';
 import { leerMensajes } from '../lib/repositorio';
 import { mensajesDemo, CHIPS } from '../data/chatDemo';
@@ -26,6 +19,14 @@ const crear = ({ C, T, R, S, RELLENO }) => ({
   pantalla: {
     flex: 1,
     backgroundColor: C.crema,
+  },
+  visera: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: C.crema,
+    zIndex: 2,
   },
   hilo: {
     paddingHorizontal: S.xl,
@@ -130,6 +131,11 @@ export default function Chat() {
   const est = useEstilos(crear);
   const { C, S } = useTema();
   const { userId, enNube } = useUsuario();
+  const altoTeclado = useTeclado();
+
+  // Con el teclado abierto, la barra de pestañas se esconde sola (Tabs.js), así
+  // que el hueco de abajo pasa a ser el del teclado y no el de los gestos.
+  const espacioAbajo = altoTeclado > 0 ? altoTeclado : insets.bottom;
 
   const [mensajes, setMensajes] = useState(mensajesDemo);
   const [texto, setTexto] = useState('');
@@ -165,16 +171,26 @@ export default function Chat() {
     setEsperando(false);
   };
 
+  // Al abrirse el teclado, el hilo se va al final: si no, la última respuesta
+  // de Brío queda escondida detrás del teclado justo cuando se va a leer.
+  useEffect(() => {
+    if (altoTeclado > 0) {
+      const t = setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 60);
+      return () => clearTimeout(t);
+    }
+    return undefined;
+  }, [altoTeclado]);
+
   return (
-    <KeyboardAvoidingView
-      style={est.pantalla}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={est.pantalla}>
+      <View pointerEvents="none" style={[est.visera, { height: insets.top }]} />
+
       <ScrollView
         ref={scroll}
         contentContainerStyle={[est.hilo, { paddingTop: insets.top + S.xl }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: true })}
       >
         {mensajes.map((m) => (
@@ -193,7 +209,7 @@ export default function Chat() {
         )}
       </ScrollView>
 
-      <View style={[est.zonaBaja, { paddingBottom: S.md + insets.bottom / 2 }]}>
+      <View style={[est.zonaBaja, { paddingBottom: S.md + espacioAbajo }]}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -239,6 +255,6 @@ export default function Chat() {
           </Pressable>
         </View>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }

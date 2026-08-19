@@ -47,6 +47,25 @@ export function porBloques(dia) {
   })).filter((b) => b.ejercicios.length > 0);
 }
 
+// La clave de un ejercicio dentro del día. Sirve para marcarlo como hecho sin
+// depender de la posición: si el plan cambia, lo tachado no se corre de sitio.
+export const claveEjercicio = (dia, e, i) => `${dia?.dia ?? '?'}|${i}|${e?.nombre ?? ''}`;
+
+// Cuánto de la rutina va hecho. Se muestra como "2 de 4".
+export function avanceDeRutina(dia, hechos = {}) {
+  const total = dia?.ejercicios?.length ?? 0;
+  if (!total) return { hechos: 0, total: 0, fraccion: 0, completa: false };
+
+  const marcados = dia.ejercicios.filter((e, i) => hechos[claveEjercicio(dia, e, i)]).length;
+
+  return {
+    hechos: marcados,
+    total,
+    fraccion: marcados / total,
+    completa: marcados === total,
+  };
+}
+
 // Lo que se muestra en Hoy. La tarjeta del reto no puede crecer sin límite:
 // con cinco ejercicios dentro, el botón "Listo por hoy" queda fuera de la
 // pantalla, y ese botón es lo único que la persona tiene que alcanzar.

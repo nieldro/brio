@@ -1,4 +1,5 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { S } from '../theme';
 import { useTema } from '../state/TemaContext';
@@ -17,8 +18,11 @@ const PESTANAS = [
   { nombre: 'Progreso', componente: Progreso, Icono: IconoProgreso },
 ];
 
+const ALTO_BARRA = 62;
+
 export default function Tabs() {
   const { C } = useTema();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
@@ -26,11 +30,18 @@ export default function Tabs() {
         headerShown: false,
         tabBarActiveTintColor: C.coralTexto,
         tabBarInactiveTintColor: C.apagado,
+        // Con el teclado abierto la barra estorba: tapa el campo de escribir
+        // del chat justo cuando la persona está escribiendo.
+        tabBarHideOnKeyboard: true,
         tabBarStyle: {
           backgroundColor: C.blanco,
           borderTopColor: C.borde,
           borderTopWidth: 1,
-          height: 64 + S.xl,
+          // El alto se calcula con la barra de gestos del teléfono. Antes era
+          // un número fijo y en los teléfonos con gestos quedaba un hueco
+          // muerto debajo de las pestañas.
+          height: ALTO_BARRA + insets.bottom,
+          paddingBottom: insets.bottom,
           paddingTop: S.sm,
         },
         tabBarLabelStyle: {

@@ -8,6 +8,8 @@ import {
   porBloques,
   asomoDeEjercicios,
   versionMinima,
+  avanceDeRutina,
+  claveEjercicio,
 } from '../src/services/plan.js';
 import { interpolar } from '../src/services/texto.js';
 import { guiaDe } from '../src/services/guias.js';
@@ -165,6 +167,60 @@ test('con tres o menos no sobra ninguno', () => {
   assert.equal(asomoDeEjercicios(martes).restantes, 0);
   assert.deepEqual(asomoDeEjercicios({ ejercicios: [] }), { visibles: [], restantes: 0 });
   assert.deepEqual(asomoDeEjercicios(undefined), { visibles: [], restantes: 0 });
+});
+
+// --- La rutina como lista para tachar ------------------------------------
+
+const marcar = (dia, ...indices) =>
+  Object.fromEntries(indices.map((i) => [claveEjercicio(dia, dia.ejercicios[i], i), true]));
+
+test('cuenta cuántos ejercicios van tachados', () => {
+  const dia = planDemo.dias[2]; // cinco ejercicios
+  assert.deepEqual(avanceDeRutina(dia, {}), {
+    hechos: 0,
+    total: 5,
+    fraccion: 0,
+    completa: false,
+  });
+
+  const dos = avanceDeRutina(dia, marcar(dia, 0, 2));
+  assert.equal(dos.hechos, 2);
+  assert.equal(dos.completa, false);
+
+  const todos = avanceDeRutina(dia, marcar(dia, 0, 1, 2, 3, 4));
+  assert.equal(todos.completa, true);
+  assert.equal(todos.fraccion, 1);
+});
+
+test('la clave lleva el nombre, no solo la posición', () => {
+  // Si el plan cambia y los ejercicios se corren de sitio, lo tachado no se
+  // puede pasar al ejercicio equivocado.
+  const dia = planDemo.dias[0];
+  const clave = claveEjercicio(dia, dia.ejercicios[1], 1);
+
+  assert.ok(clave.includes(dia.ejercicios[1].nombre));
+  assert.notEqual(clave, claveEjercicio(dia, dia.ejercicios[2], 2));
+});
+
+test('un día de descanso no tiene nada que tachar', () => {
+  const descanso = planDemo.dias.find((d) => d.tipo === 'descanso');
+  assert.deepEqual(avanceDeRutina(descanso, {}), {
+    hechos: 0,
+    total: 0,
+    fraccion: 0,
+    completa: false,
+  });
+  assert.equal(avanceDeRutina(undefined, {}).total, 0);
+});
+
+test('lo tachado no decide si el día cuenta', () => {
+  // Regla del producto: el día se marca con su botón. Si tachar ejercicios
+  // decidiera si el día vale, dejar uno a medias se volvería una falta.
+  const dia = planDemo.dias[0];
+  const aMedias = avanceDeRutina(dia, marcar(dia, 0));
+
+  assert.equal(aMedias.completa, false);
+  assert.ok(aMedias.hechos > 0, 'y aun así se reconoce lo que sí hizo');
 });
 
 test('la versión mínima se queda con el primero, que es el más suave', () => {
