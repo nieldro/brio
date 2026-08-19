@@ -263,6 +263,66 @@ export const POSTURAS = {
     P(48, 18, 48, 32, 52, 62, 38, 42, 34, 28, 58, 44, 62, 58, 46, 86, 44, 110, 56, 86, 60, 110),
     P(56, 18, 56, 32, 48, 62, 64, 42, 70, 28, 44, 44, 40, 58, 44, 86, 42, 110, 58, 86, 62, 110),
   ],
+
+  // --- Lo que se puede hacer sin bajar al suelo ---------------------------
+  //
+  // A quien no le conviene tumbarse —sesenta años o más, o rodillas que ya
+  // avisan— el catálogo no le daba ni un ejercicio de centro. Estos son los
+  // que llenan ese hueco, y por eso ninguno toca el piso con las manos.
+
+  // Plancha en la mesa: el cuerpo en diagonal, apoyado en una encimera.
+  // La línea de hombros a talones se sostiene; no se sube ni se baja.
+  planchaInclinada: [
+    P(85, 26, 76, 36, 54, 60, 77, 50, 78, 64, 73, 50, 74, 64, 36, 82, 22, 106, 38, 86, 24, 110),
+    P(85, 24, 76, 34, 54, 56, 77, 48, 78, 64, 73, 48, 74, 64, 36, 80, 22, 104, 38, 84, 24, 108),
+  ],
+
+  // Giro de tronco sentado: los hombros van de un lado al otro y la cadera
+  // no se mueve. De frente, porque de perfil el giro no se ve.
+  //
+  // Va de lado a lado y NO de centro a lado: el centro es el paso intermedio
+  // del recorrido, no una de sus puntas. Puesto al revés, la figura salía del
+  // centro, iba a un lado y volvía dando un tirón.
+  giroTronco: [
+    P(48, 26, 48, 40, 50, 70, 34, 48, 42, 58, 60, 54, 52, 50, 42, 88, 40, 110, 58, 88, 60, 110),
+    P(50, 26, 50, 40, 50, 70, 36, 50, 46, 54, 64, 50, 54, 54, 42, 88, 40, 110, 58, 88, 60, 110),
+    P(52, 26, 52, 40, 50, 70, 40, 54, 48, 50, 66, 48, 58, 58, 42, 88, 40, 110, 58, 88, 60, 110),
+  ],
+
+  // Inclinación lateral: un brazo sube por encima y el tronco se dobla al
+  // lado contrario. De frente.
+  inclinacionLateral: [
+    P(50, 20, 50, 34, 50, 64, 38, 46, 36, 60, 62, 46, 64, 60, 46, 88, 44, 110, 54, 88, 56, 110),
+    P(60, 24, 56, 36, 48, 64, 54, 22, 52, 10, 64, 50, 66, 62, 46, 88, 44, 110, 54, 88, 56, 110),
+  ],
+
+  // Flexiones en la mesa: el escalón entre la pared y el suelo. Más tumbado
+  // que la pared, menos que el piso.
+  flexionMesa: [
+    P(85, 26, 76, 36, 54, 60, 77, 50, 78, 64, 73, 50, 74, 64, 36, 82, 22, 106, 38, 86, 24, 110),
+    P(83, 34, 74, 44, 53, 64, 82, 54, 78, 64, 78, 54, 74, 64, 35, 86, 21, 108, 37, 88, 23, 111),
+    P(81, 42, 72, 52, 52, 68, 86, 58, 78, 64, 82, 58, 74, 64, 34, 88, 20, 110, 36, 90, 22, 112),
+  ],
+
+  // Estiramiento de pecho en el marco de la puerta: los brazos se abren
+  // hacia atrás y el pecho se adelanta.
+  pechoPuerta: [
+    P(52, 18, 50, 32, 50, 62, 40, 40, 34, 30, 60, 40, 66, 30, 48, 86, 46, 110, 52, 86, 54, 110),
+    P(56, 18, 54, 32, 50, 62, 38, 38, 26, 34, 66, 38, 78, 34, 48, 86, 46, 110, 52, 86, 54, 110),
+  ],
+
+  // Estiramiento de muslo de pie: el talón va al glúteo y la mano lo
+  // sostiene. La otra mano se apoya en una pared.
+  cuadricepsDePie: [
+    P(52, 18, 50, 32, 50, 62, 40, 46, 32, 52, 56, 48, 60, 62, 48, 86, 46, 110, 52, 86, 54, 110),
+    P(52, 18, 50, 32, 50, 62, 40, 46, 32, 52, 58, 62, 60, 76, 50, 86, 58, 74, 52, 86, 54, 110),
+  ],
+
+  // Aflojar cuello y hombros: los hombros suben hacia las orejas y bajan.
+  cuelloHombros: [
+    P(50, 22, 50, 36, 50, 66, 38, 50, 36, 64, 62, 50, 64, 64, 46, 88, 44, 110, 54, 88, 56, 110),
+    P(50, 20, 50, 26, 50, 66, 38, 40, 36, 54, 62, 40, 64, 54, 46, 88, 44, 110, 54, 88, 56, 110),
+  ],
 };
 
 // El movimiento que no está en la lista se muestra de pie, respirando. Nunca

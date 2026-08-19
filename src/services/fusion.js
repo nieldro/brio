@@ -30,6 +30,32 @@ export function fusionarDias(local = [], nube = []) {
   return [...new Set([...nube, ...local])].sort().reverse();
 }
 
+// Los hábitos elegidos. Se juntan sin repetir y se respeta el tope de tres.
+//
+// El orden pone primero lo del teléfono porque es lo último que la persona
+// tocó: si eligió uno nuevo sin señal y la nube todavía trae los viejos, el
+// suyo no se cae por el tope.
+export function fusionarHabitos(local = [], nube = [], tope = 3) {
+  return [...new Set([...(local ?? []), ...(nube ?? [])])].slice(0, tope);
+}
+
+// Los días de cada hábito. Unión por hábito, igual que los días marcados.
+//
+// Sin esto, `{ ...local, ...nube }` borraba de un plumazo lo marcado sin
+// señal: la nube trae la lista completa de un hábito y reemplaza la del
+// teléfono, incluidos los días que todavía no habían subido.
+export function fusionarHabitosHechos(local = {}, nube = {}) {
+  const salida = {};
+
+  for (const clave of new Set([...Object.keys(local ?? {}), ...Object.keys(nube ?? {})])) {
+    salida[clave] = [...new Set([...(nube?.[clave] ?? []), ...(local?.[clave] ?? [])])]
+      .sort()
+      .reverse();
+  }
+
+  return salida;
+}
+
 // Junta el estado guardado en disco con el que vino de la nube.
 // `nube` puede ser null: significa que no había nada que traer.
 export function fusionar(local = {}, nube = null) {
@@ -55,5 +81,8 @@ export function fusionar(local = {}, nube = null) {
 
     diasCompletados: dias,
     diario: fusionarDiario(local.diario, nube.diario),
+
+    habitos: fusionarHabitos(local.habitos, nube.habitos),
+    habitosHechos: fusionarHabitosHechos(local.habitosHechos, nube.habitosHechos),
   };
 }

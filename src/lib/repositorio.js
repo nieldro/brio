@@ -49,7 +49,7 @@ function aPerfil(fila) {
 // --- Lectura --------------------------------------------------------------
 
 async function leerNube(userId) {
-  const [perfil, hechos, entradas, plan] = await Promise.all([
+  const [perfil, hechos, entradas, plan, habitos] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
     // Los últimos 30 días alcanzan para la semana en curso y para la racha.
     supabase
@@ -66,6 +66,12 @@ async function leerNube(userId) {
       .eq('user_id', userId)
       .order('semana', { ascending: false })
       .limit(1),
+    // Los hábitos se venían subiendo y nadie los leía de vuelta: al cambiar
+    // de teléfono, o al volver a entrar con la misma cuenta, las semanas de
+    // hábitos cumplidos desaparecían aunque las filas siguieran ahí. Era una
+    // ruta de escritura entera —con cola y migración— sin lectura al otro
+    // lado, y contradecía justo lo que la cuenta promete.
+    supabase.from('habitos_hechos').select('habito, fecha').eq('user_id', userId),
   ]);
 
   // Estos tres casos son distintos y antes se confundían en un solo `null`:
@@ -81,6 +87,15 @@ async function leerNube(userId) {
 
   const fechas = (hechos.data ?? []).map((r) => r.fecha);
 
+  // Si la migración 004 no se ha corrido, la consulta falla y aquí queda una
+  // lista vacía. Eso NO puede tumbar la lectura entera: el resto de los datos
+  // de la persona sí llegó.
+  const porHabito = {};
+  for (const fila of habitos.data ?? []) {
+    if (!fila?.habito || !fila?.fecha) continue;
+    (porHabito[fila.habito] ??= []).push(fila.fecha);
+  }
+
   return {
     estado: 'ok',
     datos: {
@@ -92,6 +107,10 @@ async function leerNube(userId) {
       diasCompletados: fechas,
       diario: Object.fromEntries((entradas.data ?? []).map((e) => [e.fecha, e.texto])),
       plan: plan.data?.[0]?.plan ?? null,
+      // Las dos claves que el estado lee de verdad. `perfil.habitos` existía
+      // y no lo miraba nadie.
+      habitos: perfil.data.habitos ?? [],
+      habitosHechos: porHabito,
     },
   };
 }
@@ -118,7 +137,7 @@ export async function leerMensajes(userId, cuantos = 30) {
 // promesa colgada y la app entera esperando: nunca falla, nunca termina.
 const LIMITE_NUBE = 6000;
 
-const conLimite = (promesa, ms = LIMITE_NUBE) =>
+export const conLimite = (promesa, ms = LIMITE_NUBE) =>
   Promise.race([
     promesa,
     new Promise((_, rechazar) => setTimeout(() => rechazar(new Error('la nube tardó')), ms)),

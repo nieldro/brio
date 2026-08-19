@@ -156,7 +156,7 @@ function Opciones({ valores, valor, onElegir, etiquetaDe, est }) {
 // larguísima donde el color de fondo y tu peso vivían en la misma lista.
 export default function Ajustes({ navigation }) {
   const est = useEstilos(crear);
-  const { preferencia, cambiarPreferencia } = useTema();
+  const { C, preferencia, cambiarPreferencia } = useTema();
   const {
     perfil,
     actualizarPerfil,

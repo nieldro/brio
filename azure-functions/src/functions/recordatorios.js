@@ -6,8 +6,13 @@ import { enviarPush } from '../lib/push.js';
 import { debeEnviarse, textoRecordatorio, horaLocal } from '../lib/recordatorio.js';
 import { diaDeLaSemana } from '../lib/fechas.js';
 
-// Timer cada hora en punto. Formato NCRONTAB: segundo minuto hora día mes díaSemana.
-const CADA_HORA = '0 0 * * * *';
+// Timer cada cuarto de hora. Formato NCRONTAB: segundo minuto hora día mes díaSemana.
+//
+// Corría solo en punto, y el selector deja elegir :00, :15, :30 y :45. Quien
+// pedía las 07:45 recibía el aviso a las 07:00, y ninguna corrida posterior
+// se lo entregaba a su hora. Cuatro corridas cubren los cuatro minutos que la
+// app ofrece, y de paso las zonas con desfase de media hora o de tres cuartos.
+const CADA_CUARTO = '0 0,15,30,45 * * * *';
 
 // Recorre a quien pueda recibir push y le escribe solo si le toca ahora.
 // La regla de "a quién y cuándo" vive en lib/recordatorio.js, no aquí.
@@ -109,4 +114,4 @@ async function manejar(_temporizador, context) {
   context.log(`recordatorios enviados: ${mensajes.length - invalidos.length}`);
 }
 
-app.timer('recordatorios', { schedule: CADA_HORA, handler: manejar });
+app.timer('recordatorios', { schedule: CADA_CUARTO, handler: manejar });

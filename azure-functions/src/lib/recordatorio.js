@@ -40,16 +40,34 @@ function formatear(ahora, zona) {
   return Object.fromEntries(fmt.formatToParts(ahora).map((p) => [p.type, p.value]));
 }
 
-// El Timer corre cada hora en punto, así que basta con que coincida la hora.
+// El cuarto de hora al que pertenece un minuto: 0, 15, 30 o 45.
+//
+// El Timer corre en esos cuatro momentos, así que comparar el cubo y no el
+// minuto exacto tolera que arranque unos segundos tarde.
+const cuarto = (minuto) => Math.floor(minuto / 15) * 15;
+
+// La hora Y los minutos que la persona eligió.
+//
+// Antes solo se miraba la hora, con `slice(0, 2)`. El selector ofrece :00,
+// :15, :30 y :45 y la pantalla dice por escrito "Te escribo a las 07:45",
+// pero el aviso salía a las 07:00: cuarenta y cinco minutos antes de lo
+// prometido, y sin ninguna corrida después que lo entregara a tiempo.
+//
+// Comparar los minutos sirve además para las zonas con desfase de media hora
+// o de tres cuartos (India, Nepal, Chatham), donde la hora local nunca cae
+// en punto.
 export function debeEnviarse(perfil, ahora) {
   if (!perfil?.push_token) return false;
   if (!perfil.hora_recordatorio) return false;
 
-  const elegida = Number(String(perfil.hora_recordatorio).slice(0, 2));
-  if (!Number.isFinite(elegida)) return false;
+  const [hh, mm] = String(perfil.hora_recordatorio).split(':');
+  const elegida = Number(hh);
+  const minutoElegido = Number(mm);
+  if (!Number.isFinite(elegida) || !Number.isFinite(minutoElegido)) return false;
 
   const local = horaLocal(ahora, perfil.zona_horaria);
   if (local.hora !== elegida) return false;
+  if (cuarto(local.minuto) !== cuarto(minutoElegido)) return false;
 
   // Tope diario. Se cuenta por el día LOCAL del usuario, no por el del servidor.
   if (

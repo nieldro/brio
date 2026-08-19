@@ -35,6 +35,11 @@ export const EJERCICIOS = [
   E('Gato y vaca', 'casa', 'calentamiento', ['espalda'], true),
   E('Estiramiento', 'ambos', 'cierre'),
   E('Respiración', 'ambos', 'cierre'),
+  // Con dos cierres, el mismo ejercicio caía tres o cuatro veces por semana.
+  // Ninguno pide suelo: cerrar el día no puede depender de poder tumbarse.
+  E('Estiramiento de pecho en la puerta', 'casa', 'cierre', ['pecho', 'hombros']),
+  E('Estiramiento de muslo de pie', 'ambos', 'cierre', ['piernas']),
+  E('Aflojar cuello y hombros', 'ambos', 'cierre', ['hombros']),
 
   // --- Cardio --------------------------------------------------------------
   E('Caminata', 'ambos', 'cardio', ['piernas']),
@@ -64,6 +69,21 @@ export const EJERCICIOS = [
   E('Plancha lateral', 'casa', 'fuerza', ['centro'], true),
   E('Patada de glúteo', 'casa', 'fuerza', ['gluteos'], true),
   E('Remo con banda', 'casa', 'fuerza', ['espalda', 'brazos']),
+
+  // --- Centro sin bajar al suelo -------------------------------------------
+  //
+  // Los cuatro ejercicios de centro que había (plancha, abdominal, plancha
+  // lateral, puente) piden todos tumbarse. Y `evitaElSuelo` marca justo a
+  // quien tiene sesenta años o más: a esa persona el plan no podía darle un
+  // solo ejercicio de centro. No era una preferencia, era un hueco.
+  E('Plancha en la mesa', 'casa', 'fuerza', ['centro', 'hombros', 'pecho']),
+  E('Giro de tronco sentado', 'ambos', 'fuerza', ['centro', 'espalda']),
+  E('Inclinación lateral de pie', 'ambos', 'fuerza', ['centro']),
+
+  // El escalón que faltaba entre la pared y el suelo. Sin él, quien ya podía
+  // con la pared no tenía a dónde ir sin tumbarse.
+  E('Flexiones en la mesa', 'casa', 'fuerza', ['pecho', 'brazos', 'hombros']),
+  E('Remo con toalla', 'casa', 'fuerza', ['espalda', 'brazos']),
 
   // --- Fuerza en gimnasio --------------------------------------------------
   E('Prensa de piernas', 'gym', 'fuerza', ['piernas', 'gluteos']),

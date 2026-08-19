@@ -14,7 +14,7 @@ import { alternarHecho, estaHecho } from '../services/habitos';
 import { queHacerConElPlan } from '../services/renovacion';
 import { reducer, estadoInicial, persistible } from './usuarioReducer';
 import { useHoy } from './useHoy';
-import { cargar, guardarLocal, guardarPerfil } from '../lib/repositorio';
+import { cargar, guardarLocal, guardarPerfil, conLimite } from '../lib/repositorio';
 import { anotar, vaciar, vaciarCola } from '../lib/sincronizador';
 import { estadoDeSesion, salir as salirDeLaCuenta } from '../lib/auth';
 import { generarPlan, hayApi } from '../lib/api';
@@ -39,7 +39,13 @@ export function UsuarioProvider({ children }) {
   // Trae disco, nube y estado de sesión. Se usa al abrir y cada vez que
   // alguien entra o crea cuenta: ahí los datos cambian de dueño.
   const hidratar = useCallback(async () => {
-    const [datos, sesion] = await Promise.all([cargar(), estadoDeSesion()]);
+    // `estadoDeSesion` era la única promesa del arranque sin tope, y una
+    // conexión que abre y no responde la deja colgada para siempre. Si tarda,
+    // se sigue sin ella: saber si hay cuenta puede esperar, ver tus datos no.
+    const [datos, sesion] = await Promise.all([
+      cargar(),
+      conLimite(estadoDeSesion()).catch(() => ({ tipo: 'invitado', correo: null })),
+    ]);
     dispatch({ tipo: 'HIDRATAR', datos });
     dispatch({ tipo: 'SESION', tipoSesion: sesion.tipo, correo: sesion.correo });
   }, []);
@@ -79,8 +85,14 @@ export function UsuarioProvider({ children }) {
 
   // Guardar en disco en cada cambio, nunca antes de haber leído
   // (guardar antes borraría lo que ya estaba).
+  //
+  // La guarda mira `leido` y NO `hidratado`. Miraba `hidratado`, y como
+  // ARRANCAR_IGUAL lo enciende a los ocho segundos sin haber leído nada, una
+  // red lenta hacía que la app escribiera el estado en blanco encima del
+  // disco. La persona veía el onboarding otra vez y, si cerraba la app ahí,
+  // perdía la racha, el diario y los hábitos para siempre.
   useEffect(() => {
-    if (!estado.hidratado) return;
+    if (!estado.leido) return;
     guardarLocal(persistible(estado));
   }, [estado]);
 

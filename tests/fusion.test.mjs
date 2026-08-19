@@ -1,7 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { fusionar, fusionarDiario, fusionarDias } from '../src/services/fusion.js';
+import {
+  fusionar,
+  fusionarDiario,
+  fusionarDias,
+  fusionarHabitos,
+  fusionarHabitosHechos,
+} from '../src/services/fusion.js';
 
 // Esta es la regla que protegen estas pruebas: sincronizar NUNCA puede
 // borrar algo que el usuario escribió. Para alguien con 12 días de racha,
@@ -10,6 +16,62 @@ import { fusionar, fusionarDiario, fusionarDias } from '../src/services/fusion.j
 test('sin nube, lo local queda intacto', () => {
   const local = { rachaActual: 5, diario: { '2026-08-10': 'camine' } };
   assert.deepEqual(fusionar(local, null), local);
+});
+
+// --- Hábitos --------------------------------------------------------------
+//
+// Se subían a la nube y nadie los leía de vuelta. Al cambiar de teléfono, o
+// al volver a entrar con la misma cuenta, semanas de hábitos cumplidos
+// desaparecían aunque las filas siguieran intactas en la base.
+
+test('los hábitos vuelven de la nube', () => {
+  const fusionado = fusionar(
+    {},
+    { habitos: ['agua'], habitosHechos: { agua: ['2026-08-18', '2026-08-17'] } },
+  );
+
+  assert.deepEqual(fusionado.habitos, ['agua']);
+  assert.deepEqual(fusionado.habitosHechos.agua, ['2026-08-18', '2026-08-17']);
+});
+
+test('lo marcado sin señal no lo borra la nube', () => {
+  // La nube trae la lista completa de un hábito. Con una copia superficial
+  // reemplazaba la del teléfono, y con ella los días que aún no habían subido.
+  const fusionado = fusionar(
+    { habitosHechos: { agua: ['2026-08-19'] } },
+    { habitosHechos: { agua: ['2026-08-18', '2026-08-17'] } },
+  );
+
+  assert.deepEqual(fusionado.habitosHechos.agua, ['2026-08-19', '2026-08-18', '2026-08-17']);
+});
+
+test('un hábito que solo está en el teléfono sobrevive', () => {
+  const fusionado = fusionar(
+    { habitos: ['estirar'], habitosHechos: { estirar: ['2026-08-19'] } },
+    { habitos: ['agua'], habitosHechos: { agua: ['2026-08-18'] } },
+  );
+
+  assert.deepEqual([...fusionado.habitos].sort(), ['agua', 'estirar']);
+  assert.deepEqual(fusionado.habitosHechos.estirar, ['2026-08-19']);
+});
+
+test('el elegido sin señal no se cae por el tope de tres', () => {
+  // Lo del teléfono va primero justo por esto: es lo último que tocó.
+  const juntos = fusionarHabitos(['nuevo'], ['a', 'b', 'c']);
+  assert.equal(juntos.length, 3);
+  assert.ok(juntos.includes('nuevo'));
+});
+
+test('sin hábitos en ningún lado no se inventa nada', () => {
+  const fusionado = fusionar({}, {});
+  assert.deepEqual(fusionado.habitos, []);
+  assert.deepEqual(fusionado.habitosHechos, {});
+  assert.deepEqual(fusionarHabitosHechos(), {});
+});
+
+test('no se repiten días si el mismo está en los dos lados', () => {
+  const juntos = fusionarHabitosHechos({ agua: ['2026-08-18'] }, { agua: ['2026-08-18'] });
+  assert.deepEqual(juntos.agua, ['2026-08-18']);
 });
 
 test('una nube vacía NO baja la racha', () => {

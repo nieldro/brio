@@ -208,6 +208,34 @@ test('los números siguen sin poder colarse en los textos', () => {
   assert.ok(r.errores.some((e) => e.includes('cantidades')));
 });
 
+test('una cifra sin nombrar la unidad tampoco pasa', () => {
+  // Esta prueba existe porque la de arriba no probaba lo que su nombre dice.
+  // Fallaba por la palabra "calorías", no por el 600, y por eso el hueco no
+  // se veía: bastaba con que el modelo escribiera la cantidad sin nombrar la
+  // unidad para que llegara entera a la pantalla.
+  const casos = [
+    ['suma', 'Súmale 2 cucharadas de aguacate'],
+    ['mensaje', 'Ronda entre 450 y 700, y algo fresco lo redondea'],
+    ['equilibrio', 'Lleva 3 porciones de arroz'],
+    ['plato', 'Arroz con 2 huevos'],
+  ];
+
+  for (const [campo, texto] of casos) {
+    const r = validarPlato({ ...BUENO, [campo]: texto });
+    assert.equal(r.ok, false, `"${texto}" debería rechazarse`);
+    assert.ok(
+      r.errores.some((e) => e.includes('cifra')),
+      `"${texto}" se rechazó por otra razón: ${r.errores.join('; ')}`,
+    );
+  }
+});
+
+test('un texto sin cifras sigue pasando', () => {
+  // La guarda no puede volverse tan estricta que no deje pasar nada.
+  const r = validarPlato({ ...BUENO, suma: 'Súmale un puñado de espinaca' });
+  assert.equal(r.ok, true, r.errores?.join('; '));
+});
+
 // --- El equilibrio: información, no reproche ------------------------------
 
 test('el equilibrio puede decir qué sobra y qué falta', () => {

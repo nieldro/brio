@@ -53,6 +53,38 @@ test('no envía a una hora que no es la suya', () => {
   assert.equal(debeEnviarse({ ...perfilBase, hora_recordatorio: '20:00' }, MEDIODIA_UTC), false);
 });
 
+test('los minutos que eligió también cuentan', () => {
+  // El selector ofrece :00, :15, :30 y :45, y la pantalla dice por escrito
+  // "Te escribo a las 07:45". Antes solo se comparaba la hora, así que ese
+  // aviso salía a las 07:00: cuarenta y cinco minutos antes de lo prometido,
+  // y sin ninguna corrida después que lo entregara a tiempo.
+  const alasSieteCuarentaYCinco = { ...perfilBase, hora_recordatorio: '07:45' };
+
+  // 12:00 UTC son las 07:00 en Bogotá: todavía no le toca.
+  assert.equal(debeEnviarse(alasSieteCuarentaYCinco, MEDIODIA_UTC), false);
+
+  // 12:45 UTC son las 07:45: ahora sí.
+  const suHora = new Date('2026-08-14T12:45:00Z');
+  assert.equal(debeEnviarse(alasSieteCuarentaYCinco, suHora), true);
+});
+
+test('quien pidió en punto no recibe a y cuarto', () => {
+  const yCuarto = new Date('2026-08-14T12:15:00Z');
+  assert.equal(debeEnviarse(perfilBase, yCuarto), false);
+});
+
+test('unos segundos tarde no le quitan el aviso a nadie', () => {
+  // El Timer no arranca clavado. Se compara el cuarto de hora, no el minuto
+  // exacto, para que un arranque de 12:45:40 siga contando como las 07:45.
+  const conRetraso = new Date('2026-08-14T12:45:40Z');
+  assert.equal(debeEnviarse({ ...perfilBase, hora_recordatorio: '07:45' }, conRetraso), true);
+});
+
+test('una hora mal escrita no manda nada', () => {
+  assert.equal(debeEnviarse({ ...perfilBase, hora_recordatorio: '07' }, MEDIODIA_UTC), false);
+  assert.equal(debeEnviarse({ ...perfilBase, hora_recordatorio: 'siete' }, MEDIODIA_UTC), false);
+});
+
 test('no envía sin token ni sin hora', () => {
   assert.equal(debeEnviarse({ ...perfilBase, push_token: null }, MEDIODIA_UTC), false);
   assert.equal(debeEnviarse({ ...perfilBase, hora_recordatorio: null }, MEDIODIA_UTC), false);

@@ -26,6 +26,19 @@ const LARGO = { plato: 80, suma: 120, equilibrio: 140, mensaje: 160 };
 const MEDIDAS =
   /calor[íi]as?|macros?|\bkcal\b|gramos?|\bgr\b|\bml\b|mililitros?|prote[íi]nas?|carbohidratos?|ayuno/i;
 
+// Y cualquier dígito, venga con la palabra que venga.
+//
+// MEDIDAS es una lista de PALABRAS, y durante un tiempo fue la única defensa.
+// Bastaba con que el modelo escribiera la cantidad sin nombrar la unidad para
+// que pasara entera: "Súmale 2 cucharadas de aguacate" o, con la estimación
+// encendida, "Ronda entre 450 y 700, y algo fresco lo redondea". Ninguna de
+// las dos lleva una palabra de MEDIDAS, y las dos le enseñan a la persona una
+// cifra exacta dentro de una frase, que es justo lo que la regla prohíbe.
+//
+// El campo `nutricion` no pasa por aquí: esa estimación tiene su propio
+// camino, con rango ancho y niveles, y sigue intacta.
+const CIFRA = /\d/;
+
 // Juicio sobre la comida o sobre el cuerpo, y órdenes de quitar.
 //
 // Decir con qué está cargado un plato y qué le falta SÍ se puede: eso es
@@ -48,6 +61,7 @@ function revisarTexto(campo, valor, maximo, errores) {
   }
   if (valor.length > maximo) errores.push(`${campo} pasa de ${maximo} caracteres`);
   if (MEDIDAS.test(valor)) errores.push(`${campo} habla de cantidades o calorías`);
+  if (CIFRA.test(valor)) errores.push(`${campo} lleva una cifra`);
   if (JUICIO.test(valor)) errores.push(`${campo} juzga la comida o el cuerpo`);
   if (valor.includes('!') || valor.includes('¡')) errores.push(`${campo} lleva signos de admiración`);
 

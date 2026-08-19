@@ -365,7 +365,9 @@ export const GUIAS = [
     masFacil: 'Baja hasta la mitad, o hasta tocar una silla.',
   },
   {
-    claves: ['remo con banda', 'remo con toalla', 'remo de pie'],
+    // La toalla salió de aquí: ya tiene guía propia, con su aviso sobre
+    // comprobar la puerta antes de tirar.
+    claves: ['remo con banda', 'remo de pie'],
     nombre: 'Remo con banda',
     figura: 'remoDePie',
     como: [
@@ -562,6 +564,114 @@ export const GUIAS = [
     ],
     cuidado: 'La espalda no se redondea al volver.',
     masFacil: 'Menos peso y para en cuanto pierdas la postura.',
+  },
+
+  // --- Lo que se puede hacer sin bajar al suelo ---------------------------
+  //
+  // Los cuatro ejercicios de centro que había pedían todos tumbarse, y quien
+  // no puede bajar al piso se quedaba sin ninguno. Estos cinco cierran ese
+  // hueco y de paso ponen el escalón que faltaba entre la pared y el suelo.
+
+  {
+    claves: ['plancha en la mesa', 'plancha inclinada', 'plancha en la encimera'],
+    nombre: 'Plancha en la mesa',
+    figura: 'planchaInclinada',
+    como: [
+      'Manos en el borde de una mesa firme, al ancho de los hombros.',
+      'Camina los pies hacia atrás hasta quedar en diagonal.',
+      'Aprieta el abdomen y sostén, respirando normal.',
+    ],
+    cuidado: 'Si la cadera se va hacia arriba o se hunde, acerca los pies.',
+    masFacil: 'Ponte más de pie: mientras más alta la mesa, más suave.',
+    respira: 'No aguantes el aire. Respirar es parte del ejercicio.',
+  },
+  {
+    claves: ['giro de tronco', 'giro sentado', 'rotacion de tronco', 'torsion'],
+    nombre: 'Giro de tronco sentado',
+    figura: 'giroTronco',
+    como: [
+      'Sentado con los pies apoyados y la espalda despegada del respaldo.',
+      'Cruza los brazos al pecho y gira los hombros a un lado.',
+      'Vuelve al centro y gira al otro, sin apurarte.',
+    ],
+    cuidado: 'Las caderas se quedan quietas. Lo que gira es el tronco.',
+    masFacil: 'Gira la mitad del recorrido y descansa entre lado y lado.',
+  },
+  {
+    claves: ['inclinacion lateral', 'flexion lateral', 'estiramiento de costado'],
+    nombre: 'Inclinación lateral de pie',
+    figura: 'inclinacionLateral',
+    como: [
+      'De pie, pies al ancho de las caderas.',
+      'Sube un brazo por encima de la cabeza.',
+      'Inclínate hacia el lado contrario y vuelve al centro.',
+    ],
+    cuidado: 'El cuerpo se dobla al lado, no hacia adelante.',
+    masFacil: 'Baja menos y apoya la otra mano en la cadera.',
+    respira: 'Suelta el aire al inclinarte.',
+  },
+  {
+    claves: ['flexion en la mesa', 'flexiones en la mesa', 'flexion inclinada'],
+    nombre: 'Flexiones en la mesa',
+    figura: 'flexionMesa',
+    como: [
+      'Manos en el borde de una mesa firme, al ancho de los hombros.',
+      'Cuerpo en línea recta, pies atrás.',
+      'Baja el pecho hacia la mesa y empuja para volver.',
+    ],
+    cuidado: 'Comprueba que la mesa no se mueva antes de apoyarte.',
+    masFacil: 'Vuelve a la pared, que es el mismo movimiento más suave.',
+    respira: 'Toma aire al bajar, suéltalo al empujar.',
+  },
+  {
+    claves: ['remo con toalla', 'remo de toalla', 'remo sin banda'],
+    nombre: 'Remo con toalla',
+    figura: 'remoDePie',
+    como: [
+      'Pasa una toalla por la manija de una puerta cerrada y agarra las puntas.',
+      'Brazos estirados, tronco un poco atrás y talones firmes.',
+      'Tira llevando los codos atrás y junta los omóplatos.',
+    ],
+    cuidado: 'Comprueba que la puerta esté cerrada y con seguro antes de tirar.',
+    masFacil: 'Ponte más de pie: mientras menos te inclines, menos pesa.',
+  },
+  {
+    claves: ['estiramiento de pecho', 'pecho en la puerta', 'marco de la puerta'],
+    nombre: 'Estiramiento de pecho en la puerta',
+    figura: 'pechoPuerta',
+    como: [
+      'De pie en el marco de una puerta, antebrazos apoyados a los lados.',
+      'Adelanta un pie y deja que el pecho pase el marco.',
+      'Sostén sin rebotar y vuelve despacio.',
+    ],
+    cuidado: 'Debe tirar en el pecho, nunca pinchar en el hombro.',
+    masFacil: 'Baja los brazos a la altura del pecho y adelanta menos.',
+    respira: 'Respira lento mientras sostienes.',
+  },
+  {
+    claves: ['estiramiento de muslo', 'cuadriceps de pie', 'talon al gluteo'],
+    nombre: 'Estiramiento de muslo de pie',
+    figura: 'cuadricepsDePie',
+    como: [
+      'Apóyate en una pared con una mano.',
+      'Dobla la otra pierna y llévate el talón hacia el glúteo.',
+      'Sostén, suelta y cambia de pierna.',
+    ],
+    cuidado: 'Las rodillas se quedan juntas y la cadera no se va atrás.',
+    masFacil: 'Sujétate el pantalón en vez del pie, o hazlo sentado de lado.',
+  },
+  {
+    claves: ['aflojar cuello', 'cuello y hombros', 'encogimiento de hombros'],
+    nombre: 'Aflojar cuello y hombros',
+    figura: 'cuelloHombros',
+    como: [
+      'Sentado o de pie, brazos sueltos a los lados.',
+      'Sube los hombros hacia las orejas y sostén un momento.',
+      'Suéltalos de golpe y siente cómo caen.',
+    ],
+    cuidado: 'El cuello no se estira a la fuerza. Solo sube y baja.',
+    masFacil: 'Hazlo sentado, apoyando la espalda.',
+    respira: 'Toma aire al subir, suéltalo al soltar los hombros.',
   },
 ];
 

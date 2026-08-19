@@ -113,3 +113,57 @@ test('todo hook usado está importado o definido ahí mismo', () => {
 
   assert.deepEqual([...new Set(faltantes)], [], 'hooks usados sin importar');
 });
+
+// El tercer punto ciego, y el que se coló entero.
+//
+// Las dos pruebas de arriba no lo ven porque `declarados()` cuenta los
+// parámetros desestructurados de CUALQUIER función, y la fábrica de estilos
+// empieza por `({ C, T, R, S }) =>`. Así que `C` figuraba como declarada en
+// todo el archivo, aunque dentro del componente no existiera.
+//
+// Pasó de verdad: Ajustes usaba `C.apagado` en un TextInput sin sacar `C` de
+// `useTema()`. Metro empaqueta, las pruebas pasan y la pantalla revienta al
+// tocar un botón.
+//
+// Aquí se recorta la fábrica y se mira solo lo que queda: el cuerpo del
+// componente. Ahí `C`, `T`, `R` y `S` tienen que venir de `useTema()`.
+const SIN_FABRICA = (codigo) =>
+  codigo.replace(/const crear\s*=\s*\([^)]*\)\s*=>\s*\(\{[\s\S]*?\n\}\);/g, ' ');
+
+const delTema = (codigo) => {
+  const nombres = new Set();
+
+  for (const m of codigo.matchAll(/(?:const|let)\s*\{([^}]*)\}\s*=\s*useTema\(\)/g)) {
+    for (const parte of m[1].split(',')) {
+      const alias = parte.split(':');
+      const nombre = (alias[1] ?? alias[0]).trim();
+      if (nombre) nombres.add(nombre);
+    }
+  }
+
+  return nombres;
+};
+
+test('el tema que usa el componente sale de useTema, no de la fábrica de estilos', () => {
+  const faltantes = [];
+
+  for (const ruta of FUENTES) {
+    // theme.js es donde se definen: ahí no hay nada de dónde sacarlos.
+    if (ruta.endsWith('theme.js')) continue;
+
+    const codigo = SIN_CODIGO(readFileSync(ruta, 'utf8'));
+    const cuerpo = SIN_FABRICA(codigo);
+
+    // Vale de tres sitios: useTema(), un import del tema (las medidas no
+    // cambian con el modo) o una declaración propia, como la de la red de
+    // seguridad, que es una clase y no puede llamar a un hook.
+    const tengo = new Set([...delTema(codigo), ...declarados(cuerpo)]);
+
+    for (const m of cuerpo.matchAll(/\b([CTRS])\.[A-Za-z_$]/g)) {
+      const nombre = m[1];
+      if (!tengo.has(nombre)) faltantes.push(`${ruta.split('src')[1]}: ${nombre}.`);
+    }
+  }
+
+  assert.deepEqual([...new Set(faltantes)], [], 'tema usado sin sacarlo de useTema()');
+});

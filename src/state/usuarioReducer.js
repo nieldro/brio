@@ -5,7 +5,18 @@ import { claveDia } from '../services/fecha.js';
 // el provider se encarga de los efectos, esto solo decide el siguiente estado.
 
 export const estadoInicial = {
-  hidratado: false, // ¿ya leímos disco y nube?
+  hidratado: false, // ¿ya se puede pintar la app?
+  // ¿ya leímos el disco DE VERDAD?
+  //
+  // Son dos cosas distintas y antes colgaban de la misma bandera, con
+  // consecuencias feas. `ARRANCAR_IGUAL` enciende `hidratado` sin haber leído
+  // nada, para que nadie se quede mirando una pantalla de carga si la red se
+  // cuelga. Pero el efecto que guarda en disco también miraba `hidratado`, así
+  // que escribía el estado EN BLANCO encima de lo que había: racha, diario,
+  // hábitos y fotos, borrados por una red lenta.
+  //
+  // Guardar solo se autoriza cuando esta bandera está en true.
+  leido: false,
   userId: null,
   enNube: false,
   // 'invitado' | 'anonimo' | 'concuenta'. Decide si Perfil ofrece guardar
@@ -80,14 +91,14 @@ export const estadoInicial = {
 // Al abrir, si el dueño del disco no es quien tiene la sesión, lo guardado se
 // descarta. Así dos personas en el mismo teléfono no mezclan sus datos, y no
 // hay que borrar nada por adelantado para conseguirlo.
-export function persistible({ hidratado, userId, enNube, sesion, correo, ...resto }) {
+export function persistible({ hidratado, leido, userId, enNube, sesion, correo, ...resto }) {
   return userId ? { ...resto, duenoId: userId } : resto;
 }
 
 export function reducer(estado, accion) {
   switch (accion.tipo) {
     case 'HIDRATAR':
-      return { ...estado, ...(accion.datos ?? {}), hidratado: true };
+      return { ...estado, ...(accion.datos ?? {}), hidratado: true, leido: true };
 
     // Red de seguridad. Si leer disco y nube se queda colgado (señal mala, VPN,
     // DNS caído), la app NO puede quedarse en la pantalla de carga para
@@ -95,6 +106,9 @@ export function reducer(estado, accion) {
     //
     // Arranca con lo que haya. Si los datos llegan después, HIDRATAR los mete
     // encima y la pantalla se acomoda sola.
+    //
+    // `leido` NO se toca: destraba la pantalla, pero no autoriza a escribir en
+    // disco. Sin esa distinción, una red lenta borraba los datos de la persona.
     case 'ARRANCAR_IGUAL':
       return estado.hidratado ? estado : { ...estado, hidratado: true };
 
@@ -165,8 +179,16 @@ export function reducer(estado, accion) {
     case 'REHIDRATAR':
       return { ...estadoInicial, enNube: estado.enNube };
 
+    // Aquí `leido` SÍ va en true: la persona pidió empezar de cero, así que
+    // el estado en blanco es el que debe quedar guardado.
     case 'REINICIAR':
-      return { ...estadoInicial, hidratado: true, userId: estado.userId, enNube: estado.enNube };
+      return {
+        ...estadoInicial,
+        hidratado: true,
+        leido: true,
+        userId: estado.userId,
+        enNube: estado.enNube,
+      };
 
     default:
       return estado;

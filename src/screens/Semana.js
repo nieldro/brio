@@ -141,12 +141,19 @@ const crear = ({ C, T, R, S }) => ({
 });
 
 export default function Semana({ navigation }) {
-  const hoy = useMemo(() => nombreDia(new Date()), []);
-  const fechas = useMemo(() => fechasDeLaSemana(new Date()), []);
-
   const est = useEstilos(crear);
   const { C, T } = useTema();
-  const { perfil, plan: planUsuario, diasCompletados } = useUsuario();
+  const { perfil, plan: planUsuario, diasCompletados, hoy: fechaHoy } = useUsuario();
+
+  // La fecha viene del contexto y no de un `new Date()` propio.
+  //
+  // Con `useMemo(..., [])` quedaba congelada en el momento de montar, y esta
+  // pantalla es una pestaña: no se desmonta mientras la app viva. Quien cruzaba
+  // la medianoche con la app abierta marcaba su día en Hoy y aquí seguía
+  // resaltado el día anterior, sin chulos y con el contador de la semana
+  // pasada. Parecía que se había borrado el avance.
+  const hoy = useMemo(() => nombreDia(fechaHoy), [fechaHoy]);
+  const fechas = useMemo(() => fechasDeLaSemana(fechaHoy), [fechaHoy]);
 
   const TIPO = useMemo(() => tiposDe(C), [C]);
 

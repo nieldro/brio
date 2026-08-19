@@ -20,6 +20,36 @@ test('ARRANCAR_IGUAL destraba la pantalla de carga', () => {
   assert.equal(trabado.hidratado, true);
 });
 
+test('ARRANCAR_IGUAL destraba la pantalla pero NO autoriza a guardar', () => {
+  // Este es el que borraba los datos. `hidratado` y `leido` colgaban de la
+  // misma bandera, así que a los ocho segundos de red lenta la app se daba
+  // por hidratada, el efecto de guardado corría con el estado en blanco y
+  // escribía encima del disco. Racha, diario y hábitos, borrados por una
+  // conexión mala.
+  const trabado = reducer(estadoInicial, { tipo: 'ARRANCAR_IGUAL' });
+
+  assert.equal(trabado.hidratado, true, 'la pantalla tiene que destrabarse');
+  assert.equal(trabado.leido, false, 'pero el disco no se ha leído: no se puede escribir');
+});
+
+test('solo después de HIDRATAR se puede escribir en disco', () => {
+  const listo = reducer(estadoInicial, { tipo: 'HIDRATAR', datos: { rachaActual: 9 } });
+  assert.equal(listo.leido, true);
+});
+
+test('empezar de cero sí deja escribir el estado en blanco', () => {
+  // Aquí la persona lo pidió, así que el disco debe quedar vacío de verdad.
+  const cero = reducer({ ...estadoInicial, leido: true, rachaActual: 9 }, { tipo: 'REINICIAR' });
+
+  assert.equal(cero.leido, true);
+  assert.equal(cero.rachaActual, 0);
+});
+
+test('al cambiar de dueño se espera una lectura nueva antes de guardar', () => {
+  const otro = reducer({ ...estadoInicial, leido: true, rachaActual: 9 }, { tipo: 'REHIDRATAR' });
+  assert.equal(otro.leido, false, 'sin esto se escribiría el estado del anterior');
+});
+
 test('ARRANCAR_IGUAL no pisa lo que ya se habia cargado', () => {
   const conDatos = reducer(estadoInicial, {
     tipo: 'HIDRATAR',

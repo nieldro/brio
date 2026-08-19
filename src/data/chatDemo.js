@@ -1,15 +1,22 @@
-// Conversación quemada de la fase 2. En la fase 5 esto lo reemplaza
-// la Edge Function `coach` y la tabla `mensajes`.
+// Con qué abre el chat cuando todavía no hay historial.
+//
+// Aquí vivía una conversación quemada de la fase 2 que saludaba a "Daniel" y
+// ponía en la burbuja del usuario una frase que nunca escribió. A cualquiera
+// que no se llamara Daniel, la app lo llamaba por el nombre de otro y le
+// atribuía palabras ajenas, justo en la pantalla donde promete acompañarlo.
+//
+// Ahora es UNA burbuja, de Brío, con el nombre de quien abre la app. Nada de
+// palabras puestas en boca de nadie: la primera frase del usuario la escribe
+// el usuario.
+export function primerMensaje(nombre) {
+  const quien = nombre?.trim();
 
-export const mensajesDemo = [
-  { id: 'm1', rol: 'brio', texto: 'Hola Daniel. ¿Cómo amaneciste hoy?' },
-  { id: 'm2', rol: 'user', texto: 'Con pocas ganas, la verdad.' },
-  {
-    id: 'm3',
+  return {
+    id: 'saludo',
     rol: 'brio',
-    texto: 'Gracias por decirlo. Hoy hacemos la versión corta y con eso ya vamos bien.',
-  },
-];
+    texto: quien ? `Hola ${quien}. Cuéntame cómo vas.` : 'Hola. Cuéntame cómo vas.',
+  };
+}
 
 // Chips de respuesta rápida.
 //

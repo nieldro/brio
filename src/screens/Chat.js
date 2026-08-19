@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, ScrollView, TextInput, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -8,7 +8,7 @@ import { useTeclado } from '../state/useTeclado';
 import BotonVoz from '../components/BotonVoz';
 import { preguntarCoach, hayApi } from '../lib/api';
 import { leerMensajes } from '../lib/repositorio';
-import { mensajesDemo, CHIPS } from '../data/chatDemo';
+import { primerMensaje, CHIPS } from '../data/chatDemo';
 
 // Si el coach no contesta, Brío responde igual. Sin culpa y sin pantalla rota.
 const SIN_CONEXION = 'No pude conectarme ahora mismo. Escríbeme en un rato y seguimos.';
@@ -141,28 +141,41 @@ export default function Chat() {
   const scroll = useRef(null);
   const est = useEstilos(crear);
   const { C, S } = useTema();
-  const { userId, enNube, completadoHoy, retoEnMinima, aliviarReto } = useUsuario();
+  const { userId, enNube, perfil, completadoHoy, retoEnMinima, aliviarReto } = useUsuario();
   const altoTeclado = useTeclado();
 
   // Con el teclado abierto, la barra de pestañas se esconde sola (Tabs.js), así
   // que el hueco de abajo pasa a ser el del teclado y no el de los gestos.
   const espacioAbajo = altoTeclado > 0 ? altoTeclado : insets.bottom;
 
-  const [mensajes, setMensajes] = useState(mensajesDemo);
+  // El saludo se arma con el nombre de quien abre la app.
+  //
+  // Antes el hilo arrancaba con una conversación quemada de la fase 2 que
+  // saludaba a "Daniel" y ponía en la burbuja del usuario una frase que nunca
+  // escribió ("Con pocas ganas, la verdad."). A cualquiera que no se llamara
+  // Daniel, la app lo llamaba por el nombre de otro y le atribuía palabras
+  // ajenas, en la pantalla donde promete acompañamiento personal.
+  const saludo = useMemo(() => [primerMensaje(perfil?.nombre)], [perfil?.nombre]);
+
+  const [mensajes, setMensajes] = useState(null);
   const [texto, setTexto] = useState('');
   const [esperando, setEsperando] = useState(false);
 
-  // Historial real cuando hay nube; si no, la conversación de arranque.
+  // Historial real cuando hay nube; si no, el saludo.
   useEffect(() => {
-    if (!enNube || !userId) return;
+    if (!enNube || !userId) return undefined;
     let vivo = true;
     leerMensajes(userId).then((guardados) => {
+      // `null` es que la consulta falló y `[]` es que no hay historial: con
+      // lista vacía se deja el saludo, que es lo correcto para quien empieza.
       if (vivo && guardados?.length) setMensajes(guardados);
     });
     return () => {
       vivo = false;
     };
   }, [enNube, userId]);
+
+  const hilo = mensajes ?? saludo;
 
   // Lo que un chip CAMBIA en la app, además de lo que contesta.
   //
@@ -181,7 +194,7 @@ export default function Chat() {
     const limpio = contenido.trim();
     if (!limpio || esperando) return;
 
-    setMensajes((prev) => [...prev, { id: nuevoId('u'), rol: 'user', texto: limpio }]);
+    setMensajes((prev) => [...(prev ?? saludo), { id: nuevoId('u'), rol: 'user', texto: limpio }]);
     setTexto('');
     setEsperando(true);
 
@@ -193,7 +206,7 @@ export default function Chat() {
     if (hayApi) respuesta = (await preguntarCoach(limpio))?.texto ?? null;
 
     setMensajes((prev) => [
-      ...prev,
+      ...(prev ?? saludo),
       { id: nuevoId('b'), rol: 'brio', texto: respuesta ?? respuestaLocal ?? SIN_CONEXION },
       // El aviso va aparte de lo que dice Brío: es la app contando lo que
       // hizo, no el coach hablando. Así no depende de que la IA se acuerde
@@ -225,7 +238,7 @@ export default function Chat() {
         keyboardDismissMode="on-drag"
         onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: true })}
       >
-        {mensajes.map((m, i) => {
+        {hilo.map((m, i) => {
           // Lo que hizo la app, no lo que dijo el coach. Sin burbuja: es una
           // nota al margen y no tiene que parecer que alguien la escribió.
           if (m.rol === 'aviso') {
@@ -239,7 +252,7 @@ export default function Chat() {
           // Solo la última respuesta de Brío se puede escuchar. Un botón en
           // cada burbuja llenaría el hilo de botones, y lo que alguien quiere
           // oír es lo que le acaban de decir.
-          const esUltimaDeBrio = m.rol === 'brio' && i === mensajes.length - 1;
+          const esUltimaDeBrio = m.rol === 'brio' && i === hilo.length - 1;
 
           return (
             <View
