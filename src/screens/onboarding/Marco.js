@@ -83,6 +83,7 @@ export default function Marco({
   boton,
   onBoton,
   botonActivo = true,
+  encabezado,
   children,
 }) {
   const insets = useSafeAreaInsets();
@@ -117,6 +118,9 @@ export default function Marco({
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
+        {/* Va ANTES del título: en el primer paso ahí entra la marca, y lo
+            primero que alguien ve de una app debería ser de quién es. */}
+        {encabezado}
         {!!titulo && <Text style={est.titulo}>{titulo}</Text>}
         {!!sub && <Text style={est.sub}>{sub}</Text>}
         {children}

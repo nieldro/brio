@@ -10,6 +10,7 @@ import { diaDelPlan } from '../../services/plan';
 import { zonaDelTelefono } from '../../services/fecha';
 
 import Latido from '../../components/Latido';
+import Marca from '../../components/Marca';
 import SelectorHora from '../../components/SelectorHora';
 import Marco from './Marco';
 import { PASOS, interpolar } from './pasos';
@@ -129,7 +130,12 @@ export default function Onboarding({ navigation }) {
   switch (paso.tipo) {
     case 'mensaje':
       return (
-        <Marco {...comun} boton={paso.boton} onBoton={() => avanzar(paso.alAvanzar)}>
+        <Marco
+          {...comun}
+          boton={paso.boton}
+          onBoton={() => avanzar(paso.alAvanzar)}
+          encabezado={paso.id === 'intro' ? <Marca size={38} conLema style={est.marca} /> : null}
+        >
           {/* Solo en el primer paso, y como enlace discreto: quien ya usó Brío
               en otro teléfono no debería tener que rehacer el onboarding.
               Nunca es un muro, siempre está debajo del botón principal. */}
@@ -235,6 +241,11 @@ export default function Onboarding({ navigation }) {
 }
 
 const crear = ({ C, T, S }) => ({
+  marca: {
+    alignSelf: 'flex-start',
+    alignItems: 'flex-start',
+    marginBottom: S.xl,
+  },
   enlaceCuenta: {
     marginTop: S.xxl,
     alignSelf: 'flex-start',

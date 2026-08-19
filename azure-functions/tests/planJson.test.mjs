@@ -275,6 +275,53 @@ test('un día de descanso sale sin ejercicios aunque el modelo le ponga', () => 
   assert.deepEqual(r.plan.dias[5].ejercicios, []);
 });
 
+// --- Ortografía del modelo ------------------------------------------------
+
+test('acepta los días sin tilde y los devuelve con tilde', () => {
+  // Los modelos escriben "miercoles" y "sabado" la mitad de las veces. El plan
+  // entero se estaba rechazando por dos acentos, y ese plan era bueno.
+  const sinTildes = planBueno();
+  sinTildes.dias[2].dia = 'miercoles';
+  sinTildes.dias[5].dia = 'sabado';
+
+  const r = validarPlan(sinTildes, { tiempoMax: 20 });
+  assert.equal(r.ok, true, r.errores.join('; '));
+
+  // Y salen con tilde: la app busca "miércoles" para saber qué toca hoy.
+  assert.equal(r.plan.dias[2].dia, 'miércoles');
+  assert.equal(r.plan.dias[5].dia, 'sábado');
+});
+
+test('acepta mayúsculas en día, tipo y bloque', () => {
+  const gritado = planBueno();
+  gritado.dias[0].dia = 'Lunes';
+  gritado.dias[0].tipo = 'Entrenamiento';
+  gritado.dias[0].ejercicios[0].bloque = 'Calentamiento';
+
+  const r = validarPlan(gritado, { tiempoMax: 20 });
+  assert.equal(r.ok, true, r.errores.join('; '));
+  assert.equal(r.plan.dias[0].dia, 'lunes');
+  assert.equal(r.plan.dias[0].tipo, 'entrenamiento');
+  assert.equal(r.plan.dias[0].ejercicios[0].bloque, 'calentamiento');
+});
+
+test('el día repetido se detecta aunque venga escrito distinto', () => {
+  // "sabado" y "sábado" son el mismo día: si se cuelan los dos, falta uno.
+  const repetido = planBueno();
+  repetido.dias[5].dia = 'sabado';
+  repetido.dias[6].dia = 'sábado';
+
+  const r = validarPlan(repetido, { tiempoMax: 20 });
+  assert.equal(r.ok, false);
+  assert.ok(r.errores.some((e) => /repetido/.test(e)), r.errores.join('; '));
+});
+
+test('un nombre que no es un día sigue siendo inválido', () => {
+  const raro = planBueno();
+  raro.dias[0].dia = 'lunesito';
+  assert.equal(validarPlan(raro, { tiempoMax: 20 }).ok, false);
+});
+
 test('no revienta con basura', () => {
   assert.equal(validarPlan(null, { tiempoMax: 20 }).ok, false);
   assert.equal(validarPlan('hola', { tiempoMax: 20 }).ok, false);

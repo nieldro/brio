@@ -9,6 +9,30 @@ import { MINIMO_EJERCICIOS, MAXIMO_EJERCICIOS, BLOQUES, IMPACTO } from './rutina
 export const DIAS = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
 export const TIPOS = ['entrenamiento', 'descanso', 'suave'];
 
+// Los modelos escriben "miercoles" y "sabado" sin tilde la mitad de las veces,
+// y el plan entero se rechazaba por eso. Era un plan perfecto muriendo por dos
+// acentos: se comparan sin tildes y se devuelve la forma buena.
+//
+// Exigirle ortografía a un modelo es pelear una batalla que no hace falta.
+const sinTildes = (t) =>
+  String(t ?? '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .trim();
+
+const CANONICO = new Map(DIAS.map((d) => [sinTildes(d), d]));
+
+export const diaCanonico = (valor) => CANONICO.get(sinTildes(valor)) ?? null;
+
+// Lo mismo con el resto de los valores cerrados: "Entrenamiento" y
+// "entrenamiento" son el mismo día, y rechazar por una mayúscula cuesta un
+// reintento entero de treinta segundos.
+const enLista = (lista, valor) => {
+  const limpio = sinTildes(valor);
+  return lista.find((v) => sinTildes(v) === limpio) ?? null;
+};
+
 const PROHIBIDAS = [
   'fracaso',
   'excusas',
@@ -62,12 +86,14 @@ export function validarPlan(plan, { tiempoMax, impacto = 'normal' }) {
   plan.dias.forEach((dia, i) => {
     const donde = dia?.dia ?? `día ${i + 1}`;
 
-    if (!DIAS.includes(dia?.dia)) errores.push(`${donde}: nombre de día inválido`);
-    if (vistos.has(dia?.dia)) errores.push(`${donde}: día repetido`);
-    vistos.add(dia?.dia);
+    const nombre = diaCanonico(dia?.dia);
+    if (!nombre) errores.push(`${donde}: nombre de día inválido`);
+    if (nombre && vistos.has(nombre)) errores.push(`${donde}: día repetido`);
+    if (nombre) vistos.add(nombre);
 
-    if (!TIPOS.includes(dia?.tipo)) errores.push(`${donde}: tipo inválido`);
-    if (dia?.tipo === 'descanso' || dia?.tipo === 'suave') suaves += 1;
+    const tipo = enLista(TIPOS, dia?.tipo);
+    if (!tipo) errores.push(`${donde}: tipo inválido`);
+    if (tipo === 'descanso' || tipo === 'suave') suaves += 1;
 
     if (!dia?.reto?.trim?.()) errores.push(`${donde}: falta reto`);
     if (!dia?.mensaje?.trim?.()) errores.push(`${donde}: falta mensaje`);
@@ -88,11 +114,11 @@ export function validarPlan(plan, { tiempoMax, impacto = 'normal' }) {
     if (!Array.isArray(dia?.ejercicios)) {
       errores.push(`${donde}: ejercicios debe ser una lista`);
     } else {
-      const minimo = MINIMO_EJERCICIOS[dia?.tipo] ?? 0;
+      const minimo = MINIMO_EJERCICIOS[tipo] ?? 0;
 
       if (dia.ejercicios.length < minimo) {
         errores.push(
-          `${donde}: un día ${dia.tipo} necesita al menos ${minimo} ejercicios y trae ${dia.ejercicios.length}`,
+          `${donde}: un día ${tipo} necesita al menos ${minimo} ejercicios y trae ${dia.ejercicios.length}`,
         );
       }
       if (dia.ejercicios.length > MAXIMO_EJERCICIOS) {
@@ -102,7 +128,7 @@ export function validarPlan(plan, { tiempoMax, impacto = 'normal' }) {
       dia.ejercicios.forEach((e, n) => {
         if (!e?.nombre?.trim?.()) errores.push(`${donde}: al ejercicio ${n + 1} le falta nombre`);
         if (!e?.detalle?.trim?.()) errores.push(`${donde}: a "${e?.nombre}" le falta el detalle`);
-        if (e?.bloque != null && !BLOQUES.includes(e.bloque)) {
+        if (e?.bloque != null && !enLista(BLOQUES, e.bloque)) {
           errores.push(`${donde}: bloque inválido en "${e?.nombre}"`);
         }
       });
@@ -157,20 +183,27 @@ export function validarPlan(plan, { tiempoMax, impacto = 'normal' }) {
 function normalizar(plan) {
   return {
     ...plan,
-    dias: plan.dias.map((d) => ({
-      ...d,
-      // Un día de descanso con ejercicios se contradice con lo que dice la
-      // pantalla. Se le quitan en vez de tumbar el plan por eso.
-      ejercicios: d.tipo === 'descanso' ? [] : conBloques(d.ejercicios ?? []),
-      comida_color: ['verde', 'ambar', 'rojo'].includes(d.comida_color) ? d.comida_color : 'verde',
-    })),
+    dias: plan.dias.map((d) => {
+      const tipo = enLista(TIPOS, d.tipo);
+      return {
+        ...d,
+        // El día sale SIEMPRE con su tilde, venga como venga: la app busca
+        // "miércoles" para saber qué toca hoy, y "miercoles" no es lo mismo.
+        dia: diaCanonico(d.dia) ?? d.dia,
+        tipo,
+        // Un día de descanso con ejercicios se contradice con lo que dice la
+        // pantalla. Se le quitan en vez de tumbar el plan por eso.
+        ejercicios: tipo === 'descanso' ? [] : conBloques(d.ejercicios ?? []),
+        comida_color: enLista(['verde', 'ambar', 'rojo'], d.comida_color) ?? 'verde',
+      };
+    }),
   };
 }
 
 function conBloques(ejercicios) {
   return ejercicios.map((e, i) => ({
     ...e,
-    bloque: BLOQUES.includes(e?.bloque) ? e.bloque : deducirBloque(i, ejercicios.length),
+    bloque: enLista(BLOQUES, e?.bloque) ?? deducirBloque(i, ejercicios.length),
   }));
 }
 

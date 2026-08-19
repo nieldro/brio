@@ -2,16 +2,20 @@ import { View } from 'react-native';
 
 import { useEstilos } from '../state/TemaContext';
 import Latido from '../components/Latido';
+import Marca from '../components/Marca';
 import { useUsuario } from '../state/UsuarioContext';
 import PilaEntrada from './PilaEntrada';
 import PilaPrincipal from './Pila';
 
-const crear = ({ C }) => ({
+const crear = ({ C, S }) => ({
   espera: {
     flex: 1,
     backgroundColor: C.crema,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  marca: {
+    marginTop: -S.xl,
   },
 });
 
@@ -24,7 +28,10 @@ export default function Raiz() {
   if (!hidratado) {
     return (
       <View style={est.espera}>
+        {/* La chispa late arriba y la marca queda debajo: es lo primero que
+            se ve al abrir la app, y hasta ahora ahí no había marca ninguna. */}
         <Latido size={48} />
+        <Marca size={34} conLema chispa={false} style={est.marca} />
       </View>
     );
   }
