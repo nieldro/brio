@@ -136,8 +136,19 @@ function Opciones({ valores, valor, onElegir, etiquetaDe, est }) {
 export default function Ajustes({ navigation }) {
   const est = useEstilos(crear);
   const { preferencia, cambiarPreferencia } = useTema();
-  const { perfil, actualizarPerfil, sesion, correo, userId, reiniciar, plan, hoy, completadoHoy } =
-    useUsuario();
+  const {
+    perfil,
+    actualizarPerfil,
+    sesion,
+    correo,
+    userId,
+    reiniciar,
+    plan,
+    hoy,
+    completadoHoy,
+    nutricionDetallada,
+    verNutricionDetallada,
+  } = useUsuario();
   const { estado: album, setFotos } = useAlbum();
 
   const [aviso, setAviso] = useState(null);
@@ -264,7 +275,29 @@ export default function Ajustes({ navigation }) {
         </Tarjeta>
       </Aparece>
 
+      {/* Apagado por defecto y encendido a mano, nunca al revés. Quien viene
+          de contar calorías y lo dejó no tiene que volver a verlas por haber
+          abierto la cámara. */}
       <Aparece orden={3}>
+        <Tarjeta>
+          <Etiqueta>al mirar un plato</Etiqueta>
+          <Text style={est.campo}>Estimación de energía y niveles</Text>
+          <Opciones
+            valores={[false, true]}
+            valor={nutricionDetallada}
+            onElegir={verNutricionDetallada}
+            etiquetaDe={(v) => (v ? 'Mostrarla' : 'No mostrarla')}
+            est={est}
+          />
+          <Text style={est.pie}>
+            {nutricionDetallada
+              ? 'Sale como rango, porque de una foto no salen cifras exactas. No se guarda ni se suma en ningún lado: no es una métrica de Brío.'
+              : 'Verás el semáforo y una cosa para sumarle. Sin números.'}
+          </Text>
+        </Tarjeta>
+      </Aparece>
+
+      <Aparece orden={4}>
         <Tarjeta>
           <Etiqueta>tu cuenta</Etiqueta>
           {sesion === 'concuenta' ? (
@@ -294,7 +327,7 @@ export default function Ajustes({ navigation }) {
         </Tarjeta>
       </Aparece>
 
-      <Aparece orden={4}>
+      <Aparece orden={5}>
         <Tarjeta>
           <Etiqueta>tus datos</Etiqueta>
           <Text style={est.campo}>

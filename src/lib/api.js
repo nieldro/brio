@@ -61,6 +61,8 @@ export function preguntarCoach(texto) {
 //
 // La foto va en base64 dentro de la petición y NO se guarda en ningún lado:
 // ni en el teléfono, ni en Supabase, ni en un log de Azure. Se mira y se va.
-export function mirarPlato(base64, tipo = 'image/jpeg') {
-  return llamar('plato', { imagen: base64, tipo }, { timeoutMs: 40000 });
+// `detalle` pide además la estimación de energía y niveles. Va apagado por
+// defecto: la pantalla de siempre es el semáforo y una suma.
+export function mirarPlato(base64, tipo = 'image/jpeg', detalle = false) {
+  return llamar('plato', { imagen: base64, tipo, detalle }, { timeoutMs: 40000 });
 }

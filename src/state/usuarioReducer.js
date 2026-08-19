@@ -41,6 +41,12 @@ export const estadoInicial = {
   // es exactamente lo que hace irse a quien ya abandonó otras apps.
   habitos: [], // ['agua', 'estirar']
   habitosHechos: {}, // { agua: ['2026-08-19', ...] }
+  // Ver la estimación de energía al mirar un plato. APAGADO por defecto.
+  //
+  // No es una métrica de la app y nunca va a serlo: no se guarda, no se
+  // suma, no aparece en el progreso. Es información para el momento en que
+  // alguien la pide, y por eso hay que encenderla a mano.
+  nutricionDetallada: false,
 };
 
 // Lo que se guarda en disco. Lo demás se resuelve en cada arranque.
@@ -98,6 +104,9 @@ export function reducer(estado, accion) {
           : [clave, ...estado.diasCompletados],
       };
     }
+
+    case 'NUTRICION_DETALLADA':
+      return { ...estado, nutricionDetallada: !!accion.valor };
 
     case 'ELEGIR_HABITOS':
       return { ...estado, habitos: accion.habitos };

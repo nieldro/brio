@@ -44,7 +44,16 @@ async function manejar(request, context) {
   if (datos.length > MAXIMO_BASE64) return malaPeticion('la foto pesa demasiado');
 
   const perfil = await leerPerfil(usuario.id);
-  const instruccion = promptPlato({ nombre: perfil?.nombre ?? '' });
+
+  // La estimación solo se calcula si la persona la encendió. Apagada, la
+  // pantalla es la de siempre: semáforo y una suma.
+  const conNutricion = cuerpo.detalle === true;
+
+  const instruccion = promptPlato({
+    nombre: perfil?.nombre ?? '',
+    objetivo: perfil?.objetivo ?? '',
+    conNutricion,
+  });
 
   // Un solo reintento, igual que el plan: si el modelo se sale de las reglas
   // se le dice exactamente en qué y se le da otra oportunidad. Si vuelve a
@@ -71,7 +80,7 @@ async function manejar(request, context) {
         log: context,
       });
 
-      const revision = validarPlato(extraerJson(crudo));
+      const revision = validarPlato(extraerJson(crudo), { conNutricion });
       if (revision.ok) resultado = revision.resultado;
       else {
         fallos = revision.errores;

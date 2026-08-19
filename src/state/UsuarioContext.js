@@ -141,6 +141,10 @@ export function UsuarioProvider({ children }) {
         });
       },
 
+      // Solo vive en el teléfono: es una preferencia de lo que se ve, no un
+      // dato de la persona, y no tiene por qué viajar a la nube.
+      verNutricionDetallada: (valor) => dispatch({ tipo: 'NUTRICION_DETALLADA', valor }),
+
       guardarLogro: (texto) => {
         dispatch({ tipo: 'GUARDAR_LOGRO', texto, hoy });
         anotar({ tipo: 'logro', fecha: claveDia(hoy), texto });

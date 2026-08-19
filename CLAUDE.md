@@ -21,7 +21,20 @@ Diferenciador: acompañamiento emocional + personalización con IA + precio Lata
 
 ## Reglas duras del producto (no negociables)
 
-1. Nunca contar calorías, macros ni usar el peso como métrica central.
+1. Nunca contar calorías ni macros como métrica, ni usar el peso como métrica
+   central. Nada de esto se guarda, se suma ni aparece en el progreso.
+
+   Al mirar un plato con la cámara se puede mostrar una **estimación**, y solo
+   si la persona la encendió a mano en Ajustes (viene apagada). Cuando se
+   muestra, cumple tres condiciones que la separan de un contador:
+   - Va en **rango ancho**, nunca en cifra exacta: de una foto no se ve el
+     aceite, ni el tamaño real, ni cómo se cocinó.
+   - Los macros van como **poca, media o alta**, nunca en gramos.
+   - **No se registra**: se mira una vez y se va con la foto.
+
+   Los textos que la persona lee siguen sin llevar cifras nunca, y el
+   validador del servidor lo comprueba. Un número dentro de una frase se lee
+   como un dato exacto, y de una foto no sale ningún dato exacto.
 2. Nunca culpa, castigo ni presión. Solo refuerzo positivo.
 3. Nunca diagnósticos ni consejos médicos. Casos de riesgo se derivan a profesionales.
 4. Nunca dietas restrictivas, ayunos ni promesas de kilos o fechas.

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, Image } from 'react-native';
 
 import { useEstilos } from '../state/TemaContext';
+import { useUsuario } from '../state/UsuarioContext';
 import Pantalla from '../components/Pantalla';
 import Tarjeta from '../components/Tarjeta';
 import Etiqueta from '../components/Etiqueta';
@@ -44,9 +45,47 @@ const crear = ({ C, T, R, S }) => ({
     ...T.titulo,
     flex: 1,
   },
+  equilibrio: {
+    ...T.cuerpo,
+    color: C.gris,
+    marginTop: S.md,
+  },
   suma: {
     ...T.cuerpo,
     marginTop: S.md,
+  },
+  energia: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: C.cafe,
+    marginTop: S.md,
+  },
+  niveles: {
+    marginTop: S.md,
+    gap: S.sm,
+  },
+  nivel: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: C.crema,
+    borderRadius: R.chico,
+    paddingVertical: S.sm + 2,
+    paddingHorizontal: S.md,
+  },
+  nivelNombre: {
+    ...T.cuerpo,
+  },
+  nivelValor: {
+    ...T.secundario,
+    fontWeight: '800',
+    color: C.coralTexto,
+    textTransform: 'lowercase',
+  },
+  aproximado: {
+    ...T.secundario,
+    fontSize: 13,
+    marginTop: S.lg,
   },
   mensaje: {
     ...T.cuerpo,
@@ -88,6 +127,7 @@ const SIN_FOTO = {
 // no de resta, igual que los del plan.
 export default function Plato() {
   const est = useEstilos(crear);
+  const { nutricionDetallada } = useUsuario();
 
   const [vista, setVista] = useState(null); // uri de lo que se está mirando
   const [cargando, setCargando] = useState(false);
@@ -110,7 +150,7 @@ export default function Plato() {
         return;
       }
 
-      const respuesta = await mirarPlato(base64);
+      const respuesta = await mirarPlato(base64, 'image/jpeg', nutricionDetallada);
       if (!respuesta) setAviso(SIN_RED);
       else if (!respuesta.hayPlato) setAviso(SIN_PLATO);
       else setResultado(respuesta);
@@ -134,15 +174,55 @@ export default function Plato() {
       {cargando && <Latido />}
 
       {!cargando && !!resultado && (
-        <Tarjeta>
-          <Etiqueta>tu plato</Etiqueta>
-          <View style={est.filaPlato}>
-            <PuntoSemaforo color={resultado.color} size={14} />
-            <Text style={est.nombrePlato}>{resultado.plato}</Text>
-          </View>
-          <Text style={est.suma}>{resultado.suma}</Text>
-          <Text style={est.mensaje}>{resultado.mensaje}</Text>
-        </Tarjeta>
+        <>
+          <Tarjeta>
+            <Etiqueta>tu plato</Etiqueta>
+            <View style={est.filaPlato}>
+              <PuntoSemaforo color={resultado.color} size={14} />
+              <Text style={est.nombrePlato}>{resultado.plato}</Text>
+            </View>
+
+            {/* Qué tiene de más y de menos. Es información sobre el plato, no
+                sobre quien lo come, y por eso se puede decir sin herir. */}
+            {!!resultado.equilibrio && (
+              <Text style={est.equilibrio}>{resultado.equilibrio}</Text>
+            )}
+
+            <Text style={est.suma}>{resultado.suma}</Text>
+            <Text style={est.mensaje}>{resultado.mensaje}</Text>
+          </Tarjeta>
+
+          {!!resultado.nutricion && (
+            <Tarjeta>
+              <Etiqueta>estimación aproximada</Etiqueta>
+
+              <Text style={est.energia}>
+                {resultado.nutricion.energiaMin} a {resultado.nutricion.energiaMax} kcal
+              </Text>
+
+              <View style={est.niveles}>
+                {[
+                  ['Proteína', resultado.nutricion.proteina],
+                  ['Carbohidratos', resultado.nutricion.carbohidratos],
+                  ['Grasas', resultado.nutricion.grasas],
+                  ['Fibra', resultado.nutricion.fibra],
+                ].map(([nombre, nivel]) => (
+                  <View key={nombre} style={est.nivel}>
+                    <Text style={est.nivelNombre}>{nombre}</Text>
+                    <Text style={est.nivelValor}>{nivel}</Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* Se dice aquí y no en letra chica: un rango que se lee como
+                  medición hace daño justo a quien esta app quiere cuidar. */}
+              <Text style={est.aproximado}>
+                Es un cálculo a ojo desde una foto. No se ve el aceite, ni el tamaño real, ni
+                cómo se cocinó. Sirve para orientarte, no para llevar cuentas.
+              </Text>
+            </Tarjeta>
+          )}
+        </>
       )}
 
       {!cargando && !!aviso && (

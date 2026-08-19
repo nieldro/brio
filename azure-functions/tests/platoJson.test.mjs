@@ -7,11 +7,23 @@ import { extraerJson } from '../src/lib/planJson.js';
 const BUENO = {
   plato: 'Arroz con pollo y ensalada',
   color: 'verde',
+  equilibrio: 'Lleva bastante arroz y poca verdura',
   suma: 'Acompáñalo con algo fresco de color',
   mensaje: 'Se ve completo. Así vas bien.',
 };
 
+const NUTRICION = {
+  energia_min: 450,
+  energia_max: 700,
+  proteina: 'media',
+  carbohidratos: 'alta',
+  grasas: 'media',
+  fibra: 'poca',
+};
+
 const con = (cambios) => validarPlato({ ...BUENO, ...cambios });
+const conNutri = (cambios) =>
+  validarPlato({ ...BUENO, nutricion: { ...NUTRICION, ...cambios } }, { conNutricion: true });
 
 // --- Lo que sí pasa -------------------------------------------------------
 
@@ -128,6 +140,93 @@ test('rechaza pasar de dos frases', () => {
 test('rechaza las palabras prohibidas del documento', () => {
   assert.equal(con({ mensaje: 'Eso es un fracaso.' }).ok, false);
   assert.equal(con({ suma: 'Súmale algo para quemar grasa' }).ok, false);
+});
+
+// --- La estimación: información sin fingir precisión ----------------------
+//
+// Es lo que se pidió: energía y niveles. Y las condiciones bajo las que se
+// puede dar sin mentir.
+
+test('una estimación bien formada pasa y llega normalizada', () => {
+  const r = conNutri();
+
+  assert.equal(r.ok, true, r.errores.join('; '));
+  assert.equal(r.resultado.nutricion.energiaMin, 450);
+  assert.equal(r.resultado.nutricion.energiaMax, 700);
+  assert.equal(r.resultado.nutricion.proteina, 'media');
+});
+
+test('sin pedirla, la estimación no sale aunque el modelo la mande', () => {
+  const r = validarPlato({ ...BUENO, nutricion: NUTRICION });
+  assert.equal(r.ok, true);
+  assert.equal(r.resultado.nutricion, null);
+});
+
+test('pedirla y que no llegue es un fallo, no un silencio', () => {
+  const r = validarPlato(BUENO, { conNutricion: true });
+  assert.equal(r.ok, false);
+  assert.ok(r.errores.some((e) => /no llegó/.test(e)));
+});
+
+test('rechaza un rango estrecho: una foto no da esa precisión', () => {
+  // 640 a 650 se lee como una medición, y de una foto no sale ninguna.
+  const r = conNutri({ energia_min: 640, energia_max: 650 });
+  assert.equal(r.ok, false);
+  assert.ok(r.errores.some((e) => /precisión/.test(e)), r.errores.join('; '));
+});
+
+test('rechaza un rango al revés o de un solo punto', () => {
+  assert.equal(conNutri({ energia_min: 700, energia_max: 450 }).ok, false);
+  assert.equal(conNutri({ energia_min: 500, energia_max: 500 }).ok, false);
+});
+
+test('los niveles son palabras, nunca gramos', () => {
+  // Pedir "23 g de proteína" desde una foto es inventar. Poca, media o alta
+  // es lo que de verdad se puede ver, y para quien busca músculo es más útil.
+  assert.equal(conNutri({ proteina: '23 g' }).ok, false);
+  assert.equal(conNutri({ proteina: 'muchísima' }).ok, false);
+  for (const nivel of ['poca', 'media', 'alta']) {
+    assert.equal(conNutri({ proteina: nivel }).ok, true, nivel);
+  }
+});
+
+test('faltar un nivel invalida la estimación entera', () => {
+  const sinFibra = { ...NUTRICION };
+  delete sinFibra.fibra;
+  const r = validarPlato({ ...BUENO, nutricion: sinFibra }, { conNutricion: true });
+  assert.equal(r.ok, false);
+});
+
+test('los números siguen sin poder colarse en los textos', () => {
+  // Esta es la linea que no se cruza: la estimación va en su campo, y el
+  // mensaje que la persona lee sigue sin cifras.
+  const r = validarPlato(
+    { ...BUENO, mensaje: 'Tiene unas 600 calorías. Vas bien.', nutricion: NUTRICION },
+    { conNutricion: true },
+  );
+  assert.equal(r.ok, false);
+  assert.ok(r.errores.some((e) => e.includes('cantidades')));
+});
+
+// --- El equilibrio: información, no reproche ------------------------------
+
+test('el equilibrio puede decir qué sobra y qué falta', () => {
+  const r = con({ equilibrio: 'Casi todo es harina y no hay nada fresco' });
+  assert.equal(r.ok, true, r.errores.join('; '));
+  assert.equal(r.resultado.equilibrio, 'Casi todo es harina y no hay nada fresco');
+});
+
+test('el equilibrio sigue sin poder juzgar', () => {
+  assert.equal(con({ equilibrio: 'Es comida chatarra' }).ok, false);
+  assert.equal(con({ equilibrio: 'Eso engorda mucho' }).ok, false);
+  assert.equal(con({ equilibrio: 'Tiene 300 gramos de arroz' }).ok, false);
+});
+
+test('un plato completo puede venir sin equilibrio', () => {
+  // Forzar una pega cuando no la hay sale en una recomendación inventada.
+  const r = validarPlato({ ...BUENO, equilibrio: '' });
+  assert.equal(r.ok, true);
+  assert.equal(r.resultado.equilibrio, null);
 });
 
 // --- Estructura -----------------------------------------------------------
