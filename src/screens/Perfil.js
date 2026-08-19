@@ -8,6 +8,18 @@ import Boton from '../components/Boton';
 import Etiqueta from '../components/Etiqueta';
 import { useUsuario } from '../state/UsuarioContext';
 
+// Se guardan sin tilde y en minúscula, que es como las lee el servidor.
+// La etiqueta es lo que ve la persona.
+const ZONAS = [
+  { clave: 'piernas', etiqueta: 'Piernas' },
+  { clave: 'gluteos', etiqueta: 'Glúteos' },
+  { clave: 'pecho', etiqueta: 'Pecho' },
+  { clave: 'espalda', etiqueta: 'Espalda' },
+  { clave: 'brazos', etiqueta: 'Brazos' },
+  { clave: 'hombros', etiqueta: 'Hombros' },
+  { clave: 'centro', etiqueta: 'Abdomen' },
+];
+
 const OBJETIVOS = ['Perder peso', 'Ganar músculo', 'Sentirme mejor', 'Crear el hábito'];
 const LUGARES = ['En casa', 'En el gym', 'Mezclado'];
 const TIEMPOS = [20, 30, 45, 60, 90, 120];
@@ -230,6 +242,46 @@ export default function Perfil({ navigation }) {
         />
 
         <Text style={est.pie}>Los cambios entran en el plan de la próxima semana.</Text>
+      </Tarjeta>
+
+      {/* Elegir zonas filtra SOLO los ejercicios de fuerza. El calentamiento,
+          el cardio y el cierre siguen igual: un plan de "solo brazos" que
+          además no calienta ni estira no es personalización, es un plan malo. */}
+      <Tarjeta>
+        <Etiqueta>qué quieres trabajar</Etiqueta>
+        <Text style={est.campo}>Puedes elegir varias, o ninguna</Text>
+
+        <View style={est.chips}>
+          {ZONAS.map((z) => {
+            const elegida = (borrador.zonas ?? []).includes(z.clave);
+            return (
+              <Pressable
+                key={z.clave}
+                onPress={() =>
+                  cambiar(
+                    'zonas',
+                    elegida
+                      ? (borrador.zonas ?? []).filter((c) => c !== z.clave)
+                      : [...(borrador.zonas ?? []), z.clave],
+                  )
+                }
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: elegida }}
+                style={[est.chip, elegida && est.chipElegido]}
+              >
+                <Text style={[est.chipTexto, elegida && est.chipTextoElegido]}>
+                  {z.etiqueta}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <Text style={est.pie}>
+          {(borrador.zonas ?? []).length === 0
+            ? 'Sin elegir nada, trabajamos el cuerpo entero.'
+            : 'Aun así, una vez por semana movemos todo: entrenar una sola zona desequilibra.'}
+        </Text>
       </Tarjeta>
 
       {!!aviso && <Text style={est.aviso}>{aviso}</Text>}

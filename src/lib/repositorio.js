@@ -23,6 +23,7 @@ function aFila(perfil) {
     hora_recordatorio: perfil.hora_recordatorio || null,
     push_token: perfil.push_token || null,
     zona_horaria: perfil.zona_horaria || null,
+    zonas: perfil.zonas?.length ? perfil.zonas : [],
   };
 }
 
@@ -39,6 +40,7 @@ function aPerfil(fila) {
     hora_recordatorio: fila.hora_recordatorio?.slice(0, 5) ?? '',
     push_token: fila.push_token ?? null,
     zona_horaria: fila.zona_horaria ?? null,
+    zonas: fila.zonas ?? [],
   };
 }
 
@@ -173,10 +175,11 @@ export async function guardarPerfil(userId, perfil) {
     const { error } = await supabase.from('profiles').upsert({ id: userId, ...fila });
     if (!error) return true;
 
-    // `zona_horaria` solo existe si se corrió migrations/002. Sin este
-    // reintento, olvidar la migración haría perder el perfil entero en
-    // silencio, que es mucho peor que quedarse sin recordatorios.
-    const { zona_horaria, ...base } = fila;
+    // `zona_horaria` y `zonas` solo existen si se corrieron migrations/002 y
+    // 003. Sin este reintento, olvidar una migración haría perder el perfil
+    // entero en silencio, que es mucho peor que quedarse sin recordatorios o
+    // sin poder elegir qué parte del cuerpo trabajar.
+    const { zona_horaria, zonas, ...base } = fila;
     const segundo = await supabase.from('profiles').upsert({ id: userId, ...base });
     return !segundo.error;
   } catch {

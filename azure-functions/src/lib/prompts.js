@@ -124,6 +124,8 @@ export function promptPlan(d) {
     tiempo: d.tiempo,
     impacto: d.impacto,
     lugar: d.lugar,
+    sinSuelo: d.sinSuelo,
+    zonas: d.zonas,
   });
 
   // Las órdenes salen del motor de adaptación de la app, que analiza el

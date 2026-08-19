@@ -7,7 +7,7 @@
 // Aquí se decide qué exige cada día y qué se le puede pedir a esta persona en
 // concreto. El validador lo comprueba después: el prompt pide, esto obliga.
 
-import { listaParaElPrompt } from './catalogo.js';
+import { listaParaElPrompt, evitaElSuelo } from './catalogo.js';
 
 export const BLOQUES = ['calentamiento', 'principal', 'cierre'];
 
@@ -101,7 +101,19 @@ export function enfoqueDe(objetivo) {
 
 // --- El bloque que se le pega al prompt -----------------------------------
 
-export function instruccionesDeRutina({ objetivo, tiempo, impacto, lugar }) {
+// Todo lo que hay que saber para armarle el plan a esta persona.
+// Sale del perfil y de reglas, nunca del criterio del modelo.
+export function adaptacionPara(perfil = {}) {
+  const indice = imc(perfil);
+
+  return {
+    impacto: nivelDeImpacto(perfil),
+    sinSuelo: evitaElSuelo({ edad: perfil.edad, imc: indice }),
+    zonas: Array.isArray(perfil.zonas) ? perfil.zonas : [],
+  };
+}
+
+export function instruccionesDeRutina({ objetivo, tiempo, impacto, lugar, sinSuelo, zonas }) {
   const sinImpacto =
     impacto === 'bajo'
       ? `
@@ -138,5 +150,5 @@ Esta persona apartó ${tiempo} minutos al día. Úsalos.
 
 ## Enfoque de esta persona
 ${enfoqueDe(objetivo)}${sinImpacto}
-${listaParaElPrompt(lugar)}`;
+${listaParaElPrompt({ lugar, impacto, sinSuelo, zonas })}`;
 }

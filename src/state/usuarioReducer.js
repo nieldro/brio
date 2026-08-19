@@ -26,6 +26,9 @@ export const estadoInicial = {
     notificaciones: false,
     push_token: null,
     zona_horaria: null,
+    // Vacío es "el cuerpo entero". Quien no elige nada no está pidiendo un
+    // plan de brazos, está pidiendo un plan.
+    zonas: [],
   },
   plan: null, // jsonb de `planes.plan`; null mientras no lo genere la IA
   ultimoDiaCompletado: null, // '2026-08-13'

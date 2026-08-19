@@ -9,100 +9,153 @@
 // Una prueba de la app comprueba que cada nombre de aquí encuentra su guía:
 // si alguien agrega uno sin guía, salta antes de llegar al teléfono.
 //
-// Ninguno lleva salto ni carrera, así que el catálogo entero sirve también
-// para quien entrena sin impacto.
+// Cada ejercicio dice tres cosas:
+//   lugar   dónde se puede hacer: 'casa', 'gym' o 'ambos'
+//   papel   para qué sirve en el día: calentamiento, cardio, fuerza, cierre
+//   zonas   qué parte del cuerpo trabaja, para poder personalizar
+//   suelo   si hay que bajar y subir del piso
 
-export const CATALOGO = {
-  casa: {
-    calentamiento: ['Movilidad articular', 'Marcha en el sitio', 'Pasos laterales'],
-    // Sube el pulso sin ahogar. El grueso para quien quiere perder peso.
-    cardio: ['Caminata', 'Subir escaleras', 'Bailar', 'Marcha en el sitio'],
-    // Empuje, tirón, pierna y centro: con esto se arma cualquier día de fuerza.
-    fuerza: [
-      'Sentadilla a la silla',
-      'Zancada',
-      'Sentadilla búlgara',
-      'Puente de glúteos',
-      'Elevación de talones',
-      'Peso muerto',
-      'Flexiones en la pared',
-      'Flexiones en el suelo',
-      'Fondo de tríceps',
-      'Curl de bíceps',
-      'Elevaciones laterales',
-      'Plancha apoyada',
-      'Abdominal corto',
-      'Superman',
-    ],
-    cierre: ['Estiramiento', 'Respiración'],
-  },
+export const ZONAS = ['piernas', 'gluteos', 'pecho', 'espalda', 'brazos', 'hombros', 'centro'];
 
-  gym: {
-    calentamiento: ['Movilidad articular', 'Máquina de cardio'],
-    cardio: ['Máquina de cardio', 'Caminata'],
-    fuerza: [
-      'Prensa de piernas',
-      'Extensión de piernas',
-      'Curl femoral',
-      'Press de pecho',
-      'Press de hombro',
-      'Remo en máquina',
-      'Jalón al pecho',
-      'Polea de tríceps',
-      'Curl de bíceps',
-      'Trabajo con mancuernas',
-      'Plancha apoyada',
-      'Abdominal corto',
-    ],
-    cierre: ['Estiramiento', 'Respiración'],
-  },
-};
+const E = (nombre, lugar, papel, zonas = [], suelo = false, impacto = false) => ({
+  nombre,
+  lugar,
+  papel,
+  zonas,
+  suelo,
+  impacto,
+});
 
-// Quien entrena "Mezclado" tiene las dos puertas abiertas.
-function unir(...listas) {
-  return [...new Set(listas.flat())];
-}
+export const EJERCICIOS = [
+  // --- Calentamiento y cierre ---------------------------------------------
+  E('Movilidad articular', 'ambos', 'calentamiento'),
+  E('Marcha en el sitio', 'casa', 'calentamiento', ['piernas']),
+  E('Pasos laterales', 'casa', 'calentamiento', ['piernas', 'gluteos']),
+  E('Estiramiento', 'ambos', 'cierre'),
+  E('Respiración', 'ambos', 'cierre'),
 
-export function ejerciciosDe(lugar) {
-  const donde = String(lugar ?? '')
+  // --- Cardio --------------------------------------------------------------
+  E('Caminata', 'ambos', 'cardio', ['piernas']),
+  E('Subir escaleras', 'casa', 'cardio', ['piernas', 'gluteos']),
+  E('Bailar', 'casa', 'cardio', ['piernas']),
+  E('Máquina de cardio', 'gym', 'cardio', ['piernas']),
+
+  // --- Fuerza en casa ------------------------------------------------------
+  E('Sentadilla a la silla', 'casa', 'fuerza', ['piernas', 'gluteos']),
+  E('Zancada', 'casa', 'fuerza', ['piernas', 'gluteos']),
+  E('Sentadilla búlgara', 'casa', 'fuerza', ['piernas', 'gluteos']),
+  E('Elevación de talones', 'casa', 'fuerza', ['piernas']),
+  E('Peso muerto', 'ambos', 'fuerza', ['piernas', 'gluteos', 'espalda']),
+  E('Puente de glúteos', 'casa', 'fuerza', ['gluteos', 'centro'], true),
+  E('Flexiones en la pared', 'casa', 'fuerza', ['pecho', 'brazos', 'hombros']),
+  E('Flexiones en el suelo', 'casa', 'fuerza', ['pecho', 'brazos', 'hombros'], true),
+  E('Fondo de tríceps', 'ambos', 'fuerza', ['brazos', 'pecho']),
+  E('Curl de bíceps', 'ambos', 'fuerza', ['brazos']),
+  E('Elevaciones laterales', 'ambos', 'fuerza', ['hombros']),
+  E('Trabajo con mancuernas', 'ambos', 'fuerza', ['brazos', 'hombros']),
+  E('Plancha apoyada', 'ambos', 'fuerza', ['centro'], true),
+  E('Abdominal corto', 'ambos', 'fuerza', ['centro'], true),
+  E('Superman', 'casa', 'fuerza', ['espalda', 'gluteos'], true),
+
+  // --- Fuerza en gimnasio --------------------------------------------------
+  E('Prensa de piernas', 'gym', 'fuerza', ['piernas', 'gluteos']),
+  E('Extensión de piernas', 'gym', 'fuerza', ['piernas']),
+  E('Curl femoral', 'gym', 'fuerza', ['piernas']),
+  E('Press de pecho', 'gym', 'fuerza', ['pecho', 'brazos', 'hombros']),
+  E('Press de hombro', 'gym', 'fuerza', ['hombros', 'brazos']),
+  E('Remo en máquina', 'gym', 'fuerza', ['espalda', 'brazos']),
+  E('Jalón al pecho', 'gym', 'fuerza', ['espalda', 'brazos']),
+  E('Polea de tríceps', 'gym', 'fuerza', ['brazos']),
+];
+
+const sinTildes = (t) =>
+  String(t ?? '')
     .toLowerCase()
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '');
 
-  if (donde.includes('gym') || donde.includes('gimnasio')) return CATALOGO.gym;
-  if (donde.includes('mezcl')) {
-    return {
-      calentamiento: unir(CATALOGO.casa.calentamiento, CATALOGO.gym.calentamiento),
-      cardio: unir(CATALOGO.casa.cardio, CATALOGO.gym.cardio),
-      fuerza: unir(CATALOGO.casa.fuerza, CATALOGO.gym.fuerza),
-      cierre: unir(CATALOGO.casa.cierre, CATALOGO.gym.cierre),
-    };
-  }
-  return CATALOGO.casa;
+// --- A quién le sirve cada cosa -------------------------------------------
+
+export function lugarDe(lugar) {
+  const donde = sinTildes(lugar);
+  if (donde.includes('gym') || donde.includes('gimnasio')) return 'gym';
+  if (donde.includes('mezcl')) return 'mezclado';
+  return 'casa';
 }
+
+// Bajarse y subirse del piso no es gratis para todo el mundo.
+//
+// Con mucho peso encima o pasados los sesenta, ese solo gesto se vuelve la
+// parte difícil del ejercicio, y la persona abandona por algo que no era el
+// ejercicio. Se sustituye por versiones de pie o en silla, que trabajan lo
+// mismo. Es adaptación, no rebaja.
+export function evitaElSuelo({ edad, imc } = {}) {
+  const años = Number(edad);
+  if (Number.isFinite(años) && años >= 60) return true;
+  if (Number.isFinite(imc) && imc >= 35) return true;
+  return false;
+}
+
+// Devuelve los ejercicios que le sirven a esta persona.
+export function ejerciciosPara({ lugar, impacto = 'normal', sinSuelo = false, zonas = [] } = {}) {
+  const donde = lugarDe(lugar);
+  const enfoque = (zonas ?? []).map(sinTildes).filter(Boolean);
+
+  return EJERCICIOS.filter((e) => {
+    if (donde !== 'mezclado' && e.lugar !== 'ambos' && e.lugar !== donde) return false;
+    if (impacto === 'bajo' && e.impacto) return false;
+    if (sinSuelo && e.suelo) return false;
+
+    // Las zonas solo filtran la fuerza. Nadie quiere un calentamiento
+    // "de bíceps", y quitar el cierre dejaría el día sin estiramiento.
+    if (enfoque.length && e.papel === 'fuerza') {
+      return e.zonas.some((z) => enfoque.includes(sinTildes(z)));
+    }
+    return true;
+  });
+}
+
+const porPapel = (lista, papel) => lista.filter((e) => e.papel === papel).map((e) => e.nombre);
 
 // Todos los nombres, sin repetir. Lo usa la prueba que comprueba que cada uno
 // tiene guía en la app.
 export function todosLosNombres() {
-  return unir(
-    ...Object.values(CATALOGO).flatMap((lugar) => Object.values(lugar)),
-  ).sort();
+  return [...new Set(EJERCICIOS.map((e) => e.nombre))].sort();
 }
 
 // El bloque que se le pega al prompt.
-export function listaParaElPrompt(lugar) {
-  const e = ejerciciosDe(lugar);
-  const linea = (titulo, lista) => `- ${titulo}: ${lista.join(', ')}`;
+export function listaParaElPrompt(opciones = {}) {
+  const utiles = ejerciciosPara(opciones);
+
+  // Si el enfoque dejó la fuerza en nada (alguien que pidió solo "pecho" y
+  // entrena en casa), se abre la mano antes que devolver un día vacío.
+  const conFuerza = porPapel(utiles, 'fuerza').length >= 3
+    ? utiles
+    : ejerciciosPara({ ...opciones, zonas: [] });
+
+  const linea = (titulo, papel) => `- ${titulo}: ${porPapel(conFuerza, papel).join(', ')}`;
+
+  const nota = opciones.zonas?.length
+    ? `\nEsta persona quiere trabajar sobre todo: ${opciones.zonas.join(', ')}. La lista de
+fuerza ya viene filtrada para eso. Aun así, cada semana mete al menos un día
+que mueva el cuerpo entero: entrenar una sola zona desequilibra.`
+    : '';
+
+  const suelo = opciones.sinSuelo
+    ? `\nNADA en el piso. Ni planchas, ni abdominales boca arriba, ni puentes.
+Todo de pie, en silla o contra la pared. No expliques por qué.`
+    : '';
 
   return `
 ## Ejercicios que puedes usar (lista cerrada)
 Usa SOLO estos nombres, escritos exactamente así. Cada uno tiene en la app su
 guía y su animación; cualquier otro nombre deja a la persona sin las dos.
 
-${linea('para calentar', e.calentamiento)}
-${linea('para subir el pulso', e.cardio)}
-${linea('para fuerza', e.fuerza)}
-${linea('para cerrar', e.cierre)}
+${linea('para calentar', 'calentamiento')}
+${linea('para subir el pulso', 'cardio')}
+${linea('para fuerza', 'fuerza')}
+${linea('para cerrar', 'cierre')}
+${nota}${suelo}
 
 Puedes repetir un ejercicio en días distintos y cambiarle las series, las
 repeticiones o los minutos en el "detalle". Lo que no puedes es inventar un

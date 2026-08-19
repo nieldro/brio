@@ -2,7 +2,7 @@ import { admin } from './supabase.js';
 import { generar } from './gemini.js';
 import { promptPlan } from './prompts.js';
 import { extraerJson, validarPlan } from './planJson.js';
-import { nivelDeImpacto } from './rutina.js';
+import { adaptacionPara } from './rutina.js';
 import { leerPerfil, contextoSemana } from './datos.js';
 
 const TIEMPO_POR_DEFECTO = 20;
@@ -20,8 +20,9 @@ export async function crearPlan(userId, hoy, log = console, ajustes = []) {
 
   // Se decide aquí, con reglas, y no se le pregunta al modelo. El número que
   // lo decide (el IMC) no sale de rutina.js: no se guarda, no se muestra y no
-  // entra en ningún mensaje. Solo responde "¿esta persona puede saltar?".
-  const impacto = nivelDeImpacto(perfil);
+  // entra en ningún mensaje. Solo responde dos cosas: si esta persona puede
+  // saltar, y si bajarse al piso le va a costar más que el ejercicio.
+  const { impacto, sinSuelo, zonas } = adaptacionPara(perfil);
 
   const instruccion = promptPlan({
     edad: perfil.edad ?? 'no dice',
@@ -34,6 +35,8 @@ export async function crearPlan(userId, hoy, log = console, ajustes = []) {
     cumplimiento,
     nivel: perfil.nivel ?? 'inicio',
     impacto,
+    sinSuelo,
+    zonas,
     // Se filtra y se recorta: viene de la app, así que no se confía a ciegas.
     ajustes: (Array.isArray(ajustes) ? ajustes : [])
       .filter((a) => typeof a === 'string' && a.length < 200)

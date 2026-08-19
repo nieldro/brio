@@ -4,7 +4,12 @@ import assert from 'node:assert/strict';
 import { normalizar, buscarGuia, guiaDe, busquedaDeVideo } from '../src/services/guias.js';
 import { GUIAS } from '../src/data/guias.js';
 import { POSTURAS, POSTURA_POR_DEFECTO } from '../src/data/posturas.js';
-import { todosLosNombres, ejerciciosDe } from '../azure-functions/src/lib/catalogo.js';
+import {
+  todosLosNombres,
+  ejerciciosPara,
+  evitaElSuelo,
+  ZONAS,
+} from '../azure-functions/src/lib/catalogo.js';
 
 // --- Normalización --------------------------------------------------------
 
@@ -206,14 +211,67 @@ test('el nombre del catálogo cae en la guía que le toca, no en una parecida', 
   }
 });
 
+const porPapel = (lista, papel) => lista.filter((e) => e.papel === papel);
+
 test('cada lugar ofrece con qué armar un día completo', () => {
   for (const lugar of ['En casa', 'En el gym', 'Mezclado']) {
-    const e = ejerciciosDe(lugar);
-    assert.ok(e.calentamiento.length >= 1, `${lugar} sin con qué calentar`);
-    assert.ok(e.fuerza.length >= 6, `${lugar} tiene pocos de fuerza`);
-    assert.ok(e.cardio.length >= 2, `${lugar} tiene poco cardio`);
-    assert.ok(e.cierre.length >= 1, `${lugar} sin con qué cerrar`);
+    const e = ejerciciosPara({ lugar });
+    assert.ok(porPapel(e, 'calentamiento').length >= 1, `${lugar} sin con qué calentar`);
+    assert.ok(porPapel(e, 'fuerza').length >= 6, `${lugar} tiene pocos de fuerza`);
+    assert.ok(porPapel(e, 'cardio').length >= 2, `${lugar} tiene poco cardio`);
+    assert.ok(porPapel(e, 'cierre').length >= 1, `${lugar} sin con qué cerrar`);
   }
+});
+
+// --- Adaptación a la persona ---------------------------------------------
+
+test('cada zona del cuerpo tiene con qué trabajarse en casa y en el gym', () => {
+  // Si alguien elige "pecho" y entrena en casa, tiene que haber ejercicios de
+  // pecho en casa. Si no, el filtro devuelve un día vacío.
+  for (const zona of ZONAS) {
+    for (const lugar of ['En casa', 'En el gym']) {
+      const fuerza = porPapel(ejerciciosPara({ lugar, zonas: [zona] }), 'fuerza');
+      assert.ok(fuerza.length >= 1, `${zona} no tiene nada en ${lugar}`);
+    }
+  }
+});
+
+test('quien no elige zona recibe el cuerpo entero', () => {
+  const todo = ejerciciosPara({ lugar: 'Mezclado' });
+  const soloBrazos = ejerciciosPara({ lugar: 'Mezclado', zonas: ['brazos'] });
+
+  assert.ok(porPapel(soloBrazos, 'fuerza').length < porPapel(todo, 'fuerza').length);
+  // Pero el calentamiento y el cierre no se tocan: un plan de brazos que no
+  // calienta ni estira no es personalización, es un plan malo.
+  assert.equal(
+    porPapel(soloBrazos, 'calentamiento').length,
+    porPapel(todo, 'calentamiento').length,
+  );
+  assert.equal(porPapel(soloBrazos, 'cierre').length, porPapel(todo, 'cierre').length);
+});
+
+test('bajarse al piso se evita con edad o con mucho peso encima', () => {
+  // No es una rebaja: con mucho peso o pasados los sesenta, bajar y subir del
+  // piso se vuelve la parte difícil y la persona abandona por algo que no era
+  // el ejercicio.
+  assert.equal(evitaElSuelo({ edad: 62, imc: 24 }), true);
+  assert.equal(evitaElSuelo({ edad: 30, imc: 37 }), true);
+  assert.equal(evitaElSuelo({ edad: 30, imc: 24 }), false);
+  assert.equal(evitaElSuelo({}), false);
+});
+
+test('sin suelo sigue habiendo con qué armar la fuerza', () => {
+  for (const lugar of ['En casa', 'En el gym']) {
+    const fuerza = porPapel(ejerciciosPara({ lugar, sinSuelo: true }), 'fuerza');
+    assert.ok(fuerza.length >= 5, `${lugar} sin suelo se queda con ${fuerza.length}`);
+    assert.ok(!fuerza.some((e) => e.suelo), `${lugar} coló un ejercicio de piso`);
+  }
+});
+
+test('el impacto bajo no deja a nadie sin plan', () => {
+  const e = ejerciciosPara({ lugar: 'Mezclado', impacto: 'bajo' });
+  assert.ok(porPapel(e, 'cardio').length >= 2);
+  assert.ok(!e.some((x) => x.impacto));
 });
 
 test('el catálogo entero sirve para quien no puede saltar', () => {
