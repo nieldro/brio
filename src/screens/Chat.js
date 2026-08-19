@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEstilos, useTema } from '../state/TemaContext';
 import { useUsuario } from '../state/UsuarioContext';
 import { useTeclado } from '../state/useTeclado';
+import BotonVoz from '../components/BotonVoz';
 import { preguntarCoach, hayApi } from '../lib/api';
 import { leerMensajes } from '../lib/repositorio';
 import { mensajesDemo, CHIPS } from '../data/chatDemo';
@@ -62,6 +63,9 @@ const crear = ({ C, T, R, S, RELLENO }) => ({
   escribiendo: {
     ...T.secundario,
     fontStyle: 'italic',
+  },
+  vozBurbuja: {
+    marginTop: S.md,
   },
   zonaBaja: {
     borderTopWidth: 1,
@@ -193,14 +197,26 @@ export default function Chat() {
         keyboardDismissMode="on-drag"
         onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: true })}
       >
-        {mensajes.map((m) => (
-          <View
-            key={m.id}
-            style={[est.burbuja, m.rol === 'user' ? est.deUsuario : est.deBrio]}
-          >
-            <Text style={m.rol === 'user' ? est.textoUsuario : est.textoBrio}>{m.texto}</Text>
-          </View>
-        ))}
+        {mensajes.map((m, i) => {
+          // Solo la última respuesta de Brío se puede escuchar. Un botón en
+          // cada burbuja llenaría el hilo de botones, y lo que alguien quiere
+          // oír es lo que le acaban de decir.
+          const esUltimaDeBrio = m.rol === 'brio' && i === mensajes.length - 1;
+
+          return (
+            <View
+              key={m.id}
+              style={[est.burbuja, m.rol === 'user' ? est.deUsuario : est.deBrio]}
+            >
+              <Text style={m.rol === 'user' ? est.textoUsuario : est.textoBrio}>{m.texto}</Text>
+              {esUltimaDeBrio && !esperando && (
+                <View style={est.vozBurbuja}>
+                  <BotonVoz texto={m.texto} etiqueta="Escuchar" />
+                </View>
+              )}
+            </View>
+          );
+        })}
 
         {esperando && (
           <View style={[est.burbuja, est.deBrio]}>

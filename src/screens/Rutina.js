@@ -11,6 +11,8 @@ import Etiqueta from '../components/Etiqueta';
 import Boton from '../components/Boton';
 import Casilla from '../components/Casilla';
 import SelloHecho from '../components/SelloHecho';
+import BotonVoz from '../components/BotonVoz';
+import { guionDeGuia } from '../lib/voz';
 import FiguraEjercicio, { useRelojDeFiguras } from '../components/FiguraEjercicio';
 import Aparece from '../components/Aparece';
 import { useMarcarDia } from '../state/useMarcarDia';
@@ -318,6 +320,14 @@ export default function Rutina({ route, navigation }) {
                         <Text style={est.subtitulo}>si hoy no puedes</Text>
                         <Text style={est.facil}>{g.masFacil}</Text>
                       </View>
+
+                      {/* Escuchar es lo que la hace usable DURANTE el
+                          ejercicio: en mitad de una plancha nadie puede
+                          mirar el teléfono. */}
+                      <BotonVoz
+                        texto={guionDeGuia(g, e)}
+                        etiqueta="Escuchar la guía"
+                      />
 
                       {/* Hay movimientos que se entienden al verlos, y este es
                           el momento en que hace falta: con la rutina abierta y

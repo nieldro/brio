@@ -7,6 +7,8 @@ import Tarjeta from '../components/Tarjeta';
 import Etiqueta from '../components/Etiqueta';
 import Boton from '../components/Boton';
 import FiguraEjercicio from '../components/FiguraEjercicio';
+import BotonVoz from '../components/BotonVoz';
+import { guionDeGuia } from '../lib/voz';
 import { guiaDe, busquedaDeVideo } from '../services/guias';
 
 const crear = ({ C, T, R, S }) => ({
@@ -72,6 +74,7 @@ const crear = ({ C, T, R, S }) => ({
   escenario: {
     alignItems: 'center',
     paddingVertical: S.lg,
+    gap: S.lg,
   },
   pieVideo: {
     ...T.secundario,
@@ -111,6 +114,7 @@ export default function Guia({ route }) {
           ver la forma, y leerla no es lo mismo que verla. */}
       <Tarjeta style={est.escenario}>
         <FiguraEjercicio postura={g.figura} size={150} />
+        <BotonVoz texto={guionDeGuia(g, ejercicio)} etiqueta="Escuchar la guía" />
       </Tarjeta>
 
       <Tarjeta>
