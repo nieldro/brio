@@ -62,6 +62,13 @@ sin dolor no hay resultado.
 }
 
 export function promptPlan(d) {
+  // Las órdenes salen del motor de adaptación de la app, que analiza el
+  // historial con reglas. Van al FINAL y como instrucciones directas: un
+  // modelo obedece mejor una orden concreta que una tabla de datos.
+  const ajustes = d.ajustes?.length
+    ? `\n\n## Ajustes obligatorios de esta semana\nEstos salen del historial real de la persona. Cúmplelos.\n${d.ajustes.map((a) => `- ${a}`).join('\n')}`
+    : '';
+
   return `Eres el generador de planes semanales de Brío.
 Creas planes de ejercicio y hábitos personalizados.
 Respondes SOLO con JSON válido. Sin texto extra.
@@ -126,5 +133,5 @@ No supongas el género de la persona. Usa formas neutras:
       "mensaje": "Hoy solo arrancamos. Con eso basta."
     }
   ]
-}`;
+}${ajustes}`;
 }

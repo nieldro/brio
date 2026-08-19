@@ -44,8 +44,12 @@ async function llamar(ruta, cuerpo, { timeoutMs = 20000 } = {}) {
 }
 
 // Genera el plan de la semana. Puede tardar: el modelo escribe siete días.
-export function generarPlan() {
-  return llamar('plan', {}, { timeoutMs: 45000 });
+//
+// `ajustes` son las órdenes que sacó el motor de adaptación del historial
+// (services/adaptacion.js). Van desde la app porque el análisis se hace con
+// los días que el teléfono ya tiene, incluidos los que aún no subieron.
+export function generarPlan(ajustes = []) {
+  return llamar('plan', { ajustes }, { timeoutMs: 45000 });
 }
 
 // Una vuelta de conversación con Brío.

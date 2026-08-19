@@ -20,7 +20,7 @@ async function manejar(request, context) {
   const cuerpo = await cuerpoJson(request);
   const hoy = fechaValida(cuerpo.fecha) ?? hoyUtc();
 
-  const resultado = await crearPlan(usuario.id, hoy, context);
+  const resultado = await crearPlan(usuario.id, hoy, context, cuerpo.ajustes);
 
   if (resultado.error === 'sin perfil') {
     return malaPeticion('todavía no hay perfil para este usuario');

@@ -9,6 +9,7 @@ import Chispa from '../components/Chispa';
 import { useUsuario } from '../state/UsuarioContext';
 import { fechasDeLaSemana } from '../services/fecha';
 import { contarRegresos, textoRegresos } from '../services/regresos';
+import { analizar, loQueNote } from '../services/adaptacion';
 
 // El mensaje del coach sale del avance real. Nunca reprocha lo que falta.
 function mensajeCoach(hechos, nombre) {
@@ -71,6 +72,11 @@ export default function Progreso() {
 
   const regresos = useMemo(() => textoRegresos(contarRegresos(diasCompletados)), [diasCompletados]);
 
+  const observacion = useMemo(
+    () => loQueNote(analizar(diasCompletados, new Date()), perfil.nombre),
+    [diasCompletados, perfil.nombre],
+  );
+
   const { hechos, cumplimiento } = useMemo(() => {
     const semana = Object.values(fechasDeLaSemana(new Date()));
     const marcados = new Set(diasCompletados);
@@ -120,6 +126,16 @@ export default function Progreso() {
             : 'Ya lo lograste una vez. Se puede otra.'}
         </Text>
       </Tarjeta>
+
+      {/* Lo que el motor de adaptación encontró en el historial. Solo
+          aparece cuando hay un patrón de verdad: si no, Brío se calla en
+          vez de inventar uno. */}
+      {!!observacion && (
+        <Tarjeta>
+          <Etiqueta>lo que noté</Etiqueta>
+          <Text style={est.mensajeCoach}>{observacion}</Text>
+        </Tarjeta>
+      )}
 
       <Tarjeta>
         <Etiqueta>brío te dice</Etiqueta>

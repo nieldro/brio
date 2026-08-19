@@ -90,7 +90,8 @@ export default function Onboarding({ navigation }) {
       if (hayApi) {
         try {
           await actualizarPerfil(armarPerfil());
-          const respuesta = await generarPlan();
+          // En el onboarding no hay historial todavía: no hay nada que ajustar.
+          const respuesta = await generarPlan([]);
           if (vivo && respuesta?.plan) setPlan(respuesta.plan);
         } catch {
           // Se sigue con el plan de arranque.

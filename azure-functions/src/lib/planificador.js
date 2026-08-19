@@ -10,7 +10,7 @@ const TIEMPO_POR_DEFECTO = 20;
 // (al terminar el onboarding) y el Timer `plan-semanal`.
 //
 // Devuelve { plan, semana, cumplimiento } o { error }.
-export async function crearPlan(userId, hoy, log = console) {
+export async function crearPlan(userId, hoy, log = console, ajustes = []) {
   const perfil = await leerPerfil(userId);
   if (!perfil) return { error: 'sin perfil' };
 
@@ -27,6 +27,10 @@ export async function crearPlan(userId, hoy, log = console) {
     semana,
     cumplimiento,
     nivel: perfil.nivel ?? 'inicio',
+    // Se filtra y se recorta: viene de la app, así que no se confía a ciegas.
+    ajustes: (Array.isArray(ajustes) ? ajustes : [])
+      .filter((a) => typeof a === 'string' && a.length < 200)
+      .slice(0, 5),
   });
 
   // Se valida el JSON y se reintenta UNA vez, como manda el documento.
