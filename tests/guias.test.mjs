@@ -109,11 +109,15 @@ test('la postura por defecto existe, que es la red de seguridad', () => {
   assert.ok(Object.keys(POSTURAS).includes(POSTURA_POR_DEFECTO));
 });
 
-test('cada postura son dos posturas de 22 números', () => {
-  // El componente lee por posición: si a una le falta un número, la figura
-  // se dibuja rota y no falla nada.
+test('cada movimiento tiene al menos ida y vuelta, y todas de 22 números', () => {
+  // El componente lee por posición: si a una postura le falta un número, la
+  // figura se dibuja rota y no falla nada.
+  //
+  // Tres posturas son mejores que dos donde el recorrido no es una línea
+  // recta, pero dos siguen siendo válidas para lo que sube y baja sin más.
   for (const [nombre, posturas] of Object.entries(POSTURAS)) {
-    assert.equal(posturas.length, 2, `${nombre} necesita postura de ida y de vuelta`);
+    assert.ok(posturas.length >= 2, `${nombre} necesita al menos ida y vuelta`);
+    assert.ok(posturas.length <= 4, `${nombre} tiene ${posturas.length}: se va a ver lento`);
     for (const p of posturas) {
       assert.equal(p.length, 22, `${nombre} tiene una postura de ${p.length} números`);
       assert.ok(p.every(Number.isFinite), `${nombre} tiene una coordenada que no es número`);
@@ -121,10 +125,36 @@ test('cada postura son dos posturas de 22 números', () => {
   }
 });
 
-test('las dos posturas de un movimiento son distintas', () => {
+test('los extremos de un movimiento son distintos', () => {
   // Si fueran iguales no habría animación, solo un monigote quieto.
-  for (const [nombre, [a, b]] of Object.entries(POSTURAS)) {
-    assert.ok(a.some((n, i) => n !== b[i]), `${nombre} no se mueve`);
+  for (const [nombre, posturas] of Object.entries(POSTURAS)) {
+    const a = posturas[0];
+    const z = posturas[posturas.length - 1];
+    assert.ok(a.some((n, i) => n !== z[i]), `${nombre} no se mueve`);
+  }
+});
+
+test('la postura del medio está entre las dos, no fuera del recorrido', () => {
+  // Una intermedia que se sale del rango hace que la figura dé un tirón hacia
+  // un lado y vuelva, que se ve peor que no tenerla.
+  const MARGEN = 8;
+
+  for (const [nombre, posturas] of Object.entries(POSTURAS)) {
+    if (posturas.length < 3) continue;
+
+    const a = posturas[0];
+    const z = posturas[posturas.length - 1];
+
+    posturas.slice(1, -1).forEach((medio, k) => {
+      medio.forEach((valor, i) => {
+        const min = Math.min(a[i], z[i]) - MARGEN;
+        const max = Math.max(a[i], z[i]) + MARGEN;
+        assert.ok(
+          valor >= min && valor <= max,
+          `${nombre}: la postura ${k + 2} se sale en la coordenada ${i} (${valor}, entre ${min} y ${max})`,
+        );
+      });
+    });
   }
 });
 

@@ -6,6 +6,12 @@
 // y viene entre dos posturas. No es un video: pesa cero, funciona sin señal y
 // toma el color del tema. Para enseñar un recorrido alcanza.
 //
+// Un movimiento puede llevar DOS posturas o TRES. Con dos, la figura va de un
+// extremo al otro en línea recta y se ve como un ascensor. Con una postura
+// intermedia el recorrido se curva: en la sentadilla la rodilla se adelanta
+// antes de que la cadera baje, que es como se hace de verdad. Los que llevan
+// tres son los que sin ella no se entendían.
+//
 // Cada postura son 22 números, siempre en el mismo orden:
 //   cabeza, hombro, cadera, codoI, manoI, codoD, manoD, rodillaI, pieI, rodillaD, pieD
 // La vista es de perfil mirando a la derecha, que es como mejor se entienden
@@ -19,18 +25,25 @@ export const POSTURAS = {
   // adelante y los brazos se estiran al frente para no perder el equilibrio.
   sentadilla: [
     DE_PIE,
+    // A media bajada la rodilla ya se adelantó y la cadera apenas empieza a
+    // irse atrás. Sin este paso, el monigote bajaba recto como un ascensor.
+    P(53, 29, 49, 42, 45, 70, 52, 52, 64, 48, 54, 56, 66, 52, 53, 85, 51, 110, 57, 86, 57, 110),
     P(54, 40, 48, 52, 40, 78, 58, 58, 72, 54, 60, 62, 74, 58, 56, 84, 52, 110, 60, 86, 58, 110),
   ],
 
   // Caminar: las piernas se cruzan y los brazos acompañan.
   caminata: [
     P(52, 18, 50, 32, 50, 62, 44, 46, 40, 58, 56, 46, 60, 58, 40, 84, 34, 106, 60, 84, 66, 108),
+    // Las piernas se cruzan a la mitad del paso. Sin esta postura, una pierna
+    // desaparecía por delante y aparecía por detrás sin pasar por el medio.
+    P(52, 17, 50, 31, 50, 61, 50, 46, 50, 58, 50, 46, 50, 58, 50, 84, 50, 108, 50, 84, 50, 108),
     P(52, 18, 50, 32, 50, 62, 56, 46, 60, 58, 44, 46, 40, 58, 60, 84, 66, 106, 40, 84, 34, 108),
   ],
 
   // Flexión en la pared: el cuerpo entero se acerca y se aleja.
   flexion: [
     P(60, 22, 56, 38, 40, 70, 70, 44, 86, 46, 70, 48, 86, 50, 34, 90, 28, 112, 38, 92, 32, 112),
+    P(64, 26, 60, 41, 42, 71, 71, 51, 86, 46, 71, 55, 86, 50, 35, 90, 28, 112, 39, 92, 32, 112),
     P(68, 30, 64, 44, 44, 72, 72, 58, 86, 46, 72, 62, 86, 50, 36, 90, 28, 112, 40, 92, 32, 112),
   ],
 
@@ -49,7 +62,10 @@ export const POSTURAS = {
   // Estiramiento: bajar hacia los pies y volver.
   estiramiento: [
     P(52, 18, 50, 32, 50, 62, 46, 46, 46, 60, 54, 46, 54, 60, 48, 86, 46, 110, 52, 86, 54, 110),
-    P(56, 44, 54, 54, 50, 66, 60, 66, 64, 84, 62, 68, 66, 86, 50, 88, 46, 110, 54, 88, 54, 110),
+    P(56, 34, 53, 44, 50, 64, 54, 58, 58, 72, 60, 60, 64, 74, 49, 87, 46, 110, 53, 87, 54, 110),
+    // Hasta abajo de verdad. Antes se quedaba a medio doblar y no se veía si
+    // estaba estirando o mirando el suelo.
+    P(60, 60, 56, 66, 50, 68, 64, 80, 66, 98, 66, 82, 68, 100, 50, 88, 46, 110, 54, 88, 54, 110),
   ],
 
   // Elevación de talones: todo el cuerpo sube unos centímetros.
@@ -85,12 +101,16 @@ export const POSTURAS = {
   // Sentado empujando: prensa, press, bicicleta.
   empuje: [
     P(34, 34, 34, 48, 36, 78, 46, 58, 58, 56, 46, 62, 58, 60, 62, 80, 66, 106, 66, 82, 70, 108),
+    P(34, 34, 34, 48, 36, 78, 46, 58, 58, 56, 46, 62, 58, 60, 68, 78, 80, 98, 72, 80, 83, 101),
     P(34, 34, 34, 48, 36, 78, 46, 58, 58, 56, 46, 62, 58, 60, 74, 76, 94, 90, 78, 78, 96, 94),
   ],
 
   // Zancada: una pierna adelante, la otra atrás, y la cadera baja.
   zancada: [
     P(52, 18, 50, 32, 50, 62, 46, 46, 46, 60, 54, 46, 54, 60, 48, 86, 46, 110, 52, 86, 54, 110),
+    // El paso se da ANTES de bajar. Sin esto la pierna aparecía ya estirada
+    // atrás, como si la persona se hubiera teletransportado.
+    P(51, 20, 49, 34, 48, 64, 44, 48, 43, 62, 53, 48, 55, 62, 58, 84, 62, 110, 42, 88, 36, 110),
     P(50, 26, 48, 40, 46, 70, 42, 54, 40, 68, 54, 54, 56, 68, 68, 84, 74, 110, 34, 92, 26, 108),
   ],
 

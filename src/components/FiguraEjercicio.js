@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Animated } from 'react-native';
+import { Animated, Easing } from 'react-native';
 import Svg, { Circle, Line } from 'react-native-svg';
 
 import { useTema } from '../state/TemaContext';
@@ -10,6 +10,30 @@ import { POSTURAS, POSTURA_POR_DEFECTO } from '../data/posturas';
 // verlo, y mandar a alguien a YouTube lo saca de la app justo cuando estaba
 // a punto de empezar.
 const DURACIONES = { lento: 2200, normal: 1500, rapido: 950 };
+
+// Lo que se sostiene al llegar arriba y abajo, en milisegundos.
+//
+// Sin la pausa, el monigote rebota como un péndulo y ningún ejercicio se hace
+// así: siempre hay un instante quieto al final del recorrido. Es un detalle
+// pequeño y es lo que separa "una figura que se mueve" de "alguien
+// entrenando".
+const PAUSA = 260;
+
+// Ida y vuelta con suavizado.
+//
+// El movimiento arranca y termina despacio, como el de una persona. Con la
+// curva lineal de antes, la figura salía disparada y frenaba en seco.
+function vaiven(valor, duracion) {
+  const tramo = (hacia) =>
+    Animated.timing(valor, {
+      toValue: hacia,
+      duration: duracion,
+      easing: Easing.inOut(Easing.quad),
+      useNativeDriver: false,
+    });
+
+  return [tramo(1), Animated.delay(PAUSA), tramo(0), Animated.delay(PAUSA)];
+}
 
 const AnimatedLine = Animated.createAnimatedComponent(Line);
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -26,12 +50,7 @@ export function useRelojDeFiguras(ritmo = 'normal') {
   const duracion = DURACIONES[ritmo] ?? DURACIONES.normal;
 
   useEffect(() => {
-    const ciclo = Animated.loop(
-      Animated.sequence([
-        Animated.timing(avance, { toValue: 1, duration: duracion, useNativeDriver: false }),
-        Animated.timing(avance, { toValue: 0, duration: duracion, useNativeDriver: false }),
-      ]),
-    );
+    const ciclo = Animated.loop(Animated.sequence(vaiven(avance, duracion)));
     ciclo.start();
     return () => ciclo.stop();
   }, [avance, duracion]);
@@ -44,7 +63,7 @@ export default function FiguraEjercicio({ postura, size = 120, ritmo = 'normal',
   const propio = useRef(new Animated.Value(0)).current;
   const avance = reloj ?? propio;
 
-  const [a, b] = POSTURAS[postura] ?? POSTURAS[POSTURA_POR_DEFECTO];
+  const cuadros = POSTURAS[postura] ?? POSTURAS[POSTURA_POR_DEFECTO];
   const duracion = DURACIONES[ritmo] ?? DURACIONES.normal;
 
   useEffect(() => {
@@ -52,19 +71,22 @@ export default function FiguraEjercicio({ postura, size = 120, ritmo = 'normal',
     if (reloj) return undefined;
 
     propio.setValue(0);
-    const ciclo = Animated.loop(
-      Animated.sequence([
-        Animated.timing(propio, { toValue: 1, duration: duracion, useNativeDriver: false }),
-        Animated.timing(propio, { toValue: 0, duration: duracion, useNativeDriver: false }),
-      ]),
-    );
+    const ciclo = Animated.loop(Animated.sequence(vaiven(propio, duracion)));
     ciclo.start();
     return () => ciclo.stop();
   }, [propio, duracion, postura, reloj]);
 
-  // Cada número de la postura se convierte en una coordenada que viaja de la
-  // primera a la segunda.
-  const v = (i) => avance.interpolate({ inputRange: [0, 1], outputRange: [a[i], b[i]] });
+  // Cada número recorre TODAS las posturas del movimiento, no solo dos.
+  //
+  // Con dos posturas, una sentadilla iba de pie al fondo en línea recta y se
+  // veía como un ascensor. Con una postura intermedia, la rodilla se adelanta
+  // antes de que la cadera baje, que es como se hace de verdad. El
+  // movimiento se lee, y quien nunca entrenó lo puede copiar.
+  const v = (i) =>
+    avance.interpolate({
+      inputRange: cuadros.map((_, k) => k / (cuadros.length - 1)),
+      outputRange: cuadros.map((c) => c[i]),
+    });
 
   const hueso = {
     stroke: C.coral,
@@ -74,6 +96,10 @@ export default function FiguraEjercicio({ postura, size = 120, ritmo = 'normal',
 
   return (
     <Svg width={size} height={size * 1.2} viewBox="0 0 100 120">
+      {/* El suelo. Sin él, la figura flota y no se entiende si está de pie,
+          sentada o acostada, que es justo lo que hay que enseñar. */}
+      <Line x1={6} y1={115} x2={94} y2={115} stroke={C.borde} strokeWidth={2} strokeLinecap="round" />
+
       <AnimatedCircle cx={v(0)} cy={v(1)} r={9} fill={C.coral} />
 
       {/* tronco */}
