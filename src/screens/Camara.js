@@ -208,7 +208,15 @@ export default function Camara({ navigation, route }) {
 
   return (
     <View style={est.todo}>
-      <CameraView ref={vista} style={est.vista} facing={frontal ? 'front' : 'back'} />
+      {/* mirror en false a propósito, aunque ya sea el valor por defecto: el
+          fantasma es una foto YA guardada, y si el visor se viera espejado y
+          la foto no, la guía quedaría al revés y alinearse sería imposible. */}
+      <CameraView
+        ref={vista}
+        style={est.vista}
+        facing={frontal ? 'front' : 'back'}
+        mirror={false}
+      />
 
       {!!anterior && conFantasma && (
         <Image source={{ uri: anterior }} style={[est.capa, est.fantasma]} resizeMode="cover" />
