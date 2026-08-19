@@ -17,6 +17,7 @@ import {
   mensajeDeDiaDificil,
   cierreDeDiaDificil,
 } from '../services/animo';
+import { recordatorioDePorque } from '../services/porque';
 
 function aFecha(clave) {
   const [a, m, d] = clave.split('-').map(Number);
@@ -98,6 +99,14 @@ const crear = ({ C, T, R, S }) => ({
     color: C.gris,
     textAlign: 'center',
     marginTop: S.sm,
+  },
+  porque: {
+    ...T.cuerpo,
+    color: C.cafe,
+    textAlign: 'center',
+    fontStyle: 'italic',
+    marginTop: S.lg,
+    paddingHorizontal: S.md,
   },
 });
 
@@ -218,6 +227,13 @@ export default function Diario() {
                 </Text>
               ))}
             </Tarjeta>
+          )}
+
+          {/* Su motivo, en sus palabras. Va de últimas y no de primeras: en un
+              mal día, empezar por el porqué se lee como un reproche. Después
+              de la evidencia se lee como lo que es, un dato suyo. */}
+          {recordatorioDePorque(perfil.porque) && (
+            <Text style={est.porque}>{recordatorioDePorque(perfil.porque)}</Text>
           )}
 
           <Text style={est.cierre}>{cierreDeDiaDificil(!!plan)}</Text>

@@ -155,7 +155,7 @@ export const GUIAS = [
   {
     claves: ['baile', 'bailar', 'zumba'],
     nombre: 'Bailar',
-    figura: 'brazos',
+    figura: 'bailar',
     como: [
       'Pon la canción que te guste de verdad.',
       'Muévete como te salga: no hay paso correcto.',
@@ -206,7 +206,7 @@ export const GUIAS = [
   {
     claves: ['fondo', 'fondos', 'triceps en banco', 'dips'],
     nombre: 'Fondo de tríceps',
-    figura: 'empuje',
+    figura: 'fondoTriceps',
     como: [
       'Manos en el borde de una silla firme, dedos hacia adelante.',
       'Baja doblando los codos hacia atrás, no hacia los lados.',
@@ -243,7 +243,7 @@ export const GUIAS = [
   {
     claves: ['peso muerto', 'bisagra', 'hip hinge'],
     nombre: 'Peso muerto',
-    figura: 'estiramiento',
+    figura: 'pesoMuerto',
     como: [
       'De pie, rodillas apenas dobladas.',
       'Lleva la cadera hacia atrás bajando el peso pegado a las piernas.',
@@ -256,7 +256,7 @@ export const GUIAS = [
   {
     claves: ['curl de biceps', 'curl'],
     nombre: 'Curl de bíceps',
-    figura: 'remo',
+    figura: 'curlBiceps',
     como: [
       'De pie o sentado, codos pegados al cuerpo.',
       'Sube el peso doblando solo el codo.',
@@ -418,7 +418,7 @@ export const GUIAS = [
   {
     claves: ['press', 'pecho', 'banca'],
     nombre: 'Press de pecho',
-    figura: 'empuje',
+    figura: 'pressPecho',
     como: [
       'Espalda apoyada y pies firmes en el piso.',
       'Baja controlado hasta la altura del pecho.',
@@ -455,7 +455,7 @@ export const GUIAS = [
   {
     claves: ['jalon al pecho', 'dorsalera', 'polea alta'],
     nombre: 'Jalón al pecho',
-    figura: 'remo',
+    figura: 'jalon',
     como: [
       'Sentado, agarra la barra un poco más ancho que los hombros.',
       'Tira hacia el pecho llevando los codos abajo y atrás.',
@@ -468,7 +468,7 @@ export const GUIAS = [
   {
     claves: ['extension de piernas', 'cuadriceps en maquina'],
     nombre: 'Extensión de piernas',
-    figura: 'empuje',
+    figura: 'extensionPiernas',
     como: [
       'Sentado, con el rodillo apoyado sobre los tobillos.',
       'Estira las piernas sin bloquear la rodilla del todo.',
@@ -480,7 +480,7 @@ export const GUIAS = [
   {
     claves: ['curl femoral', 'femoral', 'isquios en maquina'],
     nombre: 'Curl femoral',
-    figura: 'empuje',
+    figura: 'curlFemoral',
     como: [
       'Boca abajo o sentado, según la máquina.',
       'Dobla las rodillas llevando los talones hacia atrás.',
@@ -492,7 +492,7 @@ export const GUIAS = [
   {
     claves: ['press de hombro', 'press militar', 'hombro en maquina'],
     nombre: 'Press de hombro',
-    figura: 'brazos',
+    figura: 'pressHombro',
     como: [
       'Sentado con la espalda apoyada.',
       'Empuja el peso hacia arriba sin bloquear los codos.',
@@ -505,7 +505,7 @@ export const GUIAS = [
   {
     claves: ['polea de triceps', 'triceps en polea', 'extension de triceps'],
     nombre: 'Polea de tríceps',
-    figura: 'remo',
+    figura: 'tricepsPolea',
     como: [
       'De pie frente a la polea, codos pegados al cuerpo.',
       'Estira los brazos hacia abajo moviendo solo el antebrazo.',
@@ -530,7 +530,7 @@ export const GUIAS = [
   {
     claves: ['abductor', 'abductores', 'maquina de abductores'],
     nombre: 'Máquina de abductores',
-    figura: 'empuje',
+    figura: 'abductores',
     como: [
       'Sentado, con las piernas dentro de los apoyos.',
       'Abre las piernas empujando hacia afuera.',

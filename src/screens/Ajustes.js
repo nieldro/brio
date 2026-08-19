@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { View, Text, Pressable, Alert } from 'react-native';
+import { View, Text, Pressable, TextInput, Alert } from 'react-native';
 
 import { useEstilos, useTema, PREFERENCIAS, NOMBRES_PREFERENCIA } from '../state/TemaContext';
 import { useUsuario } from '../state/UsuarioContext';
@@ -16,6 +16,7 @@ import { borrarAlbum } from '../lib/album';
 import { hayModuloPush, pedirPermisoYToken } from '../lib/notificaciones';
 import { planDemo } from '../data/planDemo';
 import { diaDelPlan } from '../services/plan';
+import { porqueCorto } from '../services/porque';
 // El MISMO módulo que usa el Timer del servidor para escribir el aviso. Se
 // importa en vez de copiarse: dos versiones del mismo texto se separan, y
 // entonces la vista previa miente sobre lo que de verdad va a llegar.
@@ -37,6 +38,25 @@ const crear = ({ C, T, R, S }) => ({
   pie: {
     ...T.secundario,
     marginTop: S.sm,
+  },
+  enlace: {
+    ...T.secundario,
+    color: C.coralTexto,
+    fontWeight: '700',
+    marginTop: S.md,
+  },
+  entrada: {
+    ...T.cuerpo,
+    backgroundColor: C.crema,
+    borderRadius: R.medio,
+    borderWidth: 1,
+    borderColor: C.borde,
+    paddingHorizontal: S.md,
+    paddingVertical: S.md,
+    marginTop: S.md,
+    marginBottom: S.md,
+    minHeight: 72,
+    textAlignVertical: 'top',
   },
   fila: {
     flexDirection: 'row',
@@ -153,6 +173,8 @@ export default function Ajustes({ navigation }) {
   const { estado: album, setFotos } = useAlbum();
 
   const [aviso, setAviso] = useState(null);
+  const [editandoPorque, setEditandoPorque] = useState(false);
+  const [porqueNuevo, setPorqueNuevo] = useState('');
 
   // El aviso que el servidor mandaría ahora mismo, con los datos de hoy.
   const aviso_previa = useMemo(
@@ -171,6 +193,14 @@ export default function Ajustes({ navigation }) {
   };
 
   const cambiarHora = (hora) => actualizarPerfil({ hora_recordatorio: hora });
+
+  // Se guarda vacío también: alguien puede querer quitarlo, y forzarlo a
+  // dejar un motivo que ya no siente sería pedirle que mienta.
+  const guardarPorque = () => {
+    actualizarPerfil({ porque: porqueNuevo.trim() });
+    setEditandoPorque(false);
+    decir('Guardado. Queda entre tú y yo.');
+  };
 
   const activarRecordatorios = async () => {
     if (!hayModuloPush()) {
@@ -296,7 +326,51 @@ export default function Ajustes({ navigation }) {
         </Tarjeta>
       </Aparece>
 
+      {/* El paso 4 del onboarding promete "esto queda entre tú y yo", y hasta
+          ahora la persona no lo volvía a ver nunca. Aquí queda a la vista y
+          se puede cambiar: un motivo de hace tres meses puede ya no ser el
+          suyo, y el de ahora es el que sirve. */}
       <Aparece orden={4}>
+        <Tarjeta>
+          <Etiqueta>tu porqué</Etiqueta>
+
+          {editandoPorque ? (
+            <>
+              <TextInput
+                value={porqueNuevo}
+                onChangeText={setPorqueNuevo}
+                placeholder="¿Para qué lo quieres de verdad?"
+                placeholderTextColor={C.apagado}
+                style={est.entrada}
+                multiline
+                maxLength={140}
+                autoFocus
+              />
+              <Boton onPress={guardarPorque}>Guardar</Boton>
+            </>
+          ) : (
+            <>
+              <Text style={est.campo}>
+                {porqueCorto(perfil.porque) ?? 'Todavía no me lo has dicho'}
+              </Text>
+              <Text style={est.pie}>
+                Te lo recuerdo el día que vuelvas después de parar, y no antes.
+              </Text>
+              <Pressable
+                onPress={() => {
+                  setPorqueNuevo(perfil.porque ?? '');
+                  setEditandoPorque(true);
+                }}
+                accessibilityRole="button"
+              >
+                <Text style={est.enlace}>Cambiarlo</Text>
+              </Pressable>
+            </>
+          )}
+        </Tarjeta>
+      </Aparece>
+
+      <Aparece orden={5}>
         <Tarjeta>
           <Etiqueta>tu cuenta</Etiqueta>
           {sesion === 'concuenta' ? (
@@ -326,7 +400,7 @@ export default function Ajustes({ navigation }) {
         </Tarjeta>
       </Aparece>
 
-      <Aparece orden={5}>
+      <Aparece orden={6}>
         <Tarjeta>
           <Etiqueta>tus datos</Etiqueta>
           <Text style={est.campo}>

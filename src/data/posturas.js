@@ -173,6 +173,96 @@ export const POSTURAS = {
     P(42, 38, 42, 52, 44, 78, 36, 64, 40, 76, 50, 64, 54, 76, 72, 78, 78, 106, 76, 80, 82, 108),
     P(42, 32, 42, 46, 44, 78, 32, 60, 38, 74, 54, 60, 58, 74, 72, 78, 78, 106, 76, 80, 82, 108),
   ],
+
+  // --- Los que antes se enseñaban con el movimiento de otro ---------------
+  //
+  // Cada guía apuntaba a una figura que existía, así que ninguna prueba se
+  // quejaba, pero el peso muerto se dibujaba como un estiramiento y el curl
+  // de bíceps como un remo. Enseñar el gesto equivocado no es mejor que no
+  // enseñar ninguno: es peor, porque quien copia la figura hace otra cosa.
+
+  // Peso muerto: la cadera va hacia atrás y la espalda se queda recta.
+  //
+  // Es lo que lo separa del estiramiento, con el que se confundía: ahí la
+  // espalda se redondea a propósito. Aquí no, y por eso hay tres posturas.
+  // Doblar la espalda con peso en las manos es de las pocas formas de
+  // lesionarse de verdad con este plan.
+  pesoMuerto: [
+    P(42, 18, 40, 32, 40, 62, 40, 46, 42, 62, 46, 46, 48, 62, 38, 86, 36, 110, 42, 86, 44, 110),
+    P(68, 32, 57, 43, 36, 64, 54, 58, 53, 73, 60, 58, 59, 73, 38, 86, 36, 110, 42, 86, 44, 110),
+    P(77, 51, 63, 56, 34, 66, 60, 71, 59, 86, 66, 71, 65, 86, 36, 86, 34, 110, 40, 86, 42, 110),
+  ],
+
+  // Curl de bíceps: el codo se queda quieto y solo sube el antebrazo.
+  //
+  // Con el remo se movía el cuerpo entero, que es justo el error que hay que
+  // evitar aquí. La postura del medio saca la mano hacia adelante para que se
+  // vea el arco y no un salto.
+  curlBiceps: [
+    P(52, 18, 50, 32, 50, 62, 46, 52, 45, 68, 55, 52, 56, 68, 48, 86, 46, 110, 52, 86, 54, 110),
+    P(52, 18, 50, 32, 50, 62, 46, 52, 57, 48, 55, 52, 66, 48, 48, 86, 46, 110, 52, 86, 54, 110),
+    P(52, 18, 50, 32, 50, 62, 46, 52, 50, 38, 55, 52, 59, 38, 48, 86, 46, 110, 52, 86, 54, 110),
+  ],
+
+  // Polea de tríceps: el codo pegado al cuerpo, el antebrazo baja.
+  // Es el gesto contrario al curl, y con la figura del remo se veían iguales.
+  tricepsPolea: [
+    P(52, 18, 50, 32, 50, 62, 46, 48, 58, 38, 54, 48, 66, 38, 48, 86, 46, 110, 52, 86, 54, 110),
+    P(52, 18, 50, 32, 50, 62, 46, 48, 46, 64, 54, 48, 54, 64, 48, 86, 46, 110, 52, 86, 54, 110),
+  ],
+
+  // Curl femoral: boca abajo, los talones van a los glúteos.
+  curlFemoral: [
+    P(16, 96, 28, 96, 58, 98, 30, 106, 42, 108, 30, 88, 42, 88, 80, 100, 96, 102, 80, 104, 96, 106),
+    P(16, 96, 28, 96, 58, 98, 30, 106, 42, 108, 30, 88, 42, 88, 80, 100, 84, 80, 80, 104, 88, 84),
+  ],
+
+  // Extensión de piernas: sentado, el muslo no se mueve y la rodilla estira.
+  extensionPiernas: [
+    P(32, 32, 30, 46, 30, 76, 26, 60, 26, 74, 34, 60, 34, 74, 58, 78, 60, 98, 58, 82, 60, 102),
+    P(32, 32, 30, 46, 30, 76, 26, 60, 26, 74, 34, 60, 34, 74, 58, 78, 72, 92, 58, 82, 72, 96),
+    P(32, 32, 30, 46, 30, 76, 26, 60, 26, 74, 34, 60, 34, 74, 58, 78, 78, 72, 58, 82, 78, 76),
+  ],
+
+  // Press de pecho: acostado, los brazos suben.
+  pressPecho: [
+    P(20, 84, 32, 86, 60, 88, 22, 76, 36, 70, 24, 80, 38, 74, 74, 74, 82, 96, 76, 78, 84, 100),
+    P(20, 84, 32, 86, 60, 88, 32, 72, 34, 56, 34, 76, 36, 60, 74, 74, 82, 96, 76, 78, 84, 100),
+  ],
+
+  // Press de hombro: de pie, los brazos suben por encima de la cabeza.
+  pressHombro: [
+    P(52, 18, 50, 32, 50, 62, 42, 42, 44, 28, 58, 42, 56, 28, 48, 86, 46, 110, 52, 86, 54, 110),
+    P(52, 18, 50, 32, 50, 62, 44, 32, 45, 18, 56, 32, 55, 18, 48, 86, 46, 110, 52, 86, 54, 110),
+    P(52, 18, 50, 32, 50, 62, 46, 22, 46, 8, 54, 22, 54, 8, 48, 86, 46, 110, 52, 86, 54, 110),
+  ],
+
+  // Jalón al pecho: sentado, la barra baja desde arriba.
+  jalon: [
+    P(48, 34, 46, 48, 46, 78, 38, 32, 40, 16, 54, 32, 52, 16, 66, 80, 68, 102, 66, 84, 68, 106),
+    P(48, 34, 46, 48, 46, 78, 32, 54, 44, 58, 60, 54, 48, 58, 66, 80, 68, 102, 66, 84, 68, 106),
+  ],
+
+  // Abductores: de frente, porque de perfil no se vería nada.
+  //
+  // Es el único de la lista que no va de lado. Las piernas se abren hacia
+  // afuera, y ese movimiento visto de perfil es una figura quieta.
+  abductores: [
+    P(50, 26, 50, 40, 50, 70, 38, 52, 36, 66, 62, 52, 64, 66, 44, 90, 42, 110, 56, 90, 58, 110),
+    P(50, 26, 50, 40, 50, 70, 38, 52, 36, 66, 62, 52, 64, 66, 30, 88, 24, 110, 70, 88, 76, 110),
+  ],
+
+  // Fondo de tríceps: las manos se quedan en el banco y el cuerpo baja.
+  fondoTriceps: [
+    P(52, 30, 50, 44, 60, 72, 42, 59, 34, 74, 46, 57, 38, 72, 84, 76, 90, 98, 84, 80, 90, 102),
+    P(52, 44, 50, 58, 60, 86, 38, 54, 34, 74, 42, 52, 38, 72, 84, 84, 90, 104, 84, 88, 90, 108),
+  ],
+
+  // Bailar: el peso pasa de un lado al otro y el brazo cambia. De frente.
+  bailar: [
+    P(48, 18, 48, 32, 52, 62, 38, 42, 34, 28, 58, 44, 62, 58, 46, 86, 44, 110, 56, 86, 60, 110),
+    P(56, 18, 56, 32, 48, 62, 64, 42, 70, 28, 44, 44, 40, 58, 44, 86, 42, 110, 58, 86, 62, 110),
+  ],
 };
 
 // El movimiento que no está en la lista se muestra de pie, respirando. Nunca

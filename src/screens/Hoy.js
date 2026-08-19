@@ -24,6 +24,7 @@ import { semanasConMovimiento } from '../services/recorrido';
 import { nivelDeAcompanamiento, saludoSegunDistancia, porQueHabloMenos } from '../services/acompanamiento';
 import { textoDelAlbum } from '../services/album';
 import { avanceDeHoy, frasePorAvance } from '../services/habitos';
+import { recordatorioDePorque, toca } from '../services/porque';
 
 const SALUDOS = {
   manana: 'Buenos días',
@@ -92,6 +93,15 @@ const crear = ({ C, T, R, S }) => ({
     borderLeftColor: C.salvia,
     paddingLeft: S.md,
     marginTop: S.xs,
+  },
+  porque: {
+    ...T.secundario,
+    color: C.cafe,
+    fontStyle: 'italic',
+    borderLeftWidth: 3,
+    borderLeftColor: C.coral,
+    paddingLeft: S.md,
+    marginTop: S.md,
   },
   reto: {
     ...T.titulo,
@@ -310,6 +320,8 @@ export default function Hoy({ navigation }) {
 
   const saludo = `${SALUDOS[franjaDelDia(hoy)]}, ${perfil.nombre}.`;
 
+  const tocaElPorque = toca(perfil.porque, { rota, completadoHoy });
+
   return (
     <Pantalla>
       <View style={est.encabezado}>
@@ -350,6 +362,13 @@ export default function Hoy({ navigation }) {
             {saludoSegunDistancia(distancia, { completadoHoy, racha, rota })}
           </Text>
           {!!explicacion && <Text style={est.explicacion}>{explicacion}</Text>}
+
+          {/* Su motivo, solo cuando vuelve después de romper la racha. Ese es
+              el día en que se decide si se queda o se va otra vez. Sacarlo
+              todos los días lo gastaría hasta volverlo decoración. */}
+          {tocaElPorque && (
+            <Text style={est.porque}>{recordatorioDePorque(perfil.porque)}</Text>
+          )}
         </View>
       </Aparece>
 

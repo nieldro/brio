@@ -8,6 +8,7 @@ import {
   todosLosNombres,
   ejerciciosPara,
   evitaElSuelo,
+  EJERCICIOS,
   ZONAS,
 } from '../azure-functions/src/lib/catalogo.js';
 
@@ -229,6 +230,58 @@ test('todo ejercicio del catálogo tiene su animación', () => {
     return !g.figura || !Object.keys(POSTURAS).includes(g.figura);
   });
   assert.deepEqual(sinFigura, [], 'ejercicios del catálogo sin figura');
+});
+
+// Que la figura EXISTA no es lo mismo que sea la del ejercicio.
+//
+// Durante un tiempo el peso muerto se dibujaba como un estiramiento, el curl
+// de bíceps como un remo y la prensa de piernas como un empuje de brazos.
+// Ninguna prueba se quejaba: todas esas figuras existían. Y enseñar el gesto
+// equivocado es peor que no enseñar ninguno, porque quien copia la figura
+// termina haciendo otra cosa, a veces con peso encima.
+
+const ejerciciosPorFigura = () => {
+  const mapa = new Map();
+
+  for (const e of EJERCICIOS) {
+    const clave = guiaDe({ nombre: e.nombre }).figura;
+    if (!mapa.has(clave)) mapa.set(clave, []);
+    mapa.get(clave).push(e);
+  }
+
+  return mapa;
+};
+
+test('los que comparten animación trabajan la misma parte del cuerpo', () => {
+  // Un curl de bíceps y un jalón al pecho compartiendo figura es lo que pasó
+  // de verdad, y son movimientos contrarios. Los calentamientos no declaran
+  // zona, así que no entran en la cuenta.
+  for (const [figura, lista] of ejerciciosPorFigura()) {
+    const conZona = lista.filter((e) => e.zonas?.length);
+    if (conZona.length < 2) continue;
+
+    const comunes = conZona
+      .map((e) => new Set(e.zonas))
+      .reduce((a, b) => new Set([...a].filter((z) => b.has(z))));
+
+    assert.ok(
+      comunes.size > 0,
+      `"${figura}" lo comparten ${conZona.map((e) => e.nombre).join(', ')}, que no coinciden en ninguna zona`,
+    );
+  }
+});
+
+test('ninguna animación carga con media biblioteca', () => {
+  // Reusar dos o tres movimientos parecidos está bien. Seis colgando de la
+  // misma figura significa que alguna no es la suya.
+  const TOPE = 3;
+
+  for (const [figura, lista] of ejerciciosPorFigura()) {
+    assert.ok(
+      lista.length <= TOPE,
+      `"${figura}" dibuja ${lista.length} ejercicios: ${lista.map((e) => e.nombre).join(', ')}`,
+    );
+  }
 });
 
 test('el nombre del catálogo cae en la guía que le toca, no en una parecida', () => {
