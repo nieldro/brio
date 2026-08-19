@@ -21,8 +21,23 @@ const CORAL = PALETAS.claro.coral;
 
 let modulo;
 
+// En Expo Go para Android, cargar el módulo lanza SIEMPRE. El try lo atrapa,
+// pero el error igual sale por consola y en desarrollo aparece como una
+// alerta roja encima de la app: parece que algo se rompió cuando no es así.
+//
+// Se pregunta antes en qué binario estamos y ni se intenta. En Expo Go se
+// sabe de antemano que no hay push; en un build propio se carga normal.
+const enExpoGo = () =>
+  Platform.OS === 'android' && Constants.executionEnvironment === 'storeClient';
+
 function cargarModulo() {
   if (modulo !== undefined) return modulo;
+
+  if (enExpoGo()) {
+    modulo = null;
+    return modulo;
+  }
+
   try {
     // eslint-disable-next-line global-require
     modulo = require('expo-notifications');
