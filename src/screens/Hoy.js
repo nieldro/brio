@@ -421,11 +421,11 @@ export default function Hoy({ navigation }) {
         <View style={est.filaDiario}>
           <Etiqueta>hoy en la mesa</Etiqueta>
           <Pressable
-            onPress={() => navigation.navigate('Plato')}
+            onPress={() => navigation.navigate('Mesa')}
             accessibilityRole="button"
             hitSlop={8}
           >
-            <Text style={est.verTodo}>mirar mi plato</Text>
+            <Text style={est.verTodo}>ver mi mesa</Text>
           </Pressable>
         </View>
         <View style={est.filaTip}>
