@@ -6,6 +6,7 @@ import Pantalla from '../components/Pantalla';
 import Tarjeta from '../components/Tarjeta';
 import Etiqueta from '../components/Etiqueta';
 import Boton from '../components/Boton';
+import FiguraEjercicio from '../components/FiguraEjercicio';
 import { guiaDe, busquedaDeVideo } from '../services/guias';
 
 const crear = ({ C, T, R, S }) => ({
@@ -68,6 +69,10 @@ const crear = ({ C, T, R, S }) => ({
     textAlign: 'center',
     marginTop: S.lg,
   },
+  escenario: {
+    alignItems: 'center',
+    paddingVertical: S.lg,
+  },
   pieVideo: {
     ...T.secundario,
     fontSize: 13,
@@ -101,6 +106,12 @@ export default function Guia({ route }) {
         <Text style={est.titulo}>{g.nombre}</Text>
         {!!ejercicio.detalle && <Text style={est.detalle}>{ejercicio.detalle}</Text>}
       </View>
+
+      {/* El movimiento antes que las palabras. Quien nunca entrenó necesita
+          ver la forma, y leerla no es lo mismo que verla. */}
+      <Tarjeta style={est.escenario}>
+        <FiguraEjercicio postura={g.figura} size={150} />
+      </Tarjeta>
 
       <Tarjeta>
         <Etiqueta>cómo se hace</Etiqueta>

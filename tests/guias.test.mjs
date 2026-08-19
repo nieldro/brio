@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import { normalizar, buscarGuia, guiaDe, busquedaDeVideo } from '../src/services/guias.js';
 import { GUIAS } from '../src/data/guias.js';
+import { POSTURAS, POSTURA_POR_DEFECTO } from '../src/data/posturas.js';
 
 // --- Normalización --------------------------------------------------------
 
@@ -77,6 +78,40 @@ test('no revienta sin ejercicio', () => {
 });
 
 // --- Calidad y seguridad de la biblioteca --------------------------------
+
+test('toda guía tiene su animación, y existe de verdad', () => {
+  // Una figura mal escrita cae en la de por defecto sin avisar, y el
+  // ejercicio se enseñaría con un movimiento que no es el suyo.
+  const conocidas = new Set(Object.keys(POSTURAS));
+
+  for (const g of GUIAS) {
+    assert.ok(g.figura, `${g.nombre} no dice qué animación lo dibuja`);
+    assert.ok(conocidas.has(g.figura), `${g.nombre} apunta a "${g.figura}", que no existe`);
+  }
+});
+
+test('la postura por defecto existe, que es la red de seguridad', () => {
+  assert.ok(Object.keys(POSTURAS).includes(POSTURA_POR_DEFECTO));
+});
+
+test('cada postura son dos posturas de 22 números', () => {
+  // El componente lee por posición: si a una le falta un número, la figura
+  // se dibuja rota y no falla nada.
+  for (const [nombre, posturas] of Object.entries(POSTURAS)) {
+    assert.equal(posturas.length, 2, `${nombre} necesita postura de ida y de vuelta`);
+    for (const p of posturas) {
+      assert.equal(p.length, 22, `${nombre} tiene una postura de ${p.length} números`);
+      assert.ok(p.every(Number.isFinite), `${nombre} tiene una coordenada que no es número`);
+    }
+  }
+});
+
+test('las dos posturas de un movimiento son distintas', () => {
+  // Si fueran iguales no habría animación, solo un monigote quieto.
+  for (const [nombre, [a, b]] of Object.entries(POSTURAS)) {
+    assert.ok(a.some((n, i) => n !== b[i]), `${nombre} no se mueve`);
+  }
+});
 
 test('toda guía tiene pasos, cuidado y una versión más fácil', () => {
   for (const g of GUIAS) {

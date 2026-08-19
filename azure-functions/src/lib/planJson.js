@@ -4,7 +4,13 @@
 // Y a veces rompe una regla del producto. Aquí se atrapan las dos cosas antes
 // de que un plan malo llegue al usuario.
 
-import { MINIMO_EJERCICIOS, MAXIMO_EJERCICIOS, BLOQUES, IMPACTO } from './rutina.js';
+import {
+  MINIMO_EJERCICIOS,
+  MAXIMO_EJERCICIOS,
+  BLOQUES,
+  IMPACTO,
+  duracionMinima,
+} from './rutina.js';
 
 export const DIAS = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
 export const TIPOS = ['entrenamiento', 'descanso', 'suave'];
@@ -100,10 +106,18 @@ export function validarPlan(plan, { tiempoMax, impacto = 'normal' }) {
     if (!dia?.comida_tip?.trim?.()) errores.push(`${donde}: falta comida_tip`);
 
     const duracion = dia?.duracion_min;
+    const piso = duracionMinima(tiempoMax, tipo);
+
     if (!Number.isFinite(duracion) || duracion < 0) {
       errores.push(`${donde}: duracion_min inválida`);
     } else if (duracion > tiempoMax) {
       errores.push(`${donde}: ${duracion} min supera los ${tiempoMax} min del usuario`);
+    } else if (duracion < piso) {
+      // El otro lado del mismo trato. Devolver 12 minutos a quien aparto una
+      // hora se siente como que la app no lo tomo en serio.
+      errores.push(
+        `${donde}: ${duracion} min se queda corto, un día ${tipo} necesita al menos ${piso} de los ${tiempoMax} min que apartó`,
+      );
     }
 
     // Una rutina no es un ejercicio suelto.

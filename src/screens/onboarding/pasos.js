@@ -70,11 +70,15 @@ export const PASOS = [
     titulo: '¿Cuánto tiempo real tienes al día?',
     campo: 'tiempo_min',
     pie: 'Poco y constante gana siempre.',
+    // De 20 minutos a 2 horas. Menos de 20 no alcanza para calentar, trabajar
+    // y cerrar, que es lo que lleva una rutina de verdad.
     opciones: [
-      { etiqueta: '10 minutos', valor: 10 },
       { etiqueta: '20 minutos', valor: 20 },
       { etiqueta: '30 minutos', valor: 30 },
       { etiqueta: '45 minutos', valor: 45 },
+      { etiqueta: '1 hora', valor: 60 },
+      { etiqueta: 'Hora y media', valor: 90 },
+      { etiqueta: '2 horas', valor: 120 },
     ],
   },
   {

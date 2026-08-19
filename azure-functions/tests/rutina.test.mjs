@@ -6,6 +6,7 @@ import {
   nivelDeImpacto,
   enfoqueDe,
   instruccionesDeRutina,
+  duracionMinima,
   MINIMO_EJERCICIOS,
   IMPACTO,
 } from '../src/lib/rutina.js';
@@ -110,6 +111,39 @@ test('las instrucciones nunca sueltan el índice ni el peso a la salida', () => 
     const t = instruccionesDeRutina({ objetivo: 'Perder peso', tiempo: 20, impacto });
     assert.ok(!/imc|índice de masa|indice de masa/i.test(t), t);
   }
+});
+
+// --- El tiempo es un compromiso -------------------------------------------
+
+test('un día de entrenamiento usa al menos la mitad del tiempo apartado', () => {
+  // Devolver 12 minutos a quien apartó una hora se siente como que la app no
+  // lo tomó en serio, y es lo que estaba pasando.
+  assert.equal(duracionMinima(60, 'entrenamiento'), 30);
+  assert.equal(duracionMinima(120, 'entrenamiento'), 60);
+  assert.equal(duracionMinima(20, 'entrenamiento'), 10);
+});
+
+test('el día suave pide menos, pero pide', () => {
+  assert.equal(duracionMinima(60, 'suave'), 18);
+  assert.equal(duracionMinima(120, 'suave'), 36);
+});
+
+test('el descanso no tiene piso: descansar es parte del plan', () => {
+  assert.equal(duracionMinima(120, 'descanso'), 0);
+});
+
+test('sin tiempo declarado no se inventa un piso', () => {
+  assert.equal(duracionMinima(undefined, 'entrenamiento'), 0);
+  assert.equal(duracionMinima(0, 'entrenamiento'), 0);
+  assert.equal(duracionMinima('mucho', 'entrenamiento'), 0);
+});
+
+test('las instrucciones le dicen al modelo el rango, no solo el techo', () => {
+  const t = instruccionesDeRutina({ objetivo: 'Ganar músculo', tiempo: 60, impacto: 'normal' });
+
+  assert.match(t, /60 minutos/);
+  assert.match(t, /entre 30 y 60/);
+  assert.match(t, /NO recortando la duracion/i);
 });
 
 // --- Mínimos --------------------------------------------------------------

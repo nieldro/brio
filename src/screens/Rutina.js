@@ -9,6 +9,7 @@ import Pantalla from '../components/Pantalla';
 import Tarjeta from '../components/Tarjeta';
 import Etiqueta from '../components/Etiqueta';
 import Casilla from '../components/Casilla';
+import FiguraEjercicio from '../components/FiguraEjercicio';
 import Aparece from '../components/Aparece';
 import { guiaDe, busquedaDeVideo } from '../services/guias';
 import { resumenReto, porBloques, avanceDeRutina, claveEjercicio } from '../services/plan';
@@ -84,6 +85,12 @@ const crear = ({ C, T, R, S }) => ({
     marginTop: S.lg,
     marginLeft: 42,
     gap: S.md,
+  },
+  escenario: {
+    alignItems: 'center',
+    backgroundColor: C.crema,
+    borderRadius: R.chico,
+    paddingVertical: S.md,
   },
   bloque: {
     gap: S.xs,
@@ -245,6 +252,10 @@ export default function Rutina({ route }) {
 
                   {estaAbierto && (
                     <View style={est.guia}>
+                      <View style={est.escenario}>
+                        <FiguraEjercicio postura={g.figura} size={120} />
+                      </View>
+
                       <View style={est.bloque}>
                         <Text style={est.subtitulo}>cómo se hace</Text>
                         {g.como.map((paso, n) => (

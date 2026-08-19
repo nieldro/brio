@@ -2,6 +2,7 @@
   "expo": {
     "name": "brío",
     "slug": "brio",
+    "owner": "nieldro",
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "brio",
@@ -14,7 +15,6 @@
     },
     "android": {
       "package": "com.danielpaez.brio",
-      "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "backgroundColor": "#131A2E",
         "foregroundImage": "./assets/android-icon-foreground.png",

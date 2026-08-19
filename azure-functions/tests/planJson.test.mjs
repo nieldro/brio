@@ -91,6 +91,49 @@ test('rechaza un día más largo que el tiempo del usuario', () => {
   assert.ok(r.errores.some((e) => /45 min supera/.test(e)));
 });
 
+test('rechaza un día que desperdicia el tiempo que la persona apartó', () => {
+  // Quien aparta una hora y recibe doce minutos siente que la app no lo tomó
+  // en serio. El techo ya estaba; faltaba el piso.
+  const corto = planBueno();
+  corto.dias[0].duracion_min = 12;
+
+  const r = validarPlan(corto, { tiempoMax: 60 });
+  assert.equal(r.ok, false);
+  assert.ok(r.errores.some((e) => /se queda corto/.test(e)), r.errores.join('; '));
+});
+
+test('el día de descanso puede durar cero aunque haya dos horas apartadas', () => {
+  const conDescanso = planBueno();
+  const r = validarPlan(conDescanso, { tiempoMax: 120 });
+
+  assert.ok(
+    !r.errores.some((e) => /sábado|domingo/.test(e) && /se queda corto/.test(e)),
+    r.errores.join('; '),
+  );
+});
+
+// Un plan pensado para alguien que apartó una hora: los cinco días de
+// entrenamiento la aprovechan.
+const planDeUnaHora = () => {
+  const p = planBueno();
+  p.dias.forEach((d) => {
+    if (d.tipo === 'entrenamiento') d.duracion_min = 55;
+  });
+  return p;
+};
+
+test('el día suave tiene un piso más bajo que el de entrenamiento', () => {
+  const suave = planDeUnaHora();
+  suave.dias[0].tipo = 'suave';
+  suave.dias[0].duracion_min = 20; // 33% de 60: pasa el piso suave (18)
+  suave.dias[0].ejercicios = suave.dias[0].ejercicios.slice(0, 2);
+  assert.equal(validarPlan(suave, { tiempoMax: 60 }).ok, true, 'el suave de 20 debería pasar');
+
+  const entrena = planDeUnaHora();
+  entrena.dias[0].duracion_min = 20; // 33% de 60: NO pasa el piso de entrenamiento (30)
+  assert.equal(validarPlan(entrena, { tiempoMax: 60 }).ok, false);
+});
+
 test('rechaza tips con calorías, cantidades o ayuno', () => {
   for (const tip of [
     'Cuenta las calorías del almuerzo',

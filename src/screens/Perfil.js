@@ -12,7 +12,7 @@ import { pedirPermisoYToken, hayModuloPush } from '../lib/notificaciones';
 
 const OBJETIVOS = ['Perder peso', 'Ganar músculo', 'Sentirme mejor', 'Crear el hábito'];
 const LUGARES = ['En casa', 'En el gym', 'Mezclado'];
-const TIEMPOS = [10, 20, 30, 45];
+const TIEMPOS = [20, 30, 45, 60, 90, 120];
 
 const NUMEROS = [
   { clave: 'edad', etiqueta: 'Edad', sufijo: 'años' },

@@ -8,6 +8,7 @@
 // Forma de cada guía:
 //   claves     con qué nombres del plan hace match (en minúscula, sin tildes)
 //   nombre     título que se muestra
+//   figura     qué animación lo dibuja (ver components/FiguraEjercicio.js)
 //   como       los pasos, cortos y en orden
 //   cuidado    el error típico, dicho sin regañar
 //   masFacil   la versión mínima, para el día que no se puede
@@ -17,6 +18,7 @@ export const GUIAS = [
   {
     claves: ['caminata', 'caminar', 'paseo', 'marcha', 'paso a paso'],
     nombre: 'Caminata',
+    figura: 'caminata',
     como: [
       'Hombros sueltos y mirada al frente, no al piso.',
       'Pisa con el talón y empuja con la punta.',
@@ -28,6 +30,7 @@ export const GUIAS = [
   {
     claves: ['movilidad', 'rotaciones', 'articular', 'calentamiento'],
     nombre: 'Movilidad articular',
+    figura: 'brazos',
     como: [
       'Empieza por el cuello: gira despacio de un lado al otro.',
       'Sigue con hombros, cadera y tobillos, en círculos suaves.',
@@ -39,6 +42,7 @@ export const GUIAS = [
   {
     claves: ['sentadilla', 'sentadillas', 'silla', 'squat'],
     nombre: 'Sentadilla a la silla',
+    figura: 'sentadilla',
     como: [
       'De pie, de espaldas a una silla, pies al ancho de las caderas.',
       'Baja como si te fueras a sentar, sacando la cola hacia atrás.',
@@ -51,6 +55,7 @@ export const GUIAS = [
   {
     claves: ['talon', 'talones', 'pantorrilla', 'gemelos'],
     nombre: 'Elevación de talones',
+    figura: 'talones',
     como: [
       'De pie, con una pared o silla cerca para apoyarte.',
       'Sube los talones hasta quedar en punta de pies.',
@@ -62,6 +67,7 @@ export const GUIAS = [
   {
     claves: ['flexion', 'flexiones', 'pared', 'lagartija'],
     nombre: 'Flexiones en la pared',
+    figura: 'flexion',
     como: [
       'Frente a la pared, manos apoyadas al ancho de los hombros.',
       'Da un paso atrás para quedar inclinado.',
@@ -74,6 +80,7 @@ export const GUIAS = [
   {
     claves: ['puente', 'gluteo', 'gluteos', 'cadera'],
     nombre: 'Puente de glúteos',
+    figura: 'puente',
     como: [
       'Boca arriba, rodillas dobladas y pies apoyados.',
       'Empuja con los talones y sube la cadera.',
@@ -86,6 +93,7 @@ export const GUIAS = [
   {
     claves: ['plancha', 'abdomen', 'core', 'isometrico'],
     nombre: 'Plancha apoyada',
+    figura: 'plancha',
     como: [
       'Apoya antebrazos y rodillas en el piso.',
       'Cuerpo en línea recta desde la cabeza hasta las rodillas.',
@@ -98,6 +106,7 @@ export const GUIAS = [
   {
     claves: ['estiramiento', 'estirar', 'elongacion', 'flexibilidad'],
     nombre: 'Estiramiento',
+    figura: 'estiramiento',
     como: [
       'Entra al estiramiento despacio, hasta sentir tensión suave.',
       'Sostén entre veinte y treinta segundos.',
@@ -110,6 +119,7 @@ export const GUIAS = [
   {
     claves: ['escaleras', 'escalon', 'subir'],
     nombre: 'Subir escaleras',
+    figura: 'escalera',
     como: [
       'Pisa el escalón completo, no solo con la punta.',
       'Sube a un ritmo que puedas sostener.',
@@ -121,6 +131,7 @@ export const GUIAS = [
   {
     claves: ['lateral', 'laterales', 'paso lateral'],
     nombre: 'Pasos laterales',
+    figura: 'lateral',
     como: [
       'De pie, da un paso ancho hacia un lado.',
       'Junta el otro pie y regresa.',
@@ -132,6 +143,7 @@ export const GUIAS = [
   {
     claves: ['respiracion', 'respirar', 'calma', 'relajacion'],
     nombre: 'Respiración',
+    figura: 'respiracion',
     como: [
       'Sentado o acostado, una mano en el pecho y otra en la barriga.',
       'Toma aire por la nariz cuatro segundos: sube la barriga, no el pecho.',
@@ -143,6 +155,7 @@ export const GUIAS = [
   {
     claves: ['baile', 'bailar', 'zumba'],
     nombre: 'Bailar',
+    figura: 'brazos',
     como: [
       'Pon la canción que te guste de verdad.',
       'Muévete como te salga: no hay paso correcto.',
@@ -156,6 +169,7 @@ export const GUIAS = [
   {
     claves: ['prensa', 'leg press'],
     nombre: 'Prensa de piernas',
+    figura: 'empuje',
     como: [
       'Ajusta el asiento para que las rodillas queden dobladas al empezar.',
       'Pies al ancho de las caderas sobre la plataforma.',
@@ -168,6 +182,7 @@ export const GUIAS = [
   {
     claves: ['remo', 'jalon', 'espalda', 'polea'],
     nombre: 'Remo en máquina',
+    figura: 'remo',
     como: [
       'Pecho apoyado o espalda firme, según la máquina.',
       'Tira llevando los codos hacia atrás, juntando los omóplatos.',
@@ -179,6 +194,7 @@ export const GUIAS = [
   {
     claves: ['press', 'pecho', 'banca'],
     nombre: 'Press de pecho',
+    figura: 'empuje',
     como: [
       'Espalda apoyada y pies firmes en el piso.',
       'Baja controlado hasta la altura del pecho.',
@@ -191,6 +207,7 @@ export const GUIAS = [
   {
     claves: ['mancuerna', 'mancuernas', 'pesas', 'biceps', 'hombro'],
     nombre: 'Trabajo con mancuernas',
+    figura: 'remo',
     como: [
       'Empieza con un peso que te deje hacer todas las repeticiones.',
       'Sube contando dos, baja contando tres.',
@@ -202,6 +219,7 @@ export const GUIAS = [
   {
     claves: ['eliptica', 'bicicleta', 'cinta', 'trotadora', 'cardio'],
     nombre: 'Máquina de cardio',
+    figura: 'caminata',
     como: [
       'Empieza cinco minutos suaves para entrar en calor.',
       'Sube el ritmo hasta poder hablar entrecortado, no menos.',

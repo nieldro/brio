@@ -9,6 +9,19 @@
 
 export const BLOQUES = ['calentamiento', 'principal', 'cierre'];
 
+// El tiempo que la persona dijo tener es un compromiso, no un techo lejano.
+//
+// Sin este piso el modelo devolvía días de 12 minutos a quien había apartado
+// una hora, y eso se siente como que la app no lo tomó en serio. Un día de
+// entrenamiento usa al menos la mitad de lo apartado; uno suave, un tercio.
+export const PISO_POR_TIPO = { entrenamiento: 0.5, suave: 0.3, descanso: 0 };
+
+export function duracionMinima(tiempo, tipo) {
+  const disponible = Number(tiempo);
+  if (!Number.isFinite(disponible) || disponible <= 0) return 0;
+  return Math.round(disponible * (PISO_POR_TIPO[tipo] ?? 0));
+}
+
 // Cuántos ejercicios lleva cada tipo de día, como mínimo.
 // El descanso lleva cero a propósito: descansar es parte del plan.
 export const MINIMO_EJERCICIOS = { entrenamiento: 3, suave: 2, descanso: 0 };
@@ -110,8 +123,16 @@ Un día suave lleva 2 o 3 ejercicios, de bloque principal o cierre.
 Un día de descanso lleva la lista de ejercicios vacía.
 
 Cada ejercicio lleva su "detalle" con series y repeticiones o con minutos,
-en palabras simples. La suma de lo que pidas tiene que caber en
-${tiempo} minutos.
+en palabras simples.
+
+## El tiempo es un compromiso, no un techo
+Esta persona apartó ${tiempo} minutos al día. Úsalos.
+- Un día de entrenamiento dura entre ${duracionMinima(tiempo, 'entrenamiento')} y ${tiempo} minutos.
+- Un día suave dura entre ${duracionMinima(tiempo, 'suave')} y ${tiempo} minutos.
+- Con ${tiempo} minutos disponibles, un día de 10 minutos es una falta de respeto
+  a quien aparto ese rato. Si el dia debe ser facil, hazlo con movimientos
+  suaves y mas descanso entre series, NO recortando la duracion.
+- La suma de lo que pidas en los ejercicios tiene que dar la duracion del dia.
 
 ## Enfoque de esta persona
 ${enfoqueDe(objetivo)}${sinImpacto}`;
